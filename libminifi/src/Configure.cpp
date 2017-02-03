@@ -23,13 +23,14 @@ Configure *Configure::_configure(NULL);
 const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
+const char *Configure::nifi_graceful_shutdown_seconds  = "nifi.graceful.shutdown.seconds";
+const char *Configure::nifi_log_level = "nifi.log.level";
 const char *Configure::nifi_server_name = "nifi.server.name";
 const char *Configure::nifi_server_port = "nifi.server.port";
 const char *Configure::nifi_server_report_interval= "nifi.server.report.interval";
 const char *Configure::nifi_provenance_repository_max_storage_size = "nifi.provenance.repository.max.storage.size";
 const char *Configure::nifi_provenance_repository_max_storage_time = "nifi.provenance.repository.max.storage.time";
 const char *Configure::nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
-
 //! Get the config value
 bool Configure::get(std::string key, std::string &value)
 {
