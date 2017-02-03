@@ -20,6 +20,18 @@
 #define LIBMINIFI_TEST_TESTBASE_H_
 
 #include "catch.hpp"
+#include "Logger.h"
+#
 
+class LogTestController {
+public:
+	LogTestController(const std::string level = "debug") {
+		Logger::getLogger()->setLogLevel(level);
+	}
+
+	~LogTestController() {
+		Logger::getLogger()->setLogLevel(LOG_LEVEL_E::info);
+	}
+};
 
 #endif /* LIBMINIFI_TEST_TESTBASE_H_ */

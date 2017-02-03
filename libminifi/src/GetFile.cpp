@@ -81,6 +81,8 @@ void GetFile::initialize()
 void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 {
 	std::string value;
+
+	_logger->log_info("onTrigger GetFile");
 	if (context->getProperty(Directory.getName(), value))
 	{
 		_directory = value;
@@ -97,6 +99,8 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	{
 		Property::StringToBool(value, _keepSourceFile);
 	}
+
+	_logger->log_info("onTrigger GetFile");
 	if (context->getProperty(MaxAge.getName(), value))
 	{
 		TimeUnit unit;
@@ -143,6 +147,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 
 	// Perform directory list
+	_logger->log_info("Is listing empty %i",isListingEmpty());
 	if (isListingEmpty())
 	{
 		if (_pollInterval == 0 || (getTimeMillis() - _lastDirectoryListingTime) > _pollInterval)
@@ -150,7 +155,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 			performListing(_directory);
 		}
 	}
-
+	_logger->log_info("Is listing empty %i",isListingEmpty());
 	if (!isListingEmpty())
 	{
 		try
@@ -159,6 +164,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 			pollListing(list, _batchSize);
 			while (!list.empty())
 			{
+
 				std::string fileName = list.front();
 				list.pop();
 				_logger->log_info("GetFile process %s", fileName.c_str());
@@ -185,6 +191,7 @@ void GetFile::onTrigger(ProcessContext *context, ProcessSession *session)
 			throw;
 		}
 	}
+
 }
 
 bool GetFile::isListingEmpty()
@@ -261,11 +268,14 @@ bool GetFile::acceptFile(std::string fullName, std::string name)
 
 void GetFile::performListing(std::string dir)
 {
+	_logger->log_info("Performing file listing against %s",dir.c_str());
 	DIR *d;
 	d = opendir(dir.c_str());
 	if (!d)
 		return;
-	while (1)
+	// only perform a listing while we are not empty
+	_logger->log_info("Performing file listing against %s",dir.c_str());
+	while (isRunning())
 	{
 		struct dirent *entry;
 		entry = readdir(d);

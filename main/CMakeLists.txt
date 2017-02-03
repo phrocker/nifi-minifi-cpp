@@ -48,3 +48,5 @@ install(TARGETS minifiexe
         RUNTIME
         DESTINATION bin
         COMPONENT bin)
+
+

@@ -44,7 +44,7 @@ public:
 	}
 	//! Destructor
 	virtual ~ProcessContext() {}
-	//! Get Processor associated with the Process Context
+	//! Get Processor associated with the Process Context0
 	Processor *getProcessor() {
 		return _processor;
 	}

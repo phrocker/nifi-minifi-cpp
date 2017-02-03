@@ -19,6 +19,7 @@
 #define LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
 
 #include "Provenance.h"
+#include "FlowController.h"
 
 class ProvenanceTestRepository : public ProvenanceRepository
 {
@@ -59,8 +60,71 @@ public:
 				return false;
 			}
 		}
+
+		const std::map<std::string,std::string> &getRepoMap() const
+		{
+			return repositoryResults;
+		}
+
 protected:
 		std::map<std::string,std::string> repositoryResults;
+};
+
+
+class TestFlowController : public FlowController
+{
+
+public:
+	TestFlowController(ProvenanceTestRepository &repo) : ::FlowController()
+	{
+		_provenanceRepo = dynamic_cast<ProvenanceRepository*>(&repo);
+	}
+	~TestFlowController()
+	{
+
+	}
+	void load(){
+
+	}
+
+	bool start()
+	{
+		_running.store(true);
+		return true;
+	}
+
+	void stop(bool force)
+	{
+		_running.store(false);
+	}
+	void waitUnload(const uint64_t timeToWaitMs)
+	{
+		stop(true);
+	}
+
+	void unload()
+	{
+		stop(true);
+	}
+
+	void reload(std::string file)
+	{
+
+	}
+
+	bool isRunning()
+	{
+		return true;
+	}
+
+
+	Processor *createProcessor(std::string name, uuid_t uuid){ return 0;}
+
+	ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid){ return 0;}
+
+	ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid){ return 0; }
+
+	Connection *createConnection(std::string name, uuid_t uuid){ return 0; }
 };
 
 
