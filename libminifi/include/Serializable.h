@@ -61,11 +61,17 @@ public:
 
     }
 
-    /**
-     * Reads data and places it into buf
-     * @param buf buffer in which we extract data
-     * @param buflen
-     */
+	/**
+	 * Reads data and places it into buf
+	 * @param buf buffer in which we extract data
+	 * @param buflen
+	 */
+	int readData(std::vector<uint8_t> &buf, int buflen);
+	/**
+	 * Reads data and places it into buf
+	 * @param buf buffer in which we extract data
+	 * @param buflen
+	 */
     int readData(uint8_t *buf, int buflen);
 
     /**

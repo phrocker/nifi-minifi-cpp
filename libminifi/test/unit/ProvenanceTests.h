@@ -41,7 +41,7 @@ TEST_CASE("Test Provenance record serialization", "[TestProvenanceEventRecordSer
 
 	std::string eventId = record1.getEventId();
 	
-	std::string smileyface = "\u0001\uf604" ;
+	std::string smileyface = ":)" ;
 	record1.setDetails(smileyface);
 
 	ProvenanceTestRepository repo;

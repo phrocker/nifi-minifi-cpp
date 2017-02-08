@@ -158,103 +158,19 @@ int Serializable::readUTF(std::string &str,DataStream *stream, bool widen) {
     if (utflen == 0)
         return 1;
 
-    uint8_t *utf_to_write = NULL;
-    char *chararr = NULL;
-    utf_to_write = new uint8_t[utflen];
-    chararr = new char[utflen];
-    memset(chararr, 0, utflen);
+    std::vector<uint8_t> buf;
+    ret = stream->readData(buf, utflen);
 
-    int c, char2, char3;
-    int count = 0;
-    int chararr_count = 0;
-
-    ret = stream->readData(utf_to_write, utflen);
-    if (ret <= 0) {
-        delete[] utf_to_write;
-        delete[] chararr;
-        if (ret == 0) {
-            if (!widen)
-                return (2 + utflen);
-            else
-                return (4 + utflen);
-        } else
-            return ret;
-    }
-
-    while (count < utflen) {
-        c = (int) utf_to_write[count] & 0xff;
-        if (c > 127)
-            break;
-        count++;
-        chararr[chararr_count++] = (char) c;
-    }
-
-    while (count < utflen) {
-        c = (int) utf_to_write[count] & 0xff;
-        switch (c >> 4) {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-            /* 0xxxxxxx*/
-            count++;
-            chararr[chararr_count++] = (char) c;
-            break;
-        case 12:
-        case 13:
-            /* 110x xxxx   10xx xxxx*/
-            count += 2;
-            if (count > utflen) {
-                delete[] utf_to_write;
-                delete[] chararr;
-                return -1;
-            }
-            char2 = (int) utf_to_write[count - 1];
-            if ((char2 & 0xC0) != 0x80) {
-                delete[] utf_to_write;
-                delete[] chararr;
-                return -1;
-            }
-            chararr[chararr_count++] = (char) (((c & 0x1F) << 6)
-                                               | (char2 & 0x3F));
-            break;
-        case 14:
-            /* 1110 xxxx  10xx xxxx  10xx xxxx */
-            count += 3;
-            if (count > utflen) {
-                delete[] utf_to_write;
-                delete[] chararr;
-                return -1;
-            }
-            char2 = (int) utf_to_write[count - 2];
-            char3 = (int) utf_to_write[count - 1];
-            if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80)) {
-                delete[] utf_to_write;
-                delete[] chararr;
-                return -1;
-            }
-            chararr[chararr_count++] = (char) (((c & 0x0F) << 12)
-                                               | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0));
-            break;
-        default:
-            delete[] utf_to_write;
-            delete[] chararr;
-            return -1;
-        }
-    }
     // The number of chars produced may be less than utflen
-    std::string value(chararr, chararr_count);
-    str = value;
-    delete[] utf_to_write;
-    delete[] chararr;
+    str = std::string((const char*)&buf[0],utflen);
+
+    return utflen;
+    /*
     if (!widen)
         return (2 + utflen);
     else
         return (4 + utflen);
+        */
 }
 
 int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
@@ -289,58 +205,28 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
         utf_to_write.resize(utflen);
 
         uint16_t shortLen = utflen;
-        //	writeData(shortLen,utf_to_write);
-        //currentPtr+=2;
-        //utf_to_write.data() + currentPtr++ = (uint8_t) ((utflen >> 8) & 255);
-        //utf_to_write.data() + currentPtr++ = (uint8_t) ((utflen >> 0) & 255);
+
     } else {
 
         utf_to_write.resize(utflen);
 
-        //writeData(utflen,utf_to_write);
-//		currentPtr+=4;
-        /*		utf_to_write.data() + currentPtr++ = (uint8_t) ((utflen >> 24) & 255);
-         utf_to_write.data() + currentPtr++ = (uint8_t) ((utflen >> 16) & 255);
-         utf_to_write.data() + currentPtr++ = (uint8_t) ((utflen >> 8) & 255);
-         utf_to_write.data() + currentPtr++= (uint8_t) ((utflen >> 0) & 255);*/
     }
 
     int i = 0;
 
-    /*	for(auto c : str){
-     if (IS_PRINTABLE(c)){
-     writeData(c,utf_to_write);
-     currentPtr++;
-     //			utf_to_write.data() + currentPtr++= c;
-     }else
-     break;
-     }*/
 
-
-
-    //for (;i < inLength; i++){
-    //auto c = str.at(i);
     uint8_t *underlyingPtr = &utf_to_write[0];
     for (auto c : str) {
         if (IS_PRINTABLE(c)) {
             writeData(c, underlyingPtr++);
-            //currentPtr++;
-            //utf_to_write.data() + currentPtr++= c;
-            /*} else if (c > 0x7FF) {
-             writeData(utflen,utf_to_write.data()+currentPtr);
-             currentPtr+=3;
-             utf_to_write.data() + currentPtr++= (uint8_t) (((c >> 0x0C) & 15) | 224);
-             utf_to_write.data() + currentPtr++= (uint8_t) (((c >> 0x06) & 63) | 128) ;
-             utf_to_write.data() + currentPtr++= (uint8_t) (((c >> 0x00) & 63) | 128);*/
         } else {
             auto t = (uint8_t) (((c >> 0x06) & 31) | 192);
             writeData(t, underlyingPtr++);
             currentPtr++;
-            //utf_to_write.data() + currentPtr++= (uint8_t) (((c >> 0x06) & 31) | 192 );
             t = (uint8_t) (((c >> 0x00) & 63) | 128);
             writeData(t, underlyingPtr++);
             currentPtr++;
-            //utf_to_write.data() + currentPtr++= (uint8_t) (((c >> 0x00) & 63) | 128);
+
         }
     }
     int ret;
@@ -436,6 +322,21 @@ int DataStream::readShort(uint16_t &value, bool is_little_endian) {
     }
     readBuffer += 2;
     return 2;
+}
+
+int DataStream::readData(std::vector<uint8_t> &buf,int buflen) {
+    if ((buflen + readBuffer) > buffer.size()) {
+        // if read exceed
+        return -1;
+    }
+
+    if (buf.capacity() < buflen)
+    	buf.resize(buflen);
+
+    buf.insert(buf.begin(),&buffer[readBuffer],&buffer[readBuffer+buflen]);
+
+    readBuffer += buflen;
+    return buflen;
 }
 
 
