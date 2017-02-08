@@ -272,7 +272,14 @@ bool Processor::addConnection(Connection *connection)
 
 	connection->getSourceProcessorUUID(srcUUID);
 	connection->getDestinationProcessorUUID(destUUID);
-	if (uuid_compare(_uuid, destUUID) == 0)
+	char uuid_str[37];
+
+
+	uuid_unparse_lower(_uuid, uuid_str);
+	std::string my_uuid = uuid_str;
+	uuid_unparse_lower(destUUID, uuid_str);
+	std::string destination_uuid = uuid_str;
+	if (my_uuid == destination_uuid)
 	{
 		// Connection is destination to the current processor
 		if (_incomingConnections.find(connection) == _incomingConnections.end())
@@ -285,7 +292,9 @@ bool Processor::addConnection(Connection *connection)
 			ret = true;
 		}
 	}
-	if (uuid_compare(_uuid, srcUUID) == 0)
+	uuid_unparse_lower(srcUUID, uuid_str);
+	std::string source_uuid = uuid_str;
+	if (my_uuid == source_uuid)
 	{
 		std::string relationship = connection->getRelationship().getName();
 		// Connection is source from the current processor

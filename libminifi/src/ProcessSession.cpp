@@ -538,7 +538,7 @@ void ProcessSession::commit()
 			}
 		}
 		// Do the samething for added flow file
-		for(auto it : _addedFlowFiles)
+		for(const auto it : _addedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
@@ -597,7 +597,7 @@ void ProcessSession::commit()
 			}
 		}
 		// Complete process the added and update flow files for the session, send the flow file to its queue
-		for(auto it : _updatedFlowFiles)
+		for(const auto &it : _updatedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
@@ -609,7 +609,7 @@ void ProcessSession::commit()
 			else
 				delete record;
 		}
-		for(auto it : _addedFlowFiles)
+		for(const auto &it : _addedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
@@ -622,7 +622,7 @@ void ProcessSession::commit()
 				delete record;
 		}
 		// Process the clone flow files
-		for(auto it : _clonedFlowFiles)
+		for(const auto &it : _clonedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			if (record->_markedDelete)
@@ -635,13 +635,13 @@ void ProcessSession::commit()
 				delete record;
 		}
 		// Delete the deleted flow files
-		for(auto it : _deletedFlowFiles)
+		for(const auto &it : _deletedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		// Delete the snapshot
-		for(auto it : _originalFlowFiles)
+		for(const auto &it : _originalFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			delete record;
@@ -674,7 +674,7 @@ void ProcessSession::rollback()
 	try
 	{
 		// Requeue the snapshot of the flowfile back
-		for(auto it : _originalFlowFiles)
+		for(const auto &it : _originalFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			if (record->_orginalConnection)
@@ -687,19 +687,19 @@ void ProcessSession::rollback()
 		}
 		_originalFlowFiles.clear();
 		// Process the clone flow files
-		for(auto it : _clonedFlowFiles)
+		for(const auto &it : _clonedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		_clonedFlowFiles.clear();
-		for(auto it : _addedFlowFiles)
+		for(const auto &it : _addedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			delete record;
 		}
 		_addedFlowFiles.clear();
-		for(auto it : _updatedFlowFiles)
+		for(const auto &it : _updatedFlowFiles)
 		{
 			FlowFileRecord *record = it.second;
 			delete record;

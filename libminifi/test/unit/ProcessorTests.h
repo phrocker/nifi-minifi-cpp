@@ -46,9 +46,9 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 
 	uuid_t processoruuid;
-	processor.getUUID(processoruuid);
+	REQUIRE( true == processor.getUUID(processoruuid) );
 
-	Connection connection("emptyConnection");
+	Connection connection("getfileCreate2Connection");
 	connection.setRelationship(Relationship("success","description"));
 
 	// link the connections so that we can test results at the end for this
