@@ -84,7 +84,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 	std::fstream file;
 	std::stringstream ss;
-	ss << dir << "/" << "tstFile";
+	ss << dir << "/" << "tstFile.ext";
 	file.open(ss.str(),std::ios::out);
 	file << "tempFile";
 	file.close();

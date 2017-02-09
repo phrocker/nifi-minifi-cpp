@@ -27,6 +27,9 @@
 class ProvenanceTestRepository : public ProvenanceRepository
 {
 public:
+	ProvenanceTestRepository()
+{
+}
 		//! initialize
 		bool initialize()
 		{
