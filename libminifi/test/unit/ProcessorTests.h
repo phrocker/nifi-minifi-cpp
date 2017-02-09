@@ -33,7 +33,9 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]"){
 
 TEST_CASE("Test Find file", "[getfileCreate2]"){
 
-	LogTestController enableDebug;
+	TestController testController;
+
+	testController.enableDebug();
 
 	ProvenanceTestRepository repo;
 	TestFlowController controller(repo);
@@ -42,7 +44,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 	GetFile processor("getfileCreate2");
 
 	char format[] ="/tmp/gt.XXXXXX";
-	char *dir = mkdtemp(format);
+	char *dir = testController.createTempDirectory(format);
 
 
 	uuid_t processoruuid;
@@ -106,8 +108,6 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 	REQUIRE( 2 == repo.getRepoMap().size() );
 
-
-
 	for(auto  entry: repo.getRepoMap())
 	{
 		ProvenanceEventRecord newRecord;
@@ -143,3 +143,5 @@ TEST_CASE("Test Find file", "[getfileCreate2]"){
 
 
 #endif
+
+

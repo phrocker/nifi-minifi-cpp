@@ -21,6 +21,9 @@
 #include "Provenance.h"
 #include "FlowController.h"
 
+/**
+ * Test repository
+ */
 class ProvenanceTestRepository : public ProvenanceRepository
 {
 public:

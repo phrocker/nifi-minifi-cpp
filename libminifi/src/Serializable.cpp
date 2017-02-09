@@ -27,7 +27,7 @@
 
 bool EndiannessCheck::IS_LITTLE = EndiannessCheck::is_little_endian();
 
-#define IS_PRINTABLE(c) __builtin_expect(!!((c >= 1) && (c <= 127)),1)
+#define IS_ASCII(c) __builtin_expect(!!((c >= 1) && (c <= 127)),1)
 
 template<typename T>
 int Serializable::writeData(const T &t,DataStream *stream) {
@@ -180,8 +180,10 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
 
     /* use charAt instead of copying String to char array */
     for (auto c : str) {
-        if (IS_PRINTABLE(c)) {
+        if (IS_ASCII(c)) {
             utflen++;
+        }else if (c > 2047){
+        	utflen += 3;
         } else {
             utflen += 2;
         }
@@ -189,6 +191,7 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
 
     if (utflen > 65535)
         return -1;
+
     if (utflen == 0) {
 
         if (!widen) {
@@ -217,8 +220,17 @@ int Serializable::writeUTF(std::string str,DataStream *stream, bool widen) {
 
     uint8_t *underlyingPtr = &utf_to_write[0];
     for (auto c : str) {
-        if (IS_PRINTABLE(c)) {
+        if (IS_ASCII(c)) {
             writeData(c, underlyingPtr++);
+        } else if (c > 2047){
+
+        	auto t = (uint8_t) (((c >> 0x0C) & 15) | 192);
+        	writeData(t, underlyingPtr++);
+        	t = (uint8_t) (((c >> 0x06) & 63) | 128);
+        	writeData(t, underlyingPtr++);
+        	t = (uint8_t) (((c >> 0) & 63) | 128);
+			writeData(t, underlyingPtr++);
+
         } else {
             auto t = (uint8_t) (((c >> 0x06) & 31) | 192);
             writeData(t, underlyingPtr++);
