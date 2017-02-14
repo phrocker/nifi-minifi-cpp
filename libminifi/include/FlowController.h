@@ -84,30 +84,9 @@ public:
   	static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
 	static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
 
-	//! passphase for the private file callback
-	static int pemPassWordCb(char *buf, int size, int rwflag, void *userdata)
-	{
-		std::string passphrase;
-
-		if (Configure::getConfigure()->get(Configure::nifi_security_client_pass_phrase, passphrase))
-		{
-		    std::ifstream file(passphrase.c_str(), std::ifstream::in);
-		    if (!file.good())
-		    {
-		    	memset(buf, 0, size);
-		    	return 0;
-		    }
-		    memset(buf, 0, size);
-		    file.getline(buf, size);
-		    return (int) strlen(buf);
-		}
-		return 0;
-	}
 
 	//! Destructor
 	virtual ~FlowController(){
-	  if (_ctx)
-	    SSL_CTX_free(_ctx);
 	}
 	//! Set FlowController Name
 	virtual void setName(std::string name) {
@@ -192,18 +171,9 @@ public:
 		_protocol->setSerialNumber(number);
 	}
 
-	
-	//! getSSLContext
-	virtual SSL_CTX *getSSLContext()
-	{
-		return _ctx;
-	}
 
 protected:
   
-	//! SSL context
-	SSL_CTX *_ctx;
-
 	//! A global unique identifier
 	uuid_t _uuid;
 	//! FlowController Name
@@ -242,13 +212,13 @@ protected:
 	FlowController() :
 			_root(0), _maxTimerDrivenThreads(0), _maxEventDrivenThreads(0), _running(
 					false), _initialized(false), _provenanceRepo(0), _protocol(
-					0), _logger(Logger::getLogger()), _ctx(NULL){
+					0), logger_(Logger::getLogger()){
 	}
 
 private:
 
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 
 };
 
@@ -310,8 +280,8 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *_logger;
-	Configure *_configure;
+	Logger *logger_;
+	Configure *configure_;
 
 	//! Process Processor Node YAML
 	void parseProcessorNodeYaml(YAML::Node processorNode, ProcessGroup *parent);

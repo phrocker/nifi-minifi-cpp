@@ -45,8 +45,8 @@ public:
 	 * Create a new process session
 	 */
 	ProcessSession(ProcessContext *processContext = NULL) : _processContext(processContext) {
-		_logger = Logger::getLogger();
-		_logger->log_trace("ProcessSession created for %s", _processContext->getProcessor()->getName().c_str());
+		logger_ = Logger::getLogger();
+		logger_->log_trace("ProcessSession created for %s", _processContext->getProcessor()->getName().c_str());
 		_provenanceReport = new ProvenanceReporter(_processContext->getProcessor()->getUUIDStr(),
 				_processContext->getProcessor()->getName());
 	}
@@ -120,7 +120,7 @@ private:
 	ProcessSession(const ProcessSession &parent);
 	ProcessSession &operator=(const ProcessSession &parent);
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Provenance Report
 	ProvenanceReporter *_provenanceReport;
 

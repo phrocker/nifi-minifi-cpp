@@ -40,13 +40,18 @@ include_directories(../include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(include)
 
-file(GLOB SOURCES "src/*.cpp")
+file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB SPD_SOURCES "../include/spdlog/*")
 
 # Workaround the limitations of having a
 # header only library
 add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(minifi STATIC ${SOURCES})
+
+find_package(ZLIB REQUIRED)
+
+include_directories(${ZLIB_INCLUDE_DIRS})
+target_link_libraries (minifi ${ZLIB_LIBRARIES})
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)

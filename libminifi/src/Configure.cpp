@@ -19,7 +19,7 @@
  */
 #include "Configure.h"
 
-Configure *Configure::_configure(NULL);
+Configure *Configure::configure_(NULL);
 const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
 const char *Configure::nifi_administrative_yield_duration = "nifi.administrative.yield.duration";
 const char *Configure::nifi_bored_yield_duration = "nifi.bored.yield.duration";
@@ -124,7 +124,7 @@ void Configure::loadConfigureFile(const char *fileName)
         // perform a naive determination if this is a relative path
         if (fileName[0] != '/')
         {
-            adjustedFilename = adjustedFilename + _configure->getHome() + "/" + fileName;
+            adjustedFilename = adjustedFilename + configure_->getHome() + "/" + fileName;
         }
         else
         {
@@ -134,12 +134,12 @@ void Configure::loadConfigureFile(const char *fileName)
     char *path = NULL;
     char full_path[PATH_MAX];
     path = realpath(adjustedFilename.c_str(), full_path);
-    _logger->log_info("Using configuration file located at %s", path);
+    logger_->log_info("Using configuration file located at %s", path);
 
     std::ifstream file(path, std::ifstream::in);
     if (!file.good())
     {
-        _logger->log_error("load configure file failed %s", path);
+        logger_->log_error("load configure file failed %s", path);
         return;
     }
     this->clear();

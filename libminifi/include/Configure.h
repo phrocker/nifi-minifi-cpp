@@ -34,11 +34,11 @@ public:
 	//! Get the singleton logger instance
 	static Configure * getConfigure()
 	{
-		if (!_configure)
+		if (!configure_)
 		{
-			_configure = new Configure();
+			configure_ = new Configure();
 		}
-		return _configure;
+		return configure_;
 	}
 	//! nifi.flow.configuration.file
 	static const char *nifi_flow_configuration_file;
@@ -105,19 +105,19 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 	//! Home location for this executable
 	std::string _minifiHome;
 
 	Configure()
 	{
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 	}
 	virtual ~Configure()
 	{
 
 	}
-	static Configure *_configure;
+	static Configure *configure_;
 
 protected:
 	std::map<std::string,std::string> _properties;

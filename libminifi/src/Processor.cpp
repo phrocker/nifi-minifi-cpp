@@ -56,8 +56,8 @@ Processor::Processor(std::string name, uuid_t uuid)
 	_activeTasks = 0;
 	_yieldExpiration = 0;
 	_incomingConnectionsIter = this->_incomingConnections.begin();
-	_logger = Logger::getLogger();
-	_logger->log_info("Processor %s created UUID %s", _name.c_str(), _uuidStr.c_str());
+	logger_ = Logger::getLogger();
+	logger_->log_info("Processor %s created UUID %s", _name.c_str(), _uuidStr.c_str());
 }
 
 Processor::~Processor()
@@ -74,7 +74,7 @@ bool Processor::setSupportedProperties(std::set<Property> properties)
 {
 	if (isRunning())
 	{
-		_logger->log_info("Can not set processor property while the process %s is running",
+		logger_->log_info("Can not set processor property while the process %s is running",
 				_name.c_str());
 		return false;
 	}
@@ -85,7 +85,7 @@ bool Processor::setSupportedProperties(std::set<Property> properties)
 	for (auto item : properties)
 	{
 		_properties[item.getName()] = item;
-		_logger->log_info("Processor %s supported property name %s", _name.c_str(), item.getName().c_str());
+		logger_->log_info("Processor %s supported property name %s", _name.c_str(), item.getName().c_str());
 	}
 
 	return true;
@@ -95,7 +95,7 @@ bool Processor::setSupportedRelationships(std::set<Relationship> relationships)
 {
 	if (isRunning())
 	{
-		_logger->log_info("Can not set processor supported relationship while the process %s is running",
+		logger_->log_info("Can not set processor supported relationship while the process %s is running",
 				_name.c_str());
 		return false;
 	}
@@ -106,7 +106,7 @@ bool Processor::setSupportedRelationships(std::set<Relationship> relationships)
 	for(auto item : relationships)
 	{
 		_relationships[item.getName()] = item;
-		_logger->log_info("Processor %s supported relationship name %s", _name.c_str(), item.getName().c_str());
+		logger_->log_info("Processor %s supported relationship name %s", _name.c_str(), item.getName().c_str());
 	}
 
 	return true;
@@ -116,7 +116,7 @@ bool Processor::setAutoTerminatedRelationships(std::set<Relationship> relationsh
 {
 	if (isRunning())
 	{
-		_logger->log_info("Can not set processor auto terminated relationship while the process %s is running",
+		logger_->log_info("Can not set processor auto terminated relationship while the process %s is running",
 				_name.c_str());
 		return false;
 	}
@@ -127,7 +127,7 @@ bool Processor::setAutoTerminatedRelationships(std::set<Relationship> relationsh
 	for(auto item : relationships)
 	{
 		_autoTerminatedRelationships[item.getName()] = item;
-		_logger->log_info("Processor %s auto terminated relationship name %s", _name.c_str(), item.getName().c_str());
+		logger_->log_info("Processor %s auto terminated relationship name %s", _name.c_str(), item.getName().c_str());
 	}
 
 	return true;
@@ -204,7 +204,7 @@ bool Processor::setProperty(std::string name, std::string value)
 		Property item = it->second;
 		item.setValue(value);
 		_properties[item.getName()] = item;
-		_logger->log_info("Processor %s property name %s value %s", _name.c_str(), item.getName().c_str(), value.c_str());
+		logger_->log_info("Processor %s property name %s value %s", _name.c_str(), item.getName().c_str(), value.c_str());
 		return true;
 	}
 	else
@@ -223,7 +223,7 @@ bool Processor::setProperty(Property prop, std::string value) {
 		Property item = it->second;
 		item.setValue(value);
 		_properties[item.getName()] = item;
-		_logger->log_info("Processor %s property name %s value %s",
+		logger_->log_info("Processor %s property name %s value %s",
 				_name.c_str(), item.getName().c_str(), value.c_str());
 		return true;
 	} else {
@@ -259,7 +259,7 @@ bool Processor::addConnection(Connection *connection)
 
 	if (isRunning())
 	{
-		_logger->log_info("Can not add connection while the process %s is running",
+		logger_->log_info("Can not add connection while the process %s is running",
 				_name.c_str());
 		return false;
 	}
@@ -286,7 +286,7 @@ bool Processor::addConnection(Connection *connection)
 		{
 			_incomingConnections.insert(connection);
 			connection->setDestinationProcessor(this);
-			_logger->log_info("Add connection %s into Processor %s incoming connection",
+			logger_->log_info("Add connection %s into Processor %s incoming connection",
 					connection->getName().c_str(), _name.c_str());
 			_incomingConnectionsIter = this->_incomingConnections.begin();
 			ret = true;
@@ -310,7 +310,7 @@ bool Processor::addConnection(Connection *connection)
 				existedConnection.insert(connection);
 				connection->setSourceProcessor(this);
 				_outGoingConnections[relationship] = existedConnection;
-				_logger->log_info("Add connection %s into Processor %s outgoing connection for relationship %s",
+				logger_->log_info("Add connection %s into Processor %s outgoing connection for relationship %s",
 												connection->getName().c_str(), _name.c_str(), relationship.c_str());
 				ret = true;
 			}
@@ -323,7 +323,7 @@ bool Processor::addConnection(Connection *connection)
 			newConnection.insert(connection);
 			connection->setSourceProcessor(this);
 			_outGoingConnections[relationship] = newConnection;
-			_logger->log_info("Add connection %s into Processor %s outgoing connection for relationship %s",
+			logger_->log_info("Add connection %s into Processor %s outgoing connection for relationship %s",
 								connection->getName().c_str(), _name.c_str(), relationship.c_str());
 			ret = true;
 		}
@@ -337,7 +337,7 @@ void Processor::removeConnection(Connection *connection)
 {
 	if (isRunning())
 	{
-		_logger->log_info("Can not remove connection while the process %s is running",
+		logger_->log_info("Can not remove connection while the process %s is running",
 				_name.c_str());
 		return;
 	}
@@ -357,7 +357,7 @@ void Processor::removeConnection(Connection *connection)
 		{
 			_incomingConnections.erase(connection);
 			connection->setDestinationProcessor(NULL);
-			_logger->log_info("Remove connection %s into Processor %s incoming connection",
+			logger_->log_info("Remove connection %s into Processor %s incoming connection",
 					connection->getName().c_str(), _name.c_str());
 			_incomingConnectionsIter = this->_incomingConnections.begin();
 		}
@@ -379,7 +379,7 @@ void Processor::removeConnection(Connection *connection)
 			{
 				_outGoingConnections[relationship].erase(connection);
 				connection->setSourceProcessor(NULL);
-				_logger->log_info("Remove connection %s into Processor %s outgoing connection for relationship %s",
+				logger_->log_info("Remove connection %s into Processor %s outgoing connection for relationship %s",
 								connection->getName().c_str(), _name.c_str(), relationship.c_str());
 			}
 		}
@@ -452,7 +452,7 @@ void Processor::onTrigger()
 	}
 	catch (std::exception &exception)
 	{
-		_logger->log_debug("Caught Exception %s", exception.what());
+		logger_->log_debug("Caught Exception %s", exception.what());
 		session->rollback();
 		delete session;
 		delete context;
@@ -460,7 +460,7 @@ void Processor::onTrigger()
 	}
 	catch (...)
 	{
-		_logger->log_debug("Caught Exception Processor::onTrigger");
+		logger_->log_debug("Caught Exception Processor::onTrigger");
 		session->rollback();
 		delete session;
 		delete context;
@@ -517,7 +517,7 @@ bool Processor::isWorkAvailable()
 	}
 	catch (...)
 	{
-		_logger->log_error("Caught an exception while checking if work is available; unless it was positively determined that work is available, assuming NO work is available!");
+		logger_->log_error("Caught an exception while checking if work is available; unless it was positively determined that work is available, assuming NO work is available!");
 	}
 
 	return hasWork;

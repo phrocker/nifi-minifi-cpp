@@ -40,7 +40,7 @@ public:
 	 * Create a new process context associated with the processor/controller service/state manager
 	 */
 	ProcessContext(Processor *processor = NULL) : _processor(processor) {
-		_logger = Logger::getLogger();
+		logger_ = Logger::getLogger();
 	}
 	//! Destructor
 	virtual ~ProcessContext() {}
@@ -107,7 +107,7 @@ private:
 	ProcessContext(const ProcessContext &parent);
 	ProcessContext &operator=(const ProcessContext &parent);
 	//! Logger
-	Logger *_logger;
+	Logger *logger_;
 
 };
 
