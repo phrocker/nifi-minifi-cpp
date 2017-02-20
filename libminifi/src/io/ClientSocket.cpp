@@ -68,6 +68,7 @@ void Socket::closeStream()
 {
 	if (0 != addr_info_) {
 			freeaddrinfo(addr_info_);
+			addr_info_=0;
 		}
 
 		if (socket_file_descriptor_ >= 0)

@@ -7,6 +7,11 @@
 #include "Configure.h"
 #include "utils/StringUtils.h"
 
+/**
+  Purpose: Due to the current design this is the only mechanism by which we can
+  inject different socket types
+  
+**/
 class SocketFactory{
 public:
   

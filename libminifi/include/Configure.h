@@ -79,10 +79,6 @@ public:
 	}
 	//! Get the config value
 	bool get(std::string key, std::string &value);
-	// Trim String utils
-	std::string trim(const std::string& s);
-	std::string trimLeft(const std::string& s);
-	std::string trimRight(const std::string& s);
 	//! Parse one line in configure file like key=value
 	void parseConfigureFileLine(char *buf);
 	//! Load Configure File

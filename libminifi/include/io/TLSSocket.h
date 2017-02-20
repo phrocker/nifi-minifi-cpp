@@ -93,8 +93,10 @@ private:
 			password.assign((std::istreambuf_iterator<char>(file)),
 					std::istreambuf_iterator<char>());
 			file.close();
-			memcpy(buf, password.c_str(), size);
-			return size;
+			memset(buf,0x00,size);
+			memcpy(buf, password.c_str(), password.length()-1);
+			std::cout << "password is " << buf << "-" << std::endl;
+			return password.length()-1;
 		}
 		return 0;
 	}

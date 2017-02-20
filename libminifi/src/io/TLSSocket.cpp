@@ -80,10 +80,13 @@ short TLSContext::initialize() {
 			// if the private key has passphase
 			SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
 		}
-		if (SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(),
-				SSL_FILETYPE_PEM) <= 0) {
-			logger->log_error("Could not create load private key, error : %s",
-					std::strerror(errno));
+		
+
+		int retp = SSL_CTX_use_PrivateKey_file(ctx, privatekey.c_str(),
+				SSL_FILETYPE_PEM);
+		if (retp != 1) {
+			logger->log_error("Could not create load private key,%i on %s error : %s",
+					retp,privatekey.c_str(),std::strerror(errno));
 			error_value = TLS_ERROR_KEY_ERROR;
 			return error_value;
 		}
@@ -98,7 +101,8 @@ short TLSContext::initialize() {
 		// load CA certificates
 		if (configuration->get(Configure::nifi_security_client_ca_certificate,
 				caCertificate)) {
-			if (!SSL_CTX_load_verify_locations(ctx, caCertificate.c_str(), 0)) {
+			retp = SSL_CTX_load_verify_locations(ctx, caCertificate.c_str(), 0);
+			if (retp==0) {
 				logger->log_error(
 						"Can not load CA certificate, Exiting, error : %s",
 						std::strerror(errno));
@@ -130,7 +134,7 @@ TLSSocket::TLSSocket(const std::string &hostname, const uint16_t port,
 }
 
 TLSSocket::TLSSocket(const std::string &hostname, const uint16_t port) :
-		::Socket(hostname, port, -1), ssl(0) {
+		::Socket(hostname, port, 0), ssl(0) {
 }
 
 TLSSocket::TLSSocket(const TLSSocket &&d) :
@@ -140,6 +144,7 @@ TLSSocket::TLSSocket(const TLSSocket &&d) :
 short TLSSocket::initialize() {
 	TLSContext *context = TLSContext::getInstance();
 	short ret = context->initialize();
+	Socket::initialize();
 	if (!ret) {
 		// we have s2s secure config
 		ssl = SSL_new(context->getContext());
@@ -172,6 +177,8 @@ int TLSSocket::writeData(std::vector< uint8_t>& buf, int buflen)
 }
 
 int TLSSocket::writeData(uint8_t *value, int size) {
+	if (IsNullOrEmpty(ssl))
+	  return -1;
 	// for SSL, wait for the TLS IO is completed
 	int bytes = 0;
 	int sent = 0;
@@ -191,6 +198,8 @@ int TLSSocket::writeData(uint8_t *value, int size) {
 
 int TLSSocket::readData(uint8_t *buf, int buflen) {
 
+	if (IsNullOrEmpty(ssl))
+	  return -1;
 	int total_read = 0;
 	int status = 0;
 	while (buflen) {
