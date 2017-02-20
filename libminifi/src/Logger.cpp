@@ -22,6 +22,6 @@
 #include <map>
 
 #include "Logger.h"
-
+std::mutex Logger::logger_mutex_;
 Logger *Logger::_logger(NULL);
 

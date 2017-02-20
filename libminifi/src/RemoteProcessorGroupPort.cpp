@@ -43,6 +43,7 @@ Relationship RemoteProcessorGroupPort::relation;
 
 void RemoteProcessorGroupPort::initialize()
 {
+
 	//! Set the supported properties
 	std::set<Property> properties;
 	properties.insert(hostName);
@@ -52,6 +53,7 @@ void RemoteProcessorGroupPort::initialize()
 	std::set<Relationship> relationships;
 	relationships.insert(relation);
 	setSupportedRelationships(relationships);
+
 }
 
 void RemoteProcessorGroupPort::onTrigger(ProcessContext *context, ProcessSession *session)

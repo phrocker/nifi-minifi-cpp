@@ -43,6 +43,7 @@ public:
 	 * @returns new TLSContext;
 	 */
 	static TLSContext *getInstance() {
+		std::cout << "inittlsc" << std::endl;
 		TLSContext* atomic_context = context_instance.load(
 				std::memory_order_relaxed);
 		std::atomic_thread_fence(std::memory_order_acquire);

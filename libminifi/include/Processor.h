@@ -110,13 +110,18 @@ public:
 	}
 	//! Get UUID
 	bool getUUID(uuid_t uuid) {
+		logger_->log_info("found");
 		if (uuid)
 		{
 			uuid_copy(uuid, _uuid);
+			logger_->log_info("true");
 			return true;
 		}
 		else
+		{
+			logger_->log_info("foundf");
 			return false;
+		}
 	}
 	//! Set the supported processor properties while the process is not running
 	bool setSupportedProperties(std::set<Property> properties);

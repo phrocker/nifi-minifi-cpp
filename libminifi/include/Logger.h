@@ -21,6 +21,8 @@
 #ifndef __LOGGER_H__
 #define __LOGGER_H__
 
+#include <mutex>
+#include <iostream>
 #include <string>
 #include <algorithm>
 #include <cstdio>
@@ -65,6 +67,7 @@ public:
 
 	//! Get the singleton logger instance
 	static Logger * getLogger() {
+		std::lock_guard<std::mutex> mlock(logger_mutex_);
 		if (!_logger)
 			_logger = new Logger();
 		return _logger;
@@ -116,6 +119,7 @@ public:
 			return;
 		FILL_BUFFER
 	    _spdlog->error(buffer);
+		_spdlog->flush();
 	}
 	/**
 	 * @brief Log warn message
@@ -127,6 +131,7 @@ public:
 			return;
 		FILL_BUFFER
 	    _spdlog->warn(buffer);
+		_spdlog->flush();
 	}
 	/**
 	 * @brief Log info message
@@ -138,6 +143,7 @@ public:
 			return;
 		FILL_BUFFER
 	    _spdlog->info(buffer);
+		_spdlog->flush();
 	}
 	/**
 	 * @brief Log debug message
@@ -160,6 +166,7 @@ public:
 			return;
 		FILL_BUFFER
 	    _spdlog->trace(buffer);
+		_spdlog->flush();
 	}
 
 protected:
@@ -174,12 +181,12 @@ private:
 	 * Create a logger
 	 * */
 	Logger(const std::string logger_name = LOG_NAME, const std::string filename = LOG_FILE_NAME, size_t max_file_size = DEFAULT_LOG_FILE_SIZE, size_t max_files = DEFAULT_LOG_FILE_NUMBER, bool force_flush = true) {
-        _spdlog = rotating_logger_mt(logger_name, filename, max_file_size, max_files, force_flush);
+        _spdlog = spdlog::rotating_logger_mt(logger_name, filename, max_file_size, max_files);
 		_spdlog->set_level((spdlog::level::level_enum) debug);
 	}
 	//! spdlog
 	std::shared_ptr<logger> _spdlog;
-
+	static std::mutex logger_mutex_;
 	//! Singleton logger instance
 	static Logger *_logger;
 };

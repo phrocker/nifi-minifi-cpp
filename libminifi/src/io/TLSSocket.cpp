@@ -142,6 +142,7 @@ TLSSocket::TLSSocket(const TLSSocket &&d) :
 }
 
 short TLSSocket::initialize() {
+	std::cout << "inittls" << std::endl;
 	TLSContext *context = TLSContext::getInstance();
 	short ret = context->initialize();
 	Socket::initialize();

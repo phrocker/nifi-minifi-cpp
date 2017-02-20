@@ -212,9 +212,13 @@ Processor *ProcessGroup::findProcessor(uuid_t uuid)
 		logger_->log_info("find processor %s",processor->getName().c_str());
 		uuid_t processorUUID;
 		if (processor->getUUID(processorUUID) && uuid_compare(processorUUID, uuid) == 0)
+		{
+			logger_->log_info("found");
 			return processor;
+		}
+		logger_->log_info("found");
 	}
-
+	logger_->log_info("okay");
 	for (std::set<ProcessGroup *>::iterator it = _childProcessGroups.begin(); it != _childProcessGroups.end(); ++it)
 	{
 
