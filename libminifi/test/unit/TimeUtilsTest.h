@@ -22,7 +22,7 @@
 #include "utils/TimeUtil.h"
 
 TEST_CASE("Test time conversion", "[testtimeconversion]"){
-	REQUIRE ( "2017-02-16 15:14:56.196" == getTimeStr(1487276096196) );
+	REQUIRE ( "2017-02-16 20:14:56.196" == getTimeStr(1487276096196,true) );
 }
 
 

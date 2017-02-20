@@ -54,13 +54,13 @@ inline uint64_t getTimeNano() {
  * @param msec milliseconds since epoch
  * @returns string representing the time
  */
-inline std::string getTimeStr(uint64_t msec)
+inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false)
 {
 	char date[120];
 	time_t second = (time_t) (msec/1000);
 	msec = msec % 1000;
 	strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT,
-	             localtime(&second));
+	             ( enforce_locale==true ? gmtime(&second) : localtime(&second)));
 
 	std::string ret = date;
 	date[0] = '\0';
