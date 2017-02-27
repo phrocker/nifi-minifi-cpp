@@ -20,118 +20,109 @@
 
 #include "Provenance.h"
 #include "FlowController.h"
-
+#include "core/core.h"
 /**
  * Test repository
  */
-class ProvenanceTestRepository : public ProvenanceRepository
-{
-public:
-	ProvenanceTestRepository()
-{
-}
-		//! initialize
-		bool initialize()
-		{
-			return true;
-		}
+class ProvenanceTestRepository : public minifi::ProvenanceRepository {
+ public:
+  ProvenanceTestRepository() {
+  }
+  //! initialize
+  bool initialize() {
+    return true;
+  }
 
-		//! Destructor
-		virtual ~ProvenanceTestRepository() {
+  //! Destructor
+  virtual ~ProvenanceTestRepository() {
 
-		}
+  }
 
-		bool Put(std::string key, uint8_t *buf, int bufLen)
-		{
-			repositoryResults.insert(std::pair<std::string,std::string>(key,std::string((const char*)buf,bufLen)));
-			return true;
-		}
-		//! Delete
-		bool Delete(std::string key)
-		{
-			repositoryResults.erase(key);
-			return true;
-		}
-		//! Get
-		bool Get(std::string key, std::string &value)
-		{
-			auto result = repositoryResults.find(key);
-			if (result != repositoryResults.end())
-			{
-				value = result->second;
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
+  bool Put(std::string key, uint8_t *buf, int bufLen) {
+    repositoryResults.insert(
+        std::pair<std::string, std::string>(
+            key, std::string((const char*) buf, bufLen)));
+    return true;
+  }
+  //! Delete
+  bool Delete(std::string key) {
+    repositoryResults.erase(key);
+    return true;
+  }
+  //! Get
+  bool Get(std::string key, std::string &value) {
+    auto result = repositoryResults.find(key);
+    if (result != repositoryResults.end()) {
+      value = result->second;
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-		const std::map<std::string,std::string> &getRepoMap() const
-		{
-			return repositoryResults;
-		}
+  const std::map<std::string, std::string> &getRepoMap() const {
+    return repositoryResults;
+  }
 
-protected:
-		std::map<std::string,std::string> repositoryResults;
+ protected:
+  std::map<std::string, std::string> repositoryResults;
 };
 
+class TestFlowController : public minifi::FlowController {
 
-class TestFlowController : public FlowController
-{
+ public:
+  TestFlowController(ProvenanceTestRepository &repo)
+      : minifi::FlowController() {
+    _provenanceRepo = dynamic_cast<minifi::ProvenanceRepository*>(&repo);
+  }
+  ~TestFlowController() {
 
-public:
-	TestFlowController(ProvenanceTestRepository &repo) : ::FlowController()
-	{
-		_provenanceRepo = dynamic_cast<ProvenanceRepository*>(&repo);
-	}
-	~TestFlowController()
-	{
+  }
+  void load() {
 
-	}
-	void load(){
+  }
 
-	}
+  bool start() {
+    _running.store(true);
+    return true;
+  }
 
-	bool start()
-	{
-		_running.store(true);
-		return true;
-	}
+  void stop(bool force) {
+    _running.store(false);
+  }
+  void waitUnload(const uint64_t timeToWaitMs) {
+    stop(true);
+  }
 
-	void stop(bool force)
-	{
-		_running.store(false);
-	}
-	void waitUnload(const uint64_t timeToWaitMs)
-	{
-		stop(true);
-	}
+  void unload() {
+    stop(true);
+  }
 
-	void unload()
-	{
-		stop(true);
-	}
+  void reload(std::string file) {
 
-	void reload(std::string file)
-	{
+  }
 
-	}
+  bool isRunning() {
+    return true;
+  }
 
-	bool isRunning()
-	{
-		return true;
-	}
+  std::shared_ptr<core::Processor> createProcessor(std::string name,
+                                                   uuid_t uuid) {
+    return 0;
+  }
 
+  core::ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid) {
+    return 0;
+  }
 
-	Processor *createProcessor(std::string name, uuid_t uuid){ return 0;}
+  core::ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid) {
+    return 0;
+  }
 
-	ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid){ return 0;}
-
-	ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid){ return 0; }
-
-	Connection *createConnection(std::string name, uuid_t uuid){ return 0; }
+  std::shared_ptr<minifi::Connection> createConnection(std::string name,
+                                                       uuid_t uuid) {
+    return 0;
+  }
 };
-
 
 #endif /* LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_ */

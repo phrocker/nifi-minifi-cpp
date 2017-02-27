@@ -23,6 +23,12 @@
 
 #include "ResourceClaim.h"
 
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
 std::atomic<uint64_t> ResourceClaim::_localResourceClaimNumber(0);
 
 
@@ -44,6 +50,12 @@ ResourceClaim::ResourceClaim(const std::string contentDirectory)
 	_contentFullPath = contentDirectory + "/" + uuidStr;
 
 	configure_ = Configure::getConfigure();
-	logger_ = Logger::getLogger();
+	logger_ = logging::Logger::getLogger();
 	logger_->log_debug("Resource Claim created %s", _contentFullPath.c_str());
 }
+
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

@@ -27,8 +27,14 @@
 #include <errno.h>
 #include <iostream>
 #include <fstream>
+#include "core/core.h"
+#include "core/logging/Logger.h"
 
-#include "Logger.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
 class Configure {
 public:
@@ -101,13 +107,13 @@ private:
 	//! Mutex for protection
 	std::mutex _mtx;
 	//! Logger
-	std::shared_ptr<Logger> logger_;
+	std::shared_ptr<logging::Logger> logger_;
 	//! Home location for this executable
 	std::string _minifiHome;
 
 	Configure()
 	{
-		logger_ = Logger::getLogger();
+		logger_ = logging::Logger::getLogger();
 	}
 	virtual ~Configure()
 	{
@@ -119,4 +125,8 @@ protected:
 	std::map<std::string,std::string> _properties;
 };
 
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif

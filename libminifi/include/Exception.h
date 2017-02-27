@@ -26,6 +26,12 @@
 #include <errno.h>
 #include <string.h>
 
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
 //! ExceptionType 
 enum ExceptionType 
 {
@@ -91,4 +97,8 @@ private:
 
 };
 
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif

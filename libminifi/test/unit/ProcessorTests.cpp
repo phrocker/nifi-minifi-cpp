@@ -20,131 +20,119 @@
 #include "FlowController.h"
 #include "ProvenanceTestHelper.h"
 #include "../TestBase.h"
-#include "GetFile.h"
+#include "core/logging/LogAppenders.h"
+#include "core/logging/BaseLogger.h"
+#include "processors/GetFile.h"
+#include "core/core.h"
+#include "core/Record.h"
+#include "core/Processor.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "core/ProcessorNode.h"
 
-
-TEST_CASE("Test Creation of GetFile", "[getfileCreate]"){
-	GetFile processor("processorname");
-	REQUIRE( processor.getName() == "processorname");
+TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
+  org::apache::nifi::minifi::processors::GetFile processor("processorname");
+  REQUIRE(processor.getName() == "processorname");
 }
 
+TEST_CASE("Test Find file", "[getfileCreate2]") {
 
-TEST_CASE("Test Find file", "[getfileCreate2]"){
+  TestController testController;
 
-	TestController testController;
+  testController.enableDebug();
 
-	testController.enableDebug();
+  ProvenanceTestRepository repo;
+  TestFlowController controller(repo);
+  minifi::FlowControllerFactory::getFlowController(
+      dynamic_cast<minifi::FlowController*>(&controller));
 
-	ProvenanceTestRepository repo;
-	TestFlowController controller(repo);
-	FlowControllerFactory::getFlowController( dynamic_cast<FlowController*>(&controller));
+  std::shared_ptr<core::Processor> processor = std::make_shared<
+      org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
-	GetFile processor("getfileCreate2");
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
 
-	char format[] ="/tmp/gt.XXXXXX";
-	char *dir = testController.createTempDirectory(format);
+  uuid_t processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
 
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<
+      minifi::Connection>("getfileCreate2Connection");
+  connection->setRelationship(core::Relationship("success", "description"));
 
-	uuid_t processoruuid;
-	REQUIRE( true == processor.getUUID(processoruuid) );
+  // link the connections so that we can test results at the end for this
+  connection->setSource(processor);
 
-	Connection connection("getfileCreate2Connection");
-	connection.setRelationship(Relationship("success","description"));
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(processoruuid);
 
-	// link the connections so that we can test results at the end for this
+  processor->addConnection(connection);
+  REQUIRE(dir != NULL);
 
-	connection.setSourceProcessor(&processor);
+  core::ProcessorNode node(processor);
 
+  core::ProcessContext context(node);
+  context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
+                      dir);
+  core::ProcessSession session(&context);
 
-	connection.setSourceProcessorUUID(processoruuid);
-	connection.setDestinationProcessorUUID(processoruuid);
+  REQUIRE(processor->getName() == "getfileCreate2");
 
-	processor.addConnection(&connection);
-	REQUIRE( dir != NULL );
+  std::shared_ptr<core::Record> record;
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->onTrigger(&context, &session);
 
-	ProcessContext context(&processor);
-	context.setProperty(GetFile::Directory,dir);
-	ProcessSession session(&context);
+  minifi::ProvenanceReporter *reporter = session.getProvenanceReporter();
+  std::set<minifi::ProvenanceEventRecord*> records = reporter->getEvents();
+  record = session.get();
+  REQUIRE(record == nullptr);
+  REQUIRE(records.size() == 0);
 
+  std::fstream file;
+  std::stringstream ss;
+  ss << dir << "/" << "tstFile.ext";
+  file.open(ss.str(), std::ios::out);
+  file << "tempFile";
+  file.close();
 
-	REQUIRE( processor.getName() == "getfileCreate2");
+  processor->incrementActiveTasks();
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->onTrigger(&context, &session);
+  unlink(ss.str().c_str());
+  rmdir(dir);
+  reporter = session.getProvenanceReporter();
 
-	FlowFileRecord *record;
-	processor.setScheduledState(ScheduledState::RUNNING);
-	processor.onTrigger(&context,&session);
+  records = reporter->getEvents();
 
-	ProvenanceReporter *reporter = session.getProvenanceReporter();
-	std::set<ProvenanceEventRecord*> records = reporter->getEvents();
+  for (minifi::ProvenanceEventRecord *provEventRecord : records) {
+    REQUIRE(provEventRecord->getComponentType() == processor->getName());
+  }
+  session.commit();
+  std::shared_ptr<core::Record> ffr = session.get();
 
-	record = session.get();
-	REQUIRE( record== 0 );
-	REQUIRE( records.size() == 0 );
+  ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
+  REQUIRE(2 == repo.getRepoMap().size());
 
-	std::fstream file;
-	std::stringstream ss;
-	ss << dir << "/" << "tstFile.ext";
-	file.open(ss.str(),std::ios::out);
-	file << "tempFile";
-	file.close();
+  for (auto entry : repo.getRepoMap()) {
+    minifi::ProvenanceEventRecord newRecord;
+    newRecord.DeSerialize((uint8_t*) entry.second.data(),
+                          entry.second.length());
 
-	processor.incrementActiveTasks();
-	processor.setScheduledState(ScheduledState::RUNNING);
-	processor.onTrigger(&context,&session);
-	unlink(ss.str().c_str());
-	rmdir(dir);
+    bool found = false;
+    for (auto provRec : records) {
+      if (provRec->getEventId() == newRecord.getEventId()) {
+        REQUIRE(provRec->getEventId() == newRecord.getEventId());
+        REQUIRE(provRec->getComponentId() == newRecord.getComponentId());
+        REQUIRE(provRec->getComponentType() == newRecord.getComponentType());
+        REQUIRE(provRec->getDetails() == newRecord.getDetails());
+        REQUIRE(provRec->getEventDuration() == newRecord.getEventDuration());
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+      throw std::runtime_error("Did not find record");
 
-	reporter = session.getProvenanceReporter();
-
-	records = reporter->getEvents();
-
-	for(ProvenanceEventRecord *provEventRecord : records)
-	{
-		REQUIRE (provEventRecord->getComponentType() == processor.getName());
-	}
-	session.commit();
-
-	FlowFileRecord *ffr = session.get();
-
-	ffr->getResourceClaim()->decreaseFlowFileRecordOwnedCount();
-
-	delete ffr;
-
-	std::set<FlowFileRecord*> expiredFlows;
-
-	REQUIRE( 2 == repo.getRepoMap().size() );
-
-	for(auto  entry: repo.getRepoMap())
-	{
-		ProvenanceEventRecord newRecord;
-		newRecord.DeSerialize((uint8_t*)entry.second.data(),entry.second.length());
-
-		bool found = false;
-		for ( auto provRec : records)
-		{
-			if (provRec->getEventId() == newRecord.getEventId() )
-			{
-				REQUIRE( provRec->getEventId() == newRecord.getEventId());
-				REQUIRE( provRec->getComponentId() == newRecord.getComponentId());
-				REQUIRE( provRec->getComponentType() == newRecord.getComponentType());
-				REQUIRE( provRec->getDetails() == newRecord.getDetails());
-				REQUIRE( provRec->getEventDuration() == newRecord.getEventDuration());
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-		throw std::runtime_error("Did not find record");
-
-
-	}
-
-
-
-
-
+  }
 
 }
-
-
-
 

@@ -29,6 +29,12 @@
 #include <atomic>
 #include "Configure.h"
 
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+
+
 //! Default content directory
 #define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
@@ -83,7 +89,7 @@ private:
 	//! Configure
 	Configure *configure_;
 	//! Logger
-	std::shared_ptr<Logger> logger_;
+	std::shared_ptr<logging::Logger> logger_;
 	// Prevent default copy constructor and assignment operation
 	// Only support pass by reference or pointer
 	ResourceClaim(const ResourceClaim &parent);
@@ -93,4 +99,8 @@ private:
 	static std::atomic<uint64_t> _localResourceClaimNumber;
 };
 
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
 #endif

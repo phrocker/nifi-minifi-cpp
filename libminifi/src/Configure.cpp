@@ -19,6 +19,12 @@
  */
 #include "Configure.h"
 #include "utils/StringUtils.h"
+#include "core/core.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
 Configure *Configure::configure_(NULL);
 const char *Configure::nifi_flow_configuration_file = "nifi.flow.configuration.file";
@@ -91,8 +97,8 @@ void Configure::parseConfigureFileLine(char *buf)
     }
 
     std::string value = equal;
-    key = StringUtils::trimRight(key);
-    value = StringUtils::trimRight(value);
+    key = org::apache::nifi::minifi::utils::StringUtils::trimRight(key);
+    value = org::apache::nifi::minifi::utils::StringUtils::trimRight(value);
     set(key, value);
 }
 
@@ -157,3 +163,8 @@ void Configure::parseCommandLine(int argc, char **argv)
 	}
 	return;
 }
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */

@@ -28,142 +28,135 @@
 #include <iostream>
 
 #include "Connection.h"
-#include "Processor.h"
+#include "core/Processor.h"
 
-Connection::Connection(std::string name, uuid_t uuid, uuid_t srcUUID, uuid_t destUUID)
-: _name(name)
-{
-	if (!uuid)
-		// Generate the global UUID for the flow record
-		uuid_generate(_uuid);
-	else
-		uuid_copy(_uuid, uuid);
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-	if (srcUUID)
-		uuid_copy(_srcUUID, srcUUID);
-	if (destUUID)
-		uuid_copy(_destUUID, destUUID);
+Connection::Connection(std::string name, uuid_t uuid, uuid_t srcUUID,
+                       uuid_t destUUID)
+    : core::Connectable(name, uuid) {
 
-	_srcProcessor = NULL;
-	_destProcessor = NULL;
-	_maxQueueSize = 0;
-	_maxQueueDataSize = 0;
-	_expiredDuration = 0;
-	_queuedDataSize = 0;
+  if (srcUUID)
+    uuid_copy(_srcUUID, srcUUID);
+  if (destUUID)
+    uuid_copy(_destUUID, destUUID);
 
-	logger_ = Logger::getLogger();
+  _srcProcessor = NULL;
+  _destProcessor = NULL;
+  _maxQueueSize = 0;
+  _maxQueueDataSize = 0;
+  _expiredDuration = 0;
+  _queuedDataSize = 0;
 
-	logger_->log_info("Connection %s created", _name.c_str());
+  logger_ = logging::Logger::getLogger();
+
+  logger_->log_info("Connection %s created", name_.c_str());
 }
 
-bool Connection::isEmpty()
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+bool Connection::isEmpty() {
+  std::lock_guard<std::mutex> lock(_mtx);
 
-	return _queue.empty();
+  return queue_.empty();
 }
 
-bool Connection::isFull()
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+bool Connection::isFull() {
+  std::lock_guard<std::mutex> lock(_mtx);
 
-	if (_maxQueueSize <= 0 && _maxQueueDataSize <= 0)
-		// No back pressure setting
-		return false;
+  if (_maxQueueSize <= 0 && _maxQueueDataSize <= 0)
+    // No back pressure setting
+    return false;
 
-	if (_maxQueueSize > 0 && _queue.size() >= _maxQueueSize)
-		return true;
+  if (_maxQueueSize > 0 && queue_.size() >= _maxQueueSize)
+    return true;
 
-	if (_maxQueueDataSize > 0 && _queuedDataSize >= _maxQueueDataSize)
-		return true;
+  if (_maxQueueDataSize > 0 && _queuedDataSize >= _maxQueueDataSize)
+    return true;
 
-	return false;
+  return false;
 }
 
-void Connection::put(FlowFileRecord *flow)
-{
-	{
-		std::lock_guard<std::mutex> lock(_mtx);
-	
-		_queue.push(flow);
-	
-		_queuedDataSize += flow->getSize();
-	
-		logger_->log_debug("Enqueue flow file UUID %s to connection %s",
-				flow->getUUIDStr().c_str(), _name.c_str());
-	}
+void Connection::put(std::shared_ptr<core::Record> flow) {
+  {
+    std::lock_guard<std::mutex> lock(_mtx);
 
-	// Notify receiving processor that work may be available
-	if(_destProcessor)
-	{
-		_destProcessor->notifyWork();
-	}
+    queue_.push(flow);
+
+    _queuedDataSize += flow->getSize();
+
+    logger_->log_debug("Enqueue flow file UUID %s to connection %s",
+                       flow->getUUIDStr().c_str(), name_.c_str());
+  }
+
+  // Notify receiving processor that work may be available
+  if (_destProcessor) {
+    _destProcessor->notifyWork();
+  }
 }
 
-FlowFileRecord* Connection::poll(std::set<FlowFileRecord *> &expiredFlowRecords)
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+std::shared_ptr<core::Record> Connection::poll(
+    std::set<std::shared_ptr<core::Record>> &expiredFlowRecords) {
+  std::lock_guard<std::mutex> lock(_mtx);
 
-	while (!_queue.empty())
-	{
-		FlowFileRecord *item = _queue.front();
-		_queue.pop();
-		_queuedDataSize -= item->getSize();
+  while (!queue_.empty()) {
+    std::shared_ptr<core::Record> item = queue_.front();
+    queue_.pop();
+    _queuedDataSize -= item->getSize();
 
-		if (_expiredDuration > 0)
-		{
-			// We need to check for flow expiration
-			if (getTimeMillis() > (item->getEntryDate() + _expiredDuration))
-			{
-				// Flow record expired
-				expiredFlowRecords.insert(item);
-			}
-			else
-			{
-				// Flow record not expired
-				if (item->isPenalized())
-				{
-					// Flow record was penalized
-					_queue.push(item);
-					_queuedDataSize += item->getSize();
-					break;
-				}
-				item->setOriginalConnection(this);
-				logger_->log_debug("Dequeue flow file UUID %s from connection %s",
-						item->getUUIDStr().c_str(), _name.c_str());
-				return item;
-			}
-		}
-		else
-		{
-			// Flow record not expired
-			if (item->isPenalized())
-			{
-				// Flow record was penalized
-				_queue.push(item);
-				_queuedDataSize += item->getSize();
-				break;
-			}
-			item->setOriginalConnection(this);
-			logger_->log_debug("Dequeue flow file UUID %s from connection %s",
-					item->getUUIDStr().c_str(), _name.c_str());
-			return item;
-		}
-	}
+    if (_expiredDuration > 0) {
+      // We need to check for flow expiration
+      if (getTimeMillis() > (item->getEntryDate() + _expiredDuration)) {
+        // Flow record expired
+        expiredFlowRecords.insert(item);
+      } else {
+        // Flow record not expired
+        if (item->isPenalized()) {
+          // Flow record was penalized
+          queue_.push(item);
+          _queuedDataSize += item->getSize();
+          break;
+        }
+        std::shared_ptr<Connectable> connectable = std::static_pointer_cast<
+            Connectable>(shared_from_this());
+        item->setOriginalConnection(connectable);
+        logger_->log_debug("Dequeue flow file UUID %s from connection %s",
+                           item->getUUIDStr().c_str(), name_.c_str());
+        return item;
+      }
+    } else {
+      // Flow record not expired
+      if (item->isPenalized()) {
+        // Flow record was penalized
+        queue_.push(item);
+        _queuedDataSize += item->getSize();
+        break;
+      }
+      std::shared_ptr<Connectable> connectable = std::static_pointer_cast<
+          Connectable>(shared_from_this());
+      item->setOriginalConnection(connectable);
+      logger_->log_debug("Dequeue flow file UUID %s from connection %s",
+                         item->getUUIDStr().c_str(), name_.c_str());
+      return item;
+    }
+  }
 
-	return NULL;
+  return NULL;
 }
 
-void Connection::drain()
-{
-	std::lock_guard<std::mutex> lock(_mtx);
+void Connection::drain() {
+  std::lock_guard<std::mutex> lock(_mtx);
 
-	while (!_queue.empty())
-	{
-		FlowFileRecord *item = _queue.front();
-		_queue.pop();
-		delete item;
-	}
+  while (!queue_.empty()) {
+    auto &&item = queue_.front();
+    queue_.pop();
+  }
 
-	logger_->log_debug("Drain connection %s", _name.c_str());
+  logger_->log_debug("Drain connection %s", name_.c_str());
 }
+
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
