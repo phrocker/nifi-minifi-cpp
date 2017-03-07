@@ -39,7 +39,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-FlowController *FlowControllerFactory::_flowController(NULL);
+std::atomic<FlowController*> FlowControllerFactory::flow_controller_instance_;
+std::mutex FlowControllerFactory::context_mutex_;
 
 FlowControllerImpl::FlowControllerImpl(std::string name) {
   uuid_generate(_uuid);
