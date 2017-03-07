@@ -136,3 +136,125 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
 }
 
+TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
+    std::ostringstream oss;
+    std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+            logging::BaseLogger>(
+            new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+            0));
+    std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+    logger->updateLogger(std::move(outputLogger));
+
+    TestController testController;
+
+    testController.enableDebug();
+
+    ProvenanceTestRepository repo;
+    TestFlowController controller(repo);
+    minifi::FlowControllerFactory::getFlowController(
+            dynamic_cast<minifi::FlowController*>(&controller));
+
+    std::shared_ptr<core::Processor> processor = std::make_shared<
+            org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
+
+    std::shared_ptr<core::Processor> logAttribute = std::make_shared<
+            org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+
+    char format[] = "/tmp/gt.XXXXXX";
+char *dir = testController.createTempDirectory(format);
+
+    uuid_t processoruuid;
+    REQUIRE(true == processor->getUUID(processoruuid));
+
+    uuid_t logattribute_uuid;
+    REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
+
+    std::shared_ptr<minifi::Connection> connection = std::make_shared<
+            minifi::Connection>("getfileCreate2Connection");
+    connection->setRelationship(core::Relationship("success", "description"));
+
+    std::shared_ptr<minifi::Connection> connection2 = std::make_shared<
+            minifi::Connection>("logattribute");
+    connection2->setRelationship(core::Relationship("success", "description"));
+
+    // link the connections so that we can test results at the end for this
+    connection->setSource(processor);
+
+    // link the connections so that we can test results at the end for this
+    connection->setDestination(logAttribute);
+
+    connection2->setSource(logAttribute);
+
+    connection2->setSourceUUID(logattribute_uuid);
+    connection->setSourceUUID(processoruuid);
+    connection->setDestinationUUID(logattribute_uuid);
+
+    processor->addConnection(connection);
+    logAttribute->addConnection(connection);
+    logAttribute->addConnection(connection2);
+    REQUIRE(dir != NULL);
+
+    core::ProcessorNode node(processor);
+    core::ProcessorNode node2(logAttribute);
+
+    core::ProcessContext context(node);
+    core::ProcessContext context2(node2);
+    context.setProperty(org::apache::nifi::minifi::processors::GetFile::Directory,
+            dir);
+    core::ProcessSession session(&context);
+    core::ProcessSession session2(&context2);
+
+    REQUIRE(processor->getName() == "getfileCreate2");
+
+    std::shared_ptr<core::Record> record;
+    processor->setScheduledState(core::ScheduledState::RUNNING);
+    processor->onTrigger(&context, &session);
+
+    logAttribute->incrementActiveTasks();
+    logAttribute->setScheduledState(core::ScheduledState::RUNNING);
+    logAttribute->onTrigger(&context2, &session2);
+
+    minifi::ProvenanceReporter *reporter = session.getProvenanceReporter();
+    std::set<minifi::ProvenanceEventRecord*> records = reporter->getEvents();
+    record = session.get();
+    REQUIRE(record == nullptr);
+    REQUIRE(records.size() == 0);
+
+    std::fstream file;
+    std::stringstream ss;
+    ss << dir << "/" << "tstFile.ext";
+    file.open(ss.str(), std::ios::out);
+    file << "tempFile";
+    file.close();
+
+    processor->incrementActiveTasks();
+    processor->setScheduledState(core::ScheduledState::RUNNING);
+    processor->onTrigger(&context, &session);
+    unlink(ss.str().c_str());
+    rmdir(dir);
+    reporter = session.getProvenanceReporter();
+
+    records = reporter->getEvents();
+    session.commit();
+    oss.str("");
+    oss.clear();
+
+    logAttribute->incrementActiveTasks();
+    logAttribute->setScheduledState(core::ScheduledState::RUNNING);
+    logAttribute->onTrigger(&context2, &session2);
+
+    //session2.commit();
+    records = reporter->getEvents();
+
+
+    std::string log_attribute_output = oss.str();
+    REQUIRE(log_attribute_output.find("key:absolute.path value:" + ss.str()) != std::string::npos);
+    REQUIRE(log_attribute_output.find("Size:8 Offset:0") != std::string::npos);
+    REQUIRE(log_attribute_output.find("key:path value:" + std::string(dir)) != std::string::npos);
+
+    outputLogger = std::unique_ptr<
+            logging::BaseLogger>(
+            new org::apache::nifi::minifi::core::logging::NullAppender());
+    logger->updateLogger(std::move(outputLogger));
+
+}
