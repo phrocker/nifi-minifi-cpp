@@ -58,14 +58,10 @@
 #include <openssl/err.h>
 #include "core/Property.h"
 
-
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-
-
 
 //! Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
@@ -166,14 +162,14 @@ class FlowController {
   }
 
   //! Create Processor (Node/Input/Output Port) based on the name
-  virtual std::shared_ptr<core::Processor> createProcessor(
-      std::string name, uuid_t uuid) = 0;
+  virtual std::shared_ptr<core::Processor> createProcessor(std::string name,
+                                                           uuid_t uuid) = 0;
   //! Create Root Processor Group
-  virtual core::ProcessGroup *createRootProcessGroup(
-      std::string name, uuid_t uuid) = 0;
+  virtual core::ProcessGroup *createRootProcessGroup(std::string name,
+                                                     uuid_t uuid) = 0;
   //! Create Remote Processor Group
-  virtual core::ProcessGroup *createRemoteProcessGroup(
-      std::string name, uuid_t uuid) = 0;
+  virtual core::ProcessGroup *createRemoteProcessGroup(std::string name,
+                                                       uuid_t uuid) = 0;
   //! Create Connection
   virtual std::shared_ptr<Connection> createConnection(std::string name,
                                                        uuid_t uuid) = 0;
@@ -267,14 +263,12 @@ class FlowControllerImpl : public FlowController {
   }
 
   //! Create Processor (Node/Input/Output Port) based on the name
-  std::shared_ptr<core::Processor> createProcessor(
-      std::string name, uuid_t uuid);
+  std::shared_ptr<core::Processor> createProcessor(std::string name,
+                                                   uuid_t uuid);
   //! Create Root Processor Group
-  core::ProcessGroup *createRootProcessGroup(
-      std::string name, uuid_t uuid);
+  core::ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid);
   //! Create Remote Processor Group
-  core::ProcessGroup *createRemoteProcessGroup(
-      std::string name, uuid_t uuid);
+  core::ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid);
   //! Create Connection
   std::shared_ptr<Connection> createConnection(std::string name, uuid_t uuid);
 
@@ -294,29 +288,24 @@ class FlowControllerImpl : public FlowController {
   std::shared_ptr<logging::Logger> logger_;
   Configure *configure_;
   //! Process Processor Node YAML
-  void parseProcessorNodeYaml(
-      YAML::Node processorNode,
-      core::ProcessGroup *parent);
+  void parseProcessorNodeYaml(YAML::Node processorNode,
+                              core::ProcessGroup *parent);
   //! Process Port YAML
-  void parsePortYaml(YAML::Node *portNode,
-                     core::ProcessGroup *parent,
+  void parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent,
                      TransferDirection direction);
   //! Process Root Processor Group YAML
   void parseRootProcessGroupYaml(YAML::Node rootNode);
   //! Process Property YAML
-  void parseProcessorPropertyYaml(
-      YAML::Node *doc, YAML::Node *node,
-      std::shared_ptr<core::Processor> processor);
+  void parseProcessorPropertyYaml(YAML::Node *doc, YAML::Node *node,
+                                  std::shared_ptr<core::Processor> processor);
   //! Process connection YAML
-  void parseConnectionYaml(
-      YAML::Node *node, core::ProcessGroup *parent);
+  void parseConnectionYaml(YAML::Node *node, core::ProcessGroup *parent);
   //! Process Remote Process Group YAML
-  void parseRemoteProcessGroupYaml(
-      YAML::Node *node, core::ProcessGroup *parent);
+  void parseRemoteProcessGroupYaml(YAML::Node *node,
+                                   core::ProcessGroup *parent);
   //! Parse Properties Node YAML for a processor
-  void parsePropertiesNodeYaml(
-      YAML::Node *propertiesNode,
-      std::shared_ptr<core::Processor> processor);
+  void parsePropertiesNodeYaml(YAML::Node *propertiesNode,
+                               std::shared_ptr<core::Processor> processor);
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
@@ -333,13 +322,26 @@ class FlowControllerFactory {
  public:
   //! Get the singleton flow controller
   static FlowController * getFlowController(FlowController *instance = 0) {
-    if (!_flowController) {
-      if (NULL == instance)
-        _flowController = createFlowController();
-      else
-        _flowController = instance;
+    FlowController* atomic_context = flow_controller_instance_.load(
+        std::memory_order_relaxed);
+    std::atomic_thread_fence(std::memory_order_acquire);
+    if (atomic_context == nullptr) {
+      std::lock_guard<std::mutex> lock(context_mutex_);
+      atomic_context = flow_controller_instance_.load(
+          std::memory_order_relaxed);
+      if (atomic_context == nullptr) {
+        if (NULL == instance)
+          atomic_context = createFlowController();
+        else
+          atomic_context = instance;
+
+        std::atomic_thread_fence(std::memory_order_release);
+        flow_controller_instance_.store(atomic_context,
+                                        std::memory_order_relaxed);
+      }
     }
-    return _flowController;
+
+    return atomic_context;
   }
 
   //! Get the singleton flow controller
@@ -347,9 +349,10 @@ class FlowControllerFactory {
     return dynamic_cast<FlowController*>(new FlowControllerImpl());
   }
  private:
-  static FlowController *_flowController;
-};
-
+  static std::atomic<FlowController*> flow_controller_instance_;
+  static std::mutex context_mutex_;
+}
+;
 
 } /* namespace minifi */
 } /* namespace nifi */
