@@ -42,9 +42,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   testController.enableDebug();
 
   ProvenanceTestRepository repo;
-  TestFlowController controller(repo);
-  minifi::FlowControllerFactory::getFlowController(
-      dynamic_cast<minifi::FlowController*>(&controller));
+  minifi::FlowControllerFactory::getFlowController(std::make_shared<TestFlowController>(repo));
 
   std::shared_ptr<core::Processor> processor = std::make_shared<
       org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
@@ -150,9 +148,8 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
     testController.enableDebug();
 
     ProvenanceTestRepository repo;
-    TestFlowController controller(repo);
     minifi::FlowControllerFactory::getFlowController(
-            dynamic_cast<minifi::FlowController*>(&controller));
+            std::make_shared<TestFlowController>(repo));
 
     std::shared_ptr<core::Processor> processor = std::make_shared<
             org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");

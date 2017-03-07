@@ -321,14 +321,15 @@ class FlowControllerImpl : public FlowController {
 class FlowControllerFactory {
  public:
   //! Get the singleton flow controller
-  static FlowController * getFlowController(FlowController *instance = 0) {
-    FlowController* atomic_context = flow_controller_instance_.load(
+  static std::shared_ptr<FlowController> getFlowController(std::shared_ptr<FlowController> instance = 0) {
+    std::shared_ptr<FlowController> atomic_context = flow_controller_instance_.load(
         std::memory_order_relaxed);
     std::atomic_thread_fence(std::memory_order_acquire);
-    if (atomic_context == nullptr) {
+    if (atomic_context == nullptr || instance != 0) {
       std::lock_guard<std::mutex> lock(context_mutex_);
       atomic_context = flow_controller_instance_.load(
           std::memory_order_relaxed);
+      if (instance != 0 && atomic_context )
       if (atomic_context == nullptr) {
         if (NULL == instance)
           atomic_context = createFlowController();
@@ -345,11 +346,11 @@ class FlowControllerFactory {
   }
 
   //! Get the singleton flow controller
-  static FlowController * createFlowController() {
-    return dynamic_cast<FlowController*>(new FlowControllerImpl());
+  static std::shared_ptr<FlowController> createFlowController() {
+    return std::make_shared<FlowControllerImpl>();
   }
  private:
-  static std::atomic<FlowController*> flow_controller_instance_;
+  static std::atomic<std::shared_ptr<FlowController>> flow_controller_instance_;
   static std::mutex context_mutex_;
 }
 ;

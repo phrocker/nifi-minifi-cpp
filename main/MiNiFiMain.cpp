@@ -56,7 +56,7 @@
 // Variables that allow us to avoid a timed wait.
 sem_t *running;
 //! Flow Controller
-static minifi::FlowController *controller = NULL;
+static std::shared_ptr<minifi::FlowController> controller = nullptr;
 
 /**
  * Removed the stop command from the signal handler so that we could trigger

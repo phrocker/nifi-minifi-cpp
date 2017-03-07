@@ -39,7 +39,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-std::atomic<FlowController*> FlowControllerFactory::flow_controller_instance_;
+std::atomic<std::shared_ptr<FlowController>> FlowControllerFactory::flow_controller_instance_;
 std::mutex FlowControllerFactory::context_mutex_;
 
 FlowControllerImpl::FlowControllerImpl(std::string name) {
