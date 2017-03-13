@@ -36,7 +36,7 @@
 #include <uuid/uuid.h>
 
 #include "core/Property.h"
-#include "Configure.h"
+#include "properties/Configure.h"
 #include "Site2SitePeer.h"
 #include "FlowFileRecord.h"
 #include "core/logging/Logger.h"

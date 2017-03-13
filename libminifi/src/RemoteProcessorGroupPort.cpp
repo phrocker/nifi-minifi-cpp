@@ -40,6 +40,7 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+  
 
 const std::string RemoteProcessorGroupPort::ProcessorName(
     "RemoteProcessorGroupPort");
@@ -70,6 +71,13 @@ void RemoteProcessorGroupPort::onTrigger(
 
   if (!transmitting_)
     return;
+  
+  // Peer Connection
+  static thread_local Site2SitePeer peer_;
+  static thread_local std::unique_ptr<Site2SiteClientProtocol> protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
+        new Site2SiteClientProtocol(0));
+    protocol_->setPortId(protocol_uuid_);
+    protocol_->setTimeOut(timeout_);
 
   std::string host = peer_.getHostName();
   uint16_t sport = peer_.getPort();

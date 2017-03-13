@@ -41,12 +41,10 @@ class RemoteProcessorGroupPort :
   RemoteProcessorGroupPort(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid),
         direction_(SEND),
-        transmitting_(false),
-        peer_() {
+        transmitting_(false){
     logger_ = logging::Logger::getLogger();
-    protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
-        new Site2SiteClientProtocol(0));
-    protocol_->setPortId(uuid);
+    uuid_copy(protocol_uuid_,uuid);
+    timeout_ = 30000;
   }
   // Destructor
   virtual ~RemoteProcessorGroupPort() {
@@ -74,7 +72,8 @@ class RemoteProcessorGroupPort :
   }
   // Set Timeout
   void setTimeOut(uint64_t timeout) {
-    protocol_->setTimeOut(timeout);
+    timeout_ = timeout;
+    //protocol_->setTimeOut(timeout);
   }
   // SetTransmitting
   void setTransmitting(bool val) {
@@ -86,14 +85,14 @@ class RemoteProcessorGroupPort :
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  // Peer Connection
-  Site2SitePeer peer_;
-  // Peer Protocol
-  std::unique_ptr<Site2SiteClientProtocol> protocol_;
   // Transaction Direction
   TransferDirection direction_;
   // Transmitting
   bool transmitting_;
+  // timeout
+  uint64_t timeout_;
+  
+  uuid_t protocol_uuid_;
 
 };
 
