@@ -396,7 +396,7 @@ class Site2SiteClientProtocol {
   /*!
    * Create a new control protocol
    */
-  Site2SiteClientProtocol(Site2SitePeer *peer) {
+  Site2SiteClientProtocol(std::unique_ptr<Site2SitePeer> peer) {
     logger_ = logging::Logger::getLogger();
     configure_ = Configure::getConfigure();
     peer_ = peer;
@@ -419,6 +419,7 @@ class Site2SiteClientProtocol {
   }
   // Destructor
   virtual ~Site2SiteClientProtocol() {
+    tearDown();
   }
 
  public:
@@ -442,7 +443,7 @@ class Site2SiteClientProtocol {
 
   }
 
-  void setPeer(Site2SitePeer *peer) {
+  void setPeer(std::unique_ptr<Site2SitePeer> peer) {
     peer_ = peer;
   }
   /**
@@ -611,7 +612,7 @@ class Site2SiteClientProtocol {
   // Timeout in msec
   std::atomic<uint64_t> _timeOut;
   // Peer Connection
-  Site2SitePeer *peer_;
+  std::unique_ptr<Site2SitePeer> peer_;
   // portId
   uuid_t _portId;
   // portIDStr

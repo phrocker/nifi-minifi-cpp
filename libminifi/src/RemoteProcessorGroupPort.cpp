@@ -50,6 +50,17 @@ core::Property RemoteProcessorGroupPort::port(
     "Port", "Remote Port", "9999");
 core::Relationship RemoteProcessorGroupPort::relation;
 
+std::unique_ptr<Site2SiteClientProtocol> getNextProtocol();
+  void returnProtocol(std::unique_ptr<Site2SiteClientProtocol> protocol);
+   
+  std::stack<std::unique_ptr<Site2SiteClientProtocol>> available_protocols_;
+  std::mutex protocol_mutex;
+
+std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol()
+{
+  std::lock_guard<std::mutex> protocol_lock_(protocol_mutex);
+}
+
 void RemoteProcessorGroupPort::initialize() {
 
   // Set the supported properties
@@ -72,59 +83,45 @@ void RemoteProcessorGroupPort::onTrigger(
   if (!transmitting_)
     return;
   
+  std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol();
+  
   // Peer Connection
-  static thread_local Site2SitePeer peer_;
-  static thread_local std::unique_ptr<Site2SiteClientProtocol> protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
-        new Site2SiteClientProtocol(0));
-    protocol_->setPortId(protocol_uuid_);
-    protocol_->setTimeOut(timeout_);
-
-  std::string host = peer_.getHostName();
-  uint16_t sport = peer_.getPort();
-  int64_t lvalue;
-
-  if (context->getProperty(hostName.getName(), value)) {
-    host = value;
-  }
-  if (context->getProperty(port.getName(), value)
-      && core::Property::StringToInt(value,
-                                                                lvalue)) {
-    sport = (uint16_t) lvalue;
-  }
-
-  if (host != peer_.getHostName() || sport != peer_.getPort())
-
+  if (protocol_ == nullptr)
   {
+    
+    protocol_ = std::unique_ptr<Site2SiteClientProtocol>(
+	  new Site2SiteClientProtocol(0));
+      protocol_->setPortId(protocol_uuid_);
+      protocol_->setTimeOut(timeout_);
 
+    std::string host ="";
+    uint16_t sport = 0;
+    int64_t lvalue;
+
+    if (context->getProperty(hostName.getName(), value)) {
+      host = value;
+    }
+    if (context->getProperty(port.getName(), value)
+	&& core::Property::StringToInt(value,lvalue)) {
+      sport = (uint16_t) lvalue;
+    }      
     std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-        std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
-            org::apache::nifi::minifi::io::SocketFactory::getInstance()
-                ->createSocket(host, sport));
-    peer_ = std::move(Site2SitePeer(std::move(str), host, sport));
-    protocol_->setPeer(&peer_);
-
+      std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(
+	  org::apache::nifi::minifi::io::SocketFactory::getInstance()
+	      ->createSocket(host, sport));
+  
+    std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), host, sport));
+  
+    protocol_->setPeer(peer_);
   }
-
-  bool needReset = false;
-
-  if (host != peer_.getHostName()) {
-    peer_.setHostName(host);
-    needReset = true;
-  }
-  if (sport != peer_.getPort()) {
-    peer_.setPort(sport);
-    needReset = true;
-  }
-  if (needReset)
-    protocol_->tearDown();
-
+  
   if (!protocol_->bootstrap()) {
     // bootstrap the client protocol if needeed
     context->yield();
     std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(
-        context->getProcessorNode().getProcessor());
+	context->getProcessorNode().getProcessor());
     logger_->log_error("Site2Site bootstrap failed yield period %d peer ",
-                       processor->getYieldPeriodMsec());
+		      processor->getYieldPeriodMsec());
     return;
   }
 
@@ -133,6 +130,9 @@ void RemoteProcessorGroupPort::onTrigger(
   else
     protocol_->transferFlowFiles(context, session);
 
+  returnProtocol(protocol_);
+
+  
   return;
 }
 
