@@ -57,6 +57,7 @@ class ExecuteProcess : public core::Processor {
     _workingDir = ".";
     _processRunning = false;
     _pid = 0;
+    forks_ = 0;
   }
   // Destructor
   virtual ~ExecuteProcess() {
@@ -97,10 +98,16 @@ class ExecuteProcess : public core::Processor {
   // Initialize, over write by NiFi ExecuteProcess
   virtual void initialize(void);
 
+  uint64_t getForkCount(){
+    return forks_.load();
+    
+  }
  protected:
 
  private:
   // Logger
+  std::mutex running_lock_;
+  
   std::shared_ptr<logging::Logger> logger_;
   // Property
   std::string _command;
@@ -111,7 +118,8 @@ class ExecuteProcess : public core::Processor {
   // Full command
   std::string _fullCommand;
   // whether the process is running
-  bool _processRunning;
+  std::atomic<uint64_t> forks_;
+  std::atomic<bool> _processRunning;
   int _pipefd[2];
   pid_t _pid;
 };

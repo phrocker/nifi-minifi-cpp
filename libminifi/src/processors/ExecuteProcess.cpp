@@ -73,7 +73,7 @@ void ExecuteProcess::onTrigger(
     core::ProcessContext *context,
     core::ProcessSession *session) {
   std::string value;
-  if (context->getProperty(Command.getName(), value)) {
+    if (context->getProperty(Command.getName(), value)) {
     this->_command = value;
   }
   if (context->getProperty(CommandArguments.getName(), value)) {
@@ -97,6 +97,7 @@ void ExecuteProcess::onTrigger(
         value, _redirectErrorStream);
   }
   this->_fullCommand = _command + " " + _commandArgument;
+  
   if (_fullCommand.length() == 0) {
     yield();
     return;
@@ -124,8 +125,16 @@ void ExecuteProcess::onTrigger(
   }
   argv[argc] = NULL;
   int status, died;
+  
+  
   if (!_processRunning) {
-    _processRunning = true;
+    {
+      std::lock_guard<std::mutex> lock(running_lock_);
+      if (_processRunning)
+	return;
+      _processRunning = true;
+    }
+    
     // if the process has not launched yet
     // create the pipe
     if (pipe(_pipefd) == -1) {
@@ -133,6 +142,7 @@ void ExecuteProcess::onTrigger(
       yield();
       return;
     }
+    forks_++;
     switch (_pid = fork()) {
       case -1:
         logger_->log_error("Execute Process fork failed");
@@ -231,7 +241,6 @@ void ExecuteProcess::onTrigger(
             }
           }
         }
-
         died = wait(&status);
         if (WIFEXITED(status)) {
           logger_->log_info("Execute Command Complete %s status %d pid %d",

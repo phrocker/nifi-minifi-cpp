@@ -374,3 +374,110 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   logger->updateLogger(std::move(outputLogger));
 
 }
+
+int fileSize(const char *add){
+    std::ifstream mySource;
+    mySource.open(add, std::ios_base::binary);
+    mySource.seekg(0,std::ios_base::end);
+    int size = mySource.tellg();
+    mySource.close();
+    return size;
+}
+
+TEST_CASE("ExecuteProcess1", "[TestThreadSafety]") {
+
+  std::ostringstream oss;
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
+      logging::BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+                                                                         0));
+  
+  TestController testController;
+
+  testController.enableDebug();
+
+  
+
+  std::shared_ptr<core::Processor> processor = std::make_shared<
+      org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
+
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  
+  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+  std::shared_ptr<minifi::FlowController> controller =  std::make_shared<TestFlowController>(test_repo, test_repo);
+
+      
+
+  char format[] = "/tmp/gt.XXXXXX";
+  char *dir = testController.createTempDirectory(format);
+
+  uuid_t processoruuid;
+  REQUIRE(true == processor->getUUID(processoruuid));
+
+
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<
+      minifi::Connection>(test_repo,"executeProcessConnection");
+  connection->setRelationship(core::Relationship("success", "description"));
+
+  // link the connections so that we can test results at the end for this
+  connection->setSource(processor);
+  connection->setDestination(processor);
+
+  connection->setSourceUUID(processoruuid);
+  connection->setDestinationUUID(processoruuid);
+
+  processor->addConnection(connection);
+  REQUIRE(dir != NULL);
+
+  
+  std::fstream file;
+  std::stringstream ss;
+  ss << dir << "/" << "tstFile.ext";
+
+  
+  
+
+
+  REQUIRE(processor->getName() == "executeProcess");
+
+  std::shared_ptr<core::FlowFile> record;
+  processor->setScheduledState(core::ScheduledState::RUNNING);
+ 
+  
+  
+
+  
+
+  
+  std::atomic<bool> is_ready(false);
+
+   std::vector<std::thread> processor_workers;
+    for (int i = 0; i < 10; i++) {
+      //
+        processor_workers.push_back(std::thread([processor,test_repo,&ss,&is_ready]()
+        {
+	  core::ProcessorNode node(processor);
+	  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, test_repo);
+	  context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command,"sleep 0.5");
+	  //context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::CommandArguments," 1 >>" + ss.str());
+	  std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context.get());
+	    while(!is_ready.load(std::memory_order_relaxed));
+            processor->onTrigger(context.get(), session.get());
+
+	    
+        }));
+    }
+    is_ready.store(true,std::memory_order_relaxed);
+    //is_ready.store(true);
+    
+    std::for_each(processor_workers.begin(), processor_workers.end(), [](std::thread &t) 
+    {
+        t.join();
+    });
+    
+    std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp = std::static_pointer_cast<org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
+    REQUIRE( 1 == execp->getForkCount() );
+    unlink(ss.str().c_str());   
+
+
+}
