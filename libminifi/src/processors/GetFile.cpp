@@ -1,6 +1,4 @@
 /**
- * @file GetFile.cpp
- * GetFile class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -116,72 +114,76 @@ void GetFile::onTrigger(
     core::ProcessSession *session) {
   std::string value;
 
+  GetFileRequest request;
+  
   logger_->log_info("onTrigger GetFile");
   if (context->getProperty(Directory.getName(), value)) {
-    _directory = value;
+    request.directory = value;
   }
   if (context->getProperty(BatchSize.getName(), value)) {
-    core::Property::StringToInt(value, _batchSize);
+    core::Property::StringToInt(value, request.batchSize);
   }
   if (context->getProperty(IgnoreHiddenFile.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-        value, _ignoreHiddenFile);
+        value, request.ignoreHiddenFile);
   }
   if (context->getProperty(KeepSourceFile.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-        value, _keepSourceFile);
+        value, request.keepSourceFile);
   }
 
   logger_->log_info("onTrigger GetFile");
   if (context->getProperty(MaxAge.getName(), value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, _maxAge,
+    if (core::Property::StringToTime(value, request.maxAge,
                                                                 unit)
         && core::Property::ConvertTimeUnitToMS(
-            _maxAge, unit, _maxAge)) {
+            request.maxAge, unit,request.maxAge)) {
 
     }
   }
   if (context->getProperty(MinAge.getName(), value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, _minAge,
+    if (core::Property::StringToTime(value, request.minAge,
                                                                 unit)
         && core::Property::ConvertTimeUnitToMS(
-            _minAge, unit, _minAge)) {
+            request.minAge, unit, request.minAge)) {
 
     }
   }
   if (context->getProperty(MaxSize.getName(), value)) {
-    core::Property::StringToInt(value, _maxSize);
+    core::Property::StringToInt(value, request.maxSize);
   }
   if (context->getProperty(MinSize.getName(), value)) {
-    core::Property::StringToInt(value, _minSize);
+    core::Property::StringToInt(value, request.minSize);
   }
   if (context->getProperty(PollInterval.getName(), value)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(value,
-                                                                _pollInterval,
+                                                                request.pollInterval,
                                                                 unit)
         && core::Property::ConvertTimeUnitToMS(
-            _pollInterval, unit, _pollInterval)) {
+            request.pollInterval, unit, request.pollInterval)) {
 
     }
   }
   if (context->getProperty(Recurse.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(value,
-                                                                _recursive);
+                                                                request.recursive);
   }
 
   if (context->getProperty(FileFilter.getName(), value)) {
-    _fileFilter = value;
+    request.fileFilter = value;
   }
 
   // Perform directory list
   logger_->log_info("Is listing empty %i", isListingEmpty());
   if (isListingEmpty()) {
-    if (_pollInterval == 0
-        || (getTimeMillis() - _lastDirectoryListingTime) > _pollInterval) {
-      performListing(_directory);
+    auto last_listing_time_ = getLastListingTime(request.directory);
+    
+    if (request.pollInterval == 0
+        || (getTimeMillis() - last_listing_time_) > request.pollInterval) {
+      performListing(request.directory,request);
     }
   }
   logger_->log_info("Is listing empty %i", isListingEmpty());
@@ -189,7 +191,7 @@ void GetFile::onTrigger(
   if (!isListingEmpty()) {
     try {
       std::queue<std::string> list;
-      pollListing(list, _batchSize);
+      pollListing(list, request);
       while (!list.empty()) {
 
         std::string fileName = list.front();
@@ -205,7 +207,7 @@ void GetFile::onTrigger(
         flowFile->updateKeyedAttribute(FILENAME, name);
         flowFile->updateKeyedAttribute(PATH, path);
         flowFile->addKeyedAttribute(ABSOLUTE_PATH, fileName);
-        session->import(fileName, flowFile, _keepSourceFile);
+        session->import(fileName, flowFile, request.keepSourceFile);
         session->transfer(flowFile, Success);
       }
     } catch (std::exception &exception) {
@@ -216,6 +218,26 @@ void GetFile::onTrigger(
     }
   }
 
+}
+
+uint64_t GetFile::getLastListingTime(const std::string &directory){
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto listing_time = last_listing_times_.find(directory);
+  if (listing_time == last_listing_times_.end())
+  {
+    last_listing_times_[directory] = getTimeMillis();
+    listing_time = last_listing_times_.find(directory);
+  }
+  return listing_time->second.load();
+}
+
+void GetFile::updateListingTime(const std::string &directory){
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto listing_time = last_listing_times_.find(directory);
+  if (listing_time != last_listing_times_.end())
+  {
+    listing_time->second.store(getTimeMillis());
+  }
 }
 
 bool GetFile::isListingEmpty() {
@@ -230,10 +252,10 @@ void GetFile::putListing(std::string fileName) {
   _dirList.push(fileName);
 }
 
-void GetFile::pollListing(std::queue<std::string> &list, int maxSize) {
+void GetFile::pollListing(std::queue<std::string> &list, GetFileRequest &request) {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  while (!_dirList.empty() && (maxSize == 0 || list.size() < maxSize)) {
+  while (!_dirList.empty() && (request.maxSize == 0 || list.size() < request.maxSize)) {
     std::string fileName = _dirList.front();
     _dirList.pop();
     list.push(fileName);
@@ -242,37 +264,37 @@ void GetFile::pollListing(std::queue<std::string> &list, int maxSize) {
   return;
 }
 
-bool GetFile::acceptFile(std::string fullName, std::string name) {
+bool GetFile::acceptFile(std::string fullName,std::string name, GetFileRequest &request) {
   struct stat statbuf;
 
   if (stat(fullName.c_str(), &statbuf) == 0) {
-    if (_minSize > 0 && statbuf.st_size < _minSize)
+    if (request.minSize > 0 && statbuf.st_size < request.minSize)
       return false;
 
-    if (_maxSize > 0 && statbuf.st_size > _maxSize)
+    if (request.maxSize > 0 && statbuf.st_size > request.maxSize)
       return false;
 
     uint64_t modifiedTime = ((uint64_t) (statbuf.st_mtime) * 1000);
     uint64_t fileAge = getTimeMillis() - modifiedTime;
-    if (_minAge > 0 && fileAge < _minAge)
+    if (request.minAge > 0 && fileAge < request.minAge)
       return false;
-    if (_maxAge > 0 && fileAge > _maxAge)
+    if (request.maxAge > 0 && fileAge > request.maxAge)
       return false;
 
-    if (_ignoreHiddenFile && fullName.c_str()[0] == '.')
+    if (request.ignoreHiddenFile && fullName.c_str()[0] == '.')
       return false;
 
     if (access(fullName.c_str(), R_OK) != 0)
       return false;
 
-    if (_keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
+    if (request.keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
       return false;
 
 #ifdef __GNUC__
 #if (__GNUC__ >= 4)
 #if (__GNUC_MINOR__ < 9)
     regex_t regex;
-    int ret = regcomp(&regex, _fileFilter.c_str(), 0);
+    int ret = regcomp(&regex, request.fileFilter.c_str(), 0);
     if (ret)
       return false;
     ret = regexec(&regex, name.c_str(), (size_t) 0, NULL, 0);
@@ -281,7 +303,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name) {
       return false;
 #else
     try {
-      std::regex re(_fileFilter);
+      std::regex re(fileFilter);
 
       if (!std::regex_match(name, re)) {
         return false;
@@ -301,7 +323,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name) {
   return false;
 }
 
-void GetFile::performListing(std::string dir) {
+void GetFile::performListing(std::string dir,GetFileRequest &request) {
   logger_->log_info("Performing file listing against %s", dir.c_str());
   DIR *d;
   d = opendir(dir.c_str());
@@ -310,6 +332,7 @@ void GetFile::performListing(std::string dir) {
   // only perform a listing while we are not empty
   logger_->log_info("Performing file listing against %s", dir.c_str());
   while (isRunning()) {
+    updateListingTime(request.directory);
     struct dirent *entry;
     entry = readdir(d);
     if (!entry)
@@ -317,14 +340,14 @@ void GetFile::performListing(std::string dir) {
     std::string d_name = entry->d_name;
     if ((entry->d_type & DT_DIR)) {
       // if this is a directory
-      if (_recursive && strcmp(d_name.c_str(), "..") != 0
+      if (request.recursive && strcmp(d_name.c_str(), "..") != 0
           && strcmp(d_name.c_str(), ".") != 0) {
         std::string path = dir + "/" + d_name;
-        performListing(path);
+        performListing(path,request);
       }
     } else {
       std::string fileName = dir + "/" + d_name;
-      if (acceptFile(fileName, d_name)) {
+      if (acceptFile(fileName, d_name,request)) {
         // check whether we can take this file
         putListing(fileName);
       }
