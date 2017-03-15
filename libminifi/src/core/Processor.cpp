@@ -60,7 +60,6 @@ Processor::Processor(std::string name, uuid_t uuid)
   active_tasks_ = 0;
   yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
-  logger_ = logging::Logger::getLogger();
   logger_->log_info("Processor %s created UUID %s", name_.c_str(),
                     uuidStr_.c_str());
 }

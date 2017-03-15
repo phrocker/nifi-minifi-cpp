@@ -38,9 +38,8 @@ class TailFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  TailFile(std::string name, uuid_t uuid = NULL)
+  explicit TailFile(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid) {
-    logger_ = logging::Logger::getLogger();
     _stateRecovered = false;
   }
   // Destructor
@@ -70,11 +69,7 @@ class TailFile : public core::Processor {
  protected:
 
  private:
-  // Logger
-  std::shared_ptr<logging::Logger> logger_;
-  std::string _fileLocation;
-  // Property Specified Tailed File Name
-  std::string _fileName;
+  std::mutex tail_file_mutex_;
   // File to save state
   std::string _stateFile;
   // State related to the tailed file
@@ -86,7 +81,7 @@ class TailFile : public core::Processor {
   std::string trimLeft(const std::string& s);
   std::string trimRight(const std::string& s);
   void parseStateFileLine(char *buf);
-  void checkRollOver();
+  void checkRollOver(std::string, std::string);
 
 };
 
