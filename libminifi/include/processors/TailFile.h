@@ -72,9 +72,6 @@ class TailFile : public core::Processor {
  private:
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  std::string _fileLocation;
-  // Property Specified Tailed File Name
-  std::string _fileName;
   // File to save state
   std::string _stateFile;
   // State related to the tailed file
@@ -86,7 +83,7 @@ class TailFile : public core::Processor {
   std::string trimLeft(const std::string& s);
   std::string trimRight(const std::string& s);
   void parseStateFileLine(char *buf);
-  void checkRollOver();
+  void checkRollOver(std::string, std::string);
 
 };
 
