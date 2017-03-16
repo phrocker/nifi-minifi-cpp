@@ -51,7 +51,7 @@ class GetFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  GetFile(std::string name, uuid_t uuid = NULL)
+  explicit GetFile(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid) {
     logger_ = logging::Logger::getLogger();
     

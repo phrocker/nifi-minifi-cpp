@@ -35,6 +35,7 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/core.h"
+#include "utils/ThreadPool.h"
 
 namespace org {
 namespace apache {
@@ -42,6 +43,25 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+struct ChildProcess{
+  std::atomic<bool> running_;
+  int pipefd_[2];
+  pid_t pid_;
+  
+  ChildProcess &operator=(ChildProcess &other)
+  {
+      running_ = other.running_;
+      pipefd_[0] = other.pipefd_[0];
+      pipefd_[1] = other.pipefd_[1];
+      pid_ = other.pid_;
+  }
+  
+  bool operator<(const ChildProcess &b)
+  {
+    return pid_ < b.pid_;
+  }
+};
+ 
 // ExecuteProcess Class
 class ExecuteProcess : public core::Processor {
  public:
@@ -49,20 +69,32 @@ class ExecuteProcess : public core::Processor {
   /*!
    * Create a new processor
    */
-  ExecuteProcess(std::string name, uuid_t uuid = NULL)
-      : Processor(name, uuid) {
+  explicit ExecuteProcess(std::string name, uuid_t uuid = NULL)
+      : Processor(name, uuid), pool_(getMaxConcurrentTasks) {
     logger_ = logging::Logger::getLogger();
     _redirectErrorStream = false;
     _batchDuration = 0;
     _workingDir = ".";
-    _processRunning = false;
-    _pid = 0;
-    forks_ = 0;
+//    _processRunning = false;
+  //  _pid = 0;
+   // forks_ = 0;
+    //
+    uint8_t max_tasks = getMaxConcurrentTasks();
+    /*
+    for (int i=0; i < max_tasks; i++)
+    {
+      threads.push( std::thread() );
+    }*/
   }
   // Destructor
   virtual ~ExecuteProcess() {
-    if (_processRunning && _pid > 0)
-      kill(_pid, SIGTERM);
+    
+    for(ChildProcess process: forks)
+    {
+      if (process.running_ && process.pid_ > 0)
+	kill(process.pid_, SIGTERM);
+    }
+    
   }
   // Processor Name
   static const std::string ProcessorName;
@@ -98,30 +130,28 @@ class ExecuteProcess : public core::Processor {
   // Initialize, over write by NiFi ExecuteProcess
   virtual void initialize(void);
 
-  uint64_t getForkCount(){
-    return forks_.load();
-    
-  }
+  
  protected:
 
  private:
   // Logger
   std::mutex running_lock_;
   
+  ThreadPool pool_;
+  
+//  std::stack<std::thread> threads;
+  
   std::shared_ptr<logging::Logger> logger_;
   // Property
-  std::string _command;
-  std::string _commandArgument;
-  std::string _workingDir;
-  int64_t _batchDuration;
-  bool _redirectErrorStream;
-  // Full command
-  std::string _fullCommand;
+  
+  
+  
+  std::list<ChildProcess> forks;
   // whether the process is running
-  std::atomic<uint64_t> forks_;
-  std::atomic<bool> _processRunning;
-  int _pipefd[2];
-  pid_t _pid;
+//  std::atomic<uint64_t> forks_;
+  //std::atomic<bool> _processRunning;
+  //int _pipefd[2];
+  //pid_t _pid;
 };
 
 } /* namespace processors */

@@ -73,48 +73,55 @@ void ExecuteProcess::onTrigger(
     core::ProcessContext *context,
     core::ProcessSession *session) {
   std::string value;
+  std::string command_;
+  std::string command_argument_;
+  std::string working_dir_;
+  int64_t batch_duration_;
+  bool redirect_error_stream_;
+  // Full command
+  std::string full_command_;
     if (context->getProperty(Command.getName(), value)) {
-    this->_command = value;
+    command_ = value;
   }
   if (context->getProperty(CommandArguments.getName(), value)) {
-    this->_commandArgument = value;
+    command_argument_ = value;
   }
   if (context->getProperty(WorkingDir.getName(), value)) {
-    this->_workingDir = value;
+    working_dir_ = value;
   }
   if (context->getProperty(BatchDuration.getName(), value)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(value,
-                                                                _batchDuration,
+                                                                batch_duration_,
                                                                 unit)
         && core::Property::ConvertTimeUnitToMS(
-            _batchDuration, unit, _batchDuration)) {
+            batch_duration_, unit, batch_duration_)) {
 
     }
   }
   if (context->getProperty(RedirectErrorStream.getName(), value)) {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(
-        value, _redirectErrorStream);
+        value, redirect_error_stream_);
   }
-  this->_fullCommand = _command + " " + _commandArgument;
+  full_command_ = command_ + " " + command_argument_;
   
-  if (_fullCommand.length() == 0) {
+  if (full_command_.length() == 0) {
     yield();
     return;
   }
-  if (_workingDir.length() > 0 && _workingDir != ".") {
+  if (working_dir_.length() > 0 && working_dir_ != ".") {
     // change to working directory
-    if (chdir(_workingDir.c_str()) != 0) {
+    if (chdir(working_dir_.c_str()) != 0) {
       logger_->log_error("Execute Command can not chdir %s",
-                         _workingDir.c_str());
+                         working_dir_.c_str());
       yield();
       return;
     }
   }
-  logger_->log_info("Execute Command %s", _fullCommand.c_str());
+  logger_->log_info("Execute Command %s", full_command_.c_str());
   // split the command into array
-  char cstr[_fullCommand.length() + 1];
-  std::strcpy(cstr, _fullCommand.c_str());
+  char cstr[full_command_.length() + 1];
+  std::strcpy(cstr, full_command_.c_str());
   char *p = std::strtok(cstr, " ");
   int argc = 0;
   char *argv[64];
@@ -154,7 +161,7 @@ void ExecuteProcess::onTrigger(
       case 0:  // this is the code the child runs
         close(1);      // close stdout
         dup(_pipefd[1]);  // points pipefd at file descriptor
-        if (_redirectErrorStream)
+        if (redirect_error_stream_)
           // redirect stderr
           dup2(_pipefd[1], 2);
         close(_pipefd[0]);
@@ -164,10 +171,10 @@ void ExecuteProcess::onTrigger(
       default:  // this is the code the parent runs
         // the parent isn't going to write to the pipe
         close(_pipefd[1]);
-        if (_batchDuration > 0) {
+        if (batch_duration_ > 0) {
           while (1) {
             std::this_thread::sleep_for(
-                std::chrono::milliseconds(_batchDuration));
+                std::chrono::milliseconds(batch_duration_));
             char buffer[4096];
             int numRead = read(_pipefd[0], buffer, sizeof(buffer));
             if (numRead <= 0)
@@ -178,9 +185,9 @@ void ExecuteProcess::onTrigger(
                 FlowFileRecord>(session->create());
             if (!flowFile)
               continue;
-            flowFile->addAttribute("command", _command.c_str());
+            flowFile->addAttribute("command", command_.c_str());
             flowFile->addAttribute("command.arguments",
-                                   _commandArgument.c_str());
+                                   command_argument_.c_str());
             session->write(flowFile, &callback);
             session->transfer(flowFile, Success);
             session->commit();
@@ -203,9 +210,9 @@ void ExecuteProcess::onTrigger(
                       session->create());
                   if (!flowFile)
                     break;
-                  flowFile->addAttribute("command", _command.c_str());
+                  flowFile->addAttribute("command", command_.c_str());
                   flowFile->addAttribute("command.arguments",
-                                         _commandArgument.c_str());
+                                         command_argument_.c_str());
                   session->write(flowFile, &callback);
                 } else {
                   session->append(flowFile, &callback);
@@ -224,9 +231,9 @@ void ExecuteProcess::onTrigger(
                       session->create());
                   if (!flowFile)
                     continue;
-                  flowFile->addAttribute("command", _command.c_str());
+                  flowFile->addAttribute("command", command_.c_str());
                   flowFile->addAttribute("command.arguments",
-                                         _commandArgument.c_str());
+                                         command_argument_.c_str());
                   session->write(flowFile, &callback);
                 } else {
                   session->append(flowFile, &callback);
@@ -244,10 +251,10 @@ void ExecuteProcess::onTrigger(
         died = wait(&status);
         if (WIFEXITED(status)) {
           logger_->log_info("Execute Command Complete %s status %d pid %d",
-                            _fullCommand.c_str(), WEXITSTATUS(status), _pid);
+                            full_command_.c_str(), WEXITSTATUS(status), _pid);
         } else {
           logger_->log_info("Execute Command Complete %s status %d pid %d",
-                            _fullCommand.c_str(), WTERMSIG(status), _pid);
+                            full_command_.c_str(), WTERMSIG(status), _pid);
         }
 
         close(_pipefd[0]);

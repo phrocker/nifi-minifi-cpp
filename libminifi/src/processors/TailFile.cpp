@@ -165,7 +165,7 @@ void TailFile::checkRollOver(std::string fileLocation, std::string fileName) {
     d = opendir(fileLocation.c_str());
     if (!d)
       return;
-    while () {
+    while (1) {
       struct dirent *entry;
       entry = readdir(d);
       if (!entry)
