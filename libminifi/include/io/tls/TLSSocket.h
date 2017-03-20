@@ -19,7 +19,7 @@
 #define LIBMINIFI_INCLUDE_IO_TLSSOCKET_H_
 
 #include <cstdint>
-#include "ClientSocket.h"
+#include "../ClientSocket.h"
 #include <atomic>
 #include <mutex>
 

@@ -17,7 +17,7 @@
  */
 
 #include "properties/Configure.h"
-#include "io/TLSSocket.h"
+#include "io/tls/TLSSocket.h"
 #include "utils/StringUtils.h"
 
 #include "core/Property.h"
