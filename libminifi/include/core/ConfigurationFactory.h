@@ -21,9 +21,6 @@
 
 #include "FlowConfiguration.h"
 #include  <type_traits>
-//#ifdef YAML_SUPPORT
-#include "yaml/YamlConfiguration.h"
-//#endif
 
 namespace org {
 namespace apache {
@@ -32,58 +29,32 @@ namespace minifi {
 namespace core {
 
 
+
+
+template<typename T>
+typename std::enable_if<!class_operations<T>::value, T*>::type instantiate(
+      std::shared_ptr<core::Repository> repo,
+      std::shared_ptr<core::Repository> flow_file_repo,const std::string path ) {
+  throw std::runtime_error("Cannot instantiate class");
+}
+
+template<typename T>
+typename std::enable_if<class_operations<T>::value, T*>::type instantiate(
+      std::shared_ptr<core::Repository> repo,
+      std::shared_ptr<core::Repository> flow_file_repo,const std::string path ) {
+  return new T(repo,flow_file_repo,path);
+}
+
+  
 /**
  * Configuration factory is used to create a new FlowConfiguration
  * object.
  */
-class ConfigurationFactory {
- public:
-
-  /**
-   * static factory function to create a new FlowConfiguration Instance.
-   */
-  static std::unique_ptr<core::FlowConfiguration> create(
+ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
       std::shared_ptr<core::Repository> repo,
       std::shared_ptr<core::Repository> flow_file_repo,
       const std::string configuration_class_name, const std::string path = "",
-      bool fail_safe = false) {
-
-    std::string class_name_lc = configuration_class_name;
-    std::transform(class_name_lc.begin(), class_name_lc.end(),
-                   class_name_lc.begin(), ::tolower);
-    try {
-
-      if (class_name_lc == "flowconfiguration") {
-        return std::unique_ptr<core::FlowConfiguration>(
-            new core::FlowConfiguration(repo, flow_file_repo, path));
-
-      } else if (class_name_lc == "yamlconfiguration") {
-        return std::unique_ptr<core::FlowConfiguration>(
-            new core::YamlConfiguration(repo, flow_file_repo, path));
-
-      } else {
-        if (fail_safe) {
-          return std::unique_ptr<core::FlowConfiguration>(
-              new core::FlowConfiguration(repo, flow_file_repo, path));
-        } else {
-          throw std::runtime_error(
-              "Support for the provided configuration class could not be found");
-        }
-      }
-    } catch (const std::runtime_error &r) {
-      if (fail_safe) {
-        return std::unique_ptr<core::FlowConfiguration>(
-            new core::FlowConfiguration(repo, flow_file_repo, path));
-      }
-    }
-
-    throw std::runtime_error(
-        "Support for the provided configuration class could not be found");
-  }
-
-  ConfigurationFactory(const ConfigurationFactory &parent) = delete;
-  ConfigurationFactory &operator=(const ConfigurationFactory &parent) = delete;
-};
+      bool fail_safe = false);
 
 } /* namespace core */
 } /* namespace minifi */

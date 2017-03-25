@@ -20,8 +20,7 @@
 
 namespace org {
 namespace apache {
-namespace nifi {
-namespace minifi {
+namespace nifi {namespace minifi {
 namespace core {
 
 // Get Name for the property
@@ -51,7 +50,7 @@ const Property &Property::operator=(const Property &other) {
   return *this;
 }
 
-} /* namespace components */
+} /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
