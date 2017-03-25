@@ -20,9 +20,8 @@
 
 #include "ClientSocket.h"
 
+#ifdef OPENSSL_SUPPORT
 #include "tls/TLSSocket.h"
-
-
-
+#endif
 
 #endif /* LIBMINIFI_INCLUDE_IO_TLS_SECURESOCKET_H_ */
