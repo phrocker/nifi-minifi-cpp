@@ -152,15 +152,15 @@ int main(int argc, char **argv) {
   configure->get(minifi::Configure::nifi_provenance_repository_class_name,
                  prov_repo_class);
   // Create repos for flow record and provenance
-  std::shared_ptr<core::Repository> prov_repo = core::RepositoryFactory::create(
+  std::shared_ptr<core::Repository> prov_repo = core::createRepository(
       prov_repo_class, true);
   prov_repo->initialize();
 
   configure->get(minifi::Configure::nifi_flow_repository_class_name,
                  flow_repo_class);
 
-  std::shared_ptr<core::Repository> flow_repo = core::RepositoryFactory::create(
-      prov_repo_class, true);
+  std::shared_ptr<core::Repository> flow_repo = core::createRepository(
+      flow_repo_class, true);
 
   flow_repo->initialize();
 
@@ -168,7 +168,7 @@ int main(int argc, char **argv) {
                  nifi_configuration_class_name);
 
   std::unique_ptr<core::FlowConfiguration> flow_configuration = std::move(
-      ConfigurationFactory::create(prov_repo, flow_repo,
+      core::createFlowConfiguration(prov_repo, flow_repo,
                                    nifi_configuration_class_name));
 
   controller = std::unique_ptr<minifi::FlowController>(
