@@ -120,6 +120,8 @@ class GetFile : public core::Processor {
   std::string _fileFilter;
 };
 
+REGISTER_PROCESSOR(GetFile)
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
