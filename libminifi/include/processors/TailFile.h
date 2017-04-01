@@ -87,6 +87,8 @@ class TailFile : public core::Processor {
 
 };
 
+REGISTER_PROCESSOR(TailFile)
+
 // Matched File Item for Roll over check
 typedef struct {
   std::string fileName;

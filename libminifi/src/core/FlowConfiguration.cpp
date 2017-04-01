@@ -17,6 +17,7 @@
  */
 
 #include "core/FlowConfiguration.h"
+#include "core/ClassLoader.h"
 
 namespace org {
 namespace apache {
@@ -30,55 +31,13 @@ FlowConfiguration::~FlowConfiguration() {
 
 std::shared_ptr<core::Processor> FlowConfiguration::createProcessor(
     std::string name, uuid_t uuid) {
-  std::shared_ptr<core::Processor> processor = nullptr;
-  if (name
-      == org::apache::nifi::minifi::processors::GenerateFlowFile::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::GenerateFlowFile>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::LogAttribute::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::LogAttribute>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::RealTimeDataCollector::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::RealTimeDataCollector>(name,
-                                                                      uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::GetFile::ProcessorName) {
-    processor =
-        std::make_shared<org::apache::nifi::minifi::processors::GetFile>(name,
-                                                                         uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::PutFile::ProcessorName) {
-    processor =
-        std::make_shared<org::apache::nifi::minifi::processors::PutFile>(name,
-                                                                         uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::TailFile::ProcessorName) {
-    processor =
-        std::make_shared<org::apache::nifi::minifi::processors::TailFile>(name,
-                                                                          uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::ListenSyslog::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::ListenSyslog>(name, uuid);
-  } else if (name
-        == org::apache::nifi::minifi::processors::ListenHTTP::ProcessorName) {
-      processor = std::make_shared<
-          org::apache::nifi::minifi::processors::ListenHTTP>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::ExecuteProcess::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::ExecuteProcess>(name, uuid);
-  } else if (name
-      == org::apache::nifi::minifi::processors::AppendHostInfo::ProcessorName) {
-    processor = std::make_shared<
-        org::apache::nifi::minifi::processors::AppendHostInfo>(name, uuid);
-  } else {
+
+  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(name, uuid);
+  if (nullptr == ptr) {
     logger_->log_error("No Processor defined for %s", name.c_str());
-    return nullptr;
   }
+  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<
+      core::Processor>(ptr);
 
   // initialize the processor
   processor->initialize();

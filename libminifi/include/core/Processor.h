@@ -31,6 +31,7 @@
 #include <chrono>
 #include <functional>
 
+#include "core.h"
 #include "Connectable.h"
 #include "ConfigurableComponent.h"
 #include "Property.h"
@@ -40,6 +41,7 @@
 #include "ProcessContext.h"
 #include "ProcessSession.h"
 #include "ProcessSessionFactory.h"
+#include "ClassLoader.h"
 #include "Scheduling.h"
 
 namespace org {
@@ -56,6 +58,22 @@ namespace core {
 
 // Default penalization period in second
 #define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
+
+template<class T>
+class StaticClassType {
+ public:
+
+  StaticClassType(const std::string &name) {
+    // Notify when the static member is created
+    ClassLoader::getDefaultClassLoader().registerClass(
+        name,
+        std::unique_ptr<ProcessorFactory>(new DefaultProcessorFactory<T>()));
+  }
+};
+
+#define REGISTER_PROCESSOR(CLASSNAME) \
+        static core::StaticClassType<CLASSNAME> \
+        CLASSNAME##_registrar( #CLASSNAME );
 
 // Processor Class
 class Processor : public Connectable, public ConfigurableComponent,
@@ -123,8 +141,7 @@ class Processor : public Connectable, public ConfigurableComponent,
   void setPenalizationPeriodMsec(uint64_t period) {
     _penalizationPeriodMsec = period;
   }
-  
-  
+
   // Set Processor Maximum Concurrent Tasks
   void setMaxConcurrentTasks(uint8_t tasks) {
     max_concurrent_tasks_ = tasks;
@@ -211,7 +228,6 @@ class Processor : public Connectable, public ConfigurableComponent,
 
  public:
 
-
   // OnTrigger method, implemented by NiFi Processor Designer
   virtual void onTrigger(ProcessContext *context, ProcessSession *session) = 0;
   // Initialize, overridden by NiFi Process Designer
@@ -235,19 +251,18 @@ class Processor : public Connectable, public ConfigurableComponent,
   std::atomic<uint64_t> run_durantion_nano_;
   // Yield Period in Milliseconds
   std::atomic<uint64_t> yield_period_msec_;
-  
+
   // Active Tasks
   std::atomic<uint8_t> active_tasks_;
   // Trigger the Processor even if the incoming connection is empty
   std::atomic<bool> _triggerWhenEmpty;
 
-private:
+ private:
 
   // Mutex for protection
   std::mutex mutex_;
   // Yield Expiration
   std::atomic<uint64_t> yield_expiration_;
-  
 
   // Check all incoming connections for work
   bool isWorkAvailable();

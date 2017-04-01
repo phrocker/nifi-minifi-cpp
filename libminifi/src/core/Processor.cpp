@@ -265,6 +265,9 @@ bool Processor::isWorkAvailable() {
   return hasWork;
 }
 
+
+
+
 } /* namespace processor */
 } /* namespace minifi */
 } /* namespace nifi */
