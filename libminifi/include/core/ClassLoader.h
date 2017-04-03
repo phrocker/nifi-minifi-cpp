@@ -42,13 +42,13 @@ namespace core {
  * Factory that is used as an interface for
  * creating processors from shared objects.
  */
-class ProcessorFactory {
+class ObjectFactory {
 
  public:
   /**
    * Virtual destructor.
    */
-  virtual ~ProcessorFactory() {
+  virtual ~ObjectFactory() {
 
   }
 
@@ -58,11 +58,12 @@ class ProcessorFactory {
   virtual std::shared_ptr<Connectable> create(const std::string &name) {
     return nullptr;
   }
-  
-   /**
+
+  /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name, uuid_t uuid) {
+  virtual std::shared_ptr<Connectable> create(const std::string &name,
+                                              uuid_t uuid) {
     return nullptr;
   }
 
@@ -85,17 +86,17 @@ class ProcessorFactory {
  * creating processors from shared objects.
  */
 template<class T>
-class DefaultProcessorFactory : public ProcessorFactory {
+class DefautObjectFactory : public ObjectFactory {
 
  public:
 
-  DefaultProcessorFactory() {
+  DefautObjectFactory() {
     className = core::getClassName<T>();
   }
   /**
    * Virtual destructor.
    */
-  virtual ~DefaultProcessorFactory() {
+  virtual ~DefautObjectFactory() {
 
   }
 
@@ -106,12 +107,13 @@ class DefaultProcessorFactory : public ProcessorFactory {
     std::shared_ptr<T> ptr = std::make_shared<T>(name);
     return std::static_pointer_cast<Connectable>(ptr);
   }
-  
-    /**
+
+  /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<Connectable> create(const std::string &name, uuid_t uuid) {
-    std::shared_ptr<T> ptr = std::make_shared<T>(name,uuid);
+  virtual std::shared_ptr<Connectable> create(const std::string &name,
+                                              uuid_t uuid) {
+    std::shared_ptr<T> ptr = std::make_shared<T>(name, uuid);
     return std::static_pointer_cast<Connectable>(ptr);
   }
 
@@ -140,7 +142,7 @@ class DefaultProcessorFactory : public ProcessorFactory {
  * Function that is used to create the
  * processor factory from the shared object.
  */
-typedef ProcessorFactory* createFactory();
+typedef ObjectFactory* createFactory();
 
 /**
  * Processor class loader that accepts
@@ -151,9 +153,8 @@ class ClassLoader {
 
  public:
 
-   static ClassLoader &getDefaultClassLoader();
-  
-  
+  static ClassLoader &getDefaultClassLoader();
+
   /**
    * Constructor.
    */
@@ -169,53 +170,51 @@ class ClassLoader {
     }
   }
 
+  /**
+   * Register the file system resource.
+   * This will attempt to load objects within this resource.
+   * @return return code: RESOURCE_FAILURE or RESOURCE_SUCCESS
+   */
   short registerResource(const std::string &resource);
 
-  short registerResource(io::DataStream &stream);
-
+  /**
+   * Register a class with the give ProcessorFactory
+   */
   void registerClass(const std::string &name,
-                     std::unique_ptr<ProcessorFactory> factory) {
+                     std::unique_ptr<ObjectFactory> factory) {
     if (loaded_factories_.find(name) != loaded_factories_.end())
       return;
-    
-    std::lock_guard<std::mutex> lock(internal_mutex_);
-    std::cout << "registering " << name << std::endl;
-    
-    loaded_factories_.insert(std::make_pair(name,std::move(factory)));
-  }
-
-  template<typename ... Targs>
-  std::shared_ptr<Connectable> instantiate(const std::string &class_name, const std::string &name) {
 
     std::lock_guard<std::mutex> lock(internal_mutex_);
-    auto factory_entry = loaded_factories_.find(class_name);
-    if (factory_entry != loaded_factories_.end()) {
-      return factory_entry->second->create(name);
-    } else {
-      std::cout<<"could not find " << class_name << std::endl;
-      return nullptr;
-    }
-  }
-  
-   template<typename ... Targs>
-  std::shared_ptr<Connectable> instantiate(const std::string &class_name, uuid_t uuid) {
 
-    std::lock_guard<std::mutex> lock(internal_mutex_);
-    auto factory_entry = loaded_factories_.find(class_name);
-    if (factory_entry != loaded_factories_.end()) {
-      return factory_entry->second->create(class_name,uuid);
-    } else {
-      std::cout<<"could not find " << class_name << std::endl;
-      return nullptr;
-    }
+    loaded_factories_.insert(std::make_pair(name, std::move(factory)));
   }
+
+  /**
+   * Instantiate object based on class_name
+   * @param class_name class to create
+   * @param uuid uuid of object
+   * @return nullptr or object created from class_name definition.
+   */
+  template<class T = Connectable>
+  std::shared_ptr<T> instantiate(const std::string &class_name,
+                                 const std::string &name);
+
+  /**
+   * Instantiate object based on class_name
+   * @param class_name class to create
+   * @param uuid uuid of object
+   * @return nullptr or object created from class_name definition.
+   */
+  template<class T = Connectable>
+  std::shared_ptr<T> instantiate(const std::string &class_name, uuid_t uuid);
 
  protected:
 
   // logger shared ptr
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_;
 
-  std::map<std::string, std::unique_ptr<ProcessorFactory>> loaded_factories_;
+  std::map<std::string, std::unique_ptr<ObjectFactory>> loaded_factories_;
 
   std::mutex internal_mutex_;
 
@@ -223,6 +222,35 @@ class ClassLoader {
 
 };
 
+template<class T>
+std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name,
+                                            const std::string &name) {
+
+  std::lock_guard<std::mutex> lock(internal_mutex_);
+  auto factory_entry = loaded_factories_.find(class_name);
+  if (factory_entry != loaded_factories_.end()) {
+    auto obj = factory_entry->second->create(name);
+    return std::static_pointer_cast<T>(obj);
+  } else {
+    std::cout << "could not find " << class_name << std::endl;
+    return nullptr;
+  }
+}
+
+template<class T>
+std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name,
+                                            uuid_t uuid) {
+
+  std::lock_guard<std::mutex> lock(internal_mutex_);
+  auto factory_entry = loaded_factories_.find(class_name);
+  if (factory_entry != loaded_factories_.end()) {
+    auto obj = factory_entry->second->create(class_name, uuid);
+    return std::static_pointer_cast<T>(obj);
+  } else {
+    std::cout << "could not find " << class_name << std::endl;
+    return nullptr;
+  }
+}
 
 }/* namespace core */
 } /* namespace minifi */

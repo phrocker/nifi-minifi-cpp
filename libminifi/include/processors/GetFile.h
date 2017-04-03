@@ -129,7 +129,7 @@ class GetFile : public core::Processor {
 
 };
 
-REGISTER_PROCESSOR(GetFile)
+REGISTER_RESOURCE(GetFile)
 
 } /* namespace processors */
 } /* namespace minifi */

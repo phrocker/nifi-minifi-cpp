@@ -37,30 +37,30 @@ void ThreadedSchedulingAgent::schedule(
     std::shared_ptr<core::Processor> processor) {
   std::lock_guard < std::mutex > lock(mutex_);
 
-  _administrativeYieldDuration = 0;
+  admin_yield_duration_ = 0;
   std::string yieldValue;
 
   if (configure_->get(Configure::nifi_administrative_yield_duration,
                       yieldValue)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(
-        yieldValue, _administrativeYieldDuration, unit)
+        yieldValue, admin_yield_duration_, unit)
         && core::Property::ConvertTimeUnitToMS(
-            _administrativeYieldDuration, unit, _administrativeYieldDuration)) {
+            admin_yield_duration_, unit, admin_yield_duration_)) {
       logger_->log_debug("nifi_administrative_yield_duration: [%d] ms",
-                         _administrativeYieldDuration);
+                         admin_yield_duration_);
     }
   }
 
-  _boredYieldDuration = 0;
+  bored_yield_duration_ = 0;
   if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(
-        yieldValue, _boredYieldDuration, unit)
+        yieldValue, bored_yield_duration_, unit)
         && core::Property::ConvertTimeUnitToMS(
-            _boredYieldDuration, unit, _boredYieldDuration)) {
+            bored_yield_duration_, unit, bored_yield_duration_)) {
       logger_->log_debug("nifi_bored_yield_duration: [%d] ms",
-                         _boredYieldDuration);
+                         bored_yield_duration_);
     }
   }
 

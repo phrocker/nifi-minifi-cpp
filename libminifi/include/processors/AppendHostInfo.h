@@ -74,7 +74,7 @@ class AppendHostInfo : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 };
 //
-REGISTER_PROCESSOR(AppendHostInfo)
+REGISTER_RESOURCE(AppendHostInfo)
 
 } /* namespace processors */
 } /* namespace minifi */

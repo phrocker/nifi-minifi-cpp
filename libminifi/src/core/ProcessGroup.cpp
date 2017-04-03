@@ -305,6 +305,32 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
   }
 }
 
+void ProcessGroup::addControllerService(
+    const std::string &nodeId,
+    std::shared_ptr<core::controller::ControllerServiceNode> &node) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  controller_service_nodes_[nodeId] = node;
+
+}
+
+std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findControllerService(
+    const std::string &nodeId) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto node = controller_service_nodes_.find(nodeId);
+
+  if (node != controller_service_nodes_.end()) {
+    return node->second;
+  }
+
+  for (auto group : child_process_groups_) {
+    auto service = group->findControllerService(nodeId);
+    if (nullptr != service)
+      return service;
+  }
+
+  return nullptr;
+}
+
 } /* namespace processor */
 } /* namespace minifi */
 } /* namespace nifi */

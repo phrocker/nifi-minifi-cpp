@@ -207,7 +207,7 @@ class ListenSyslog : public core::Processor {
   uint8_t _buffer[2048];
 };
 
-REGISTER_PROCESSOR(ListenSyslog)
+REGISTER_RESOURCE(ListenSyslog)
 
 } /* namespace processors */
 } /* namespace minifi */

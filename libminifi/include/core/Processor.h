@@ -31,6 +31,7 @@
 #include <chrono>
 #include <functional>
 
+
 #include "core.h"
 #include "Connectable.h"
 #include "ConfigurableComponent.h"
@@ -43,6 +44,7 @@
 #include "ProcessSessionFactory.h"
 #include "ClassLoader.h"
 #include "Scheduling.h"
+#include "Resource.h"
 
 namespace org {
 namespace apache {
@@ -59,21 +61,6 @@ namespace core {
 // Default penalization period in second
 #define DEFAULT_PENALIZATION_PERIOD_SECONDS 30
 
-template<class T>
-class StaticClassType {
- public:
-
-  StaticClassType(const std::string &name) {
-    // Notify when the static member is created
-    ClassLoader::getDefaultClassLoader().registerClass(
-        name,
-        std::unique_ptr<ProcessorFactory>(new DefaultProcessorFactory<T>()));
-  }
-};
-
-#define REGISTER_PROCESSOR(CLASSNAME) \
-        static core::StaticClassType<CLASSNAME> \
-        CLASSNAME##_registrar( #CLASSNAME );
 
 // Processor Class
 class Processor : public Connectable, public ConfigurableComponent,

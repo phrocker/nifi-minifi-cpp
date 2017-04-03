@@ -102,7 +102,7 @@ class PutFile : public core::Processor {
                const std::string &tmpFile, const std::string &destFile);
 };
 
-REGISTER_PROCESSOR(PutFile)
+REGISTER_RESOURCE(PutFile)
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -117,7 +117,7 @@ class ListenHTTP : public core::Processor {
   std::unique_ptr<Handler> _handler;
 };
 
-REGISTER_PROCESSOR(ListenHTTP)
+REGISTER_RESOURCE(ListenHTTP)
 
 } /* namespace processors */
 } /* namespace minifi */

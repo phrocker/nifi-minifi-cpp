@@ -87,7 +87,7 @@ class TailFile : public core::Processor {
 
 };
 
-REGISTER_PROCESSOR(TailFile)
+REGISTER_RESOURCE(TailFile)
 
 // Matched File Item for Roll over check
 typedef struct {

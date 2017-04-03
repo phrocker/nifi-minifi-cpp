@@ -121,7 +121,7 @@ class LogAttribute : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_PROCESSOR(LogAttribute)
+REGISTER_RESOURCE(LogAttribute)
 
 } /* namespace processors */
 } /* namespace minifi */

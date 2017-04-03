@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-
 #include "core/ClassLoader.h"
-
+#include <sys/mman.h>
 
 namespace org {
 namespace apache {
@@ -25,12 +24,10 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-
-ClassLoader &ClassLoader::getDefaultClassLoader()
-{
-    static ClassLoader ret;
-    // populate ret
-    return ret;
+ClassLoader &ClassLoader::getDefaultClassLoader() {
+  static ClassLoader ret;
+  // populate ret
+  return ret;
 }
 short ClassLoader::registerResource(const std::string &resource) {
   void* resource_ptr = dlopen(resource.c_str(), RTLD_LAZY);
@@ -46,30 +43,26 @@ short ClassLoader::registerResource(const std::string &resource) {
   dlerror();
 
   // load the symbols
-  createFactory* create_factory_func = (createFactory*) dlsym(
-      resource_ptr, "createFactory");
+  createFactory* create_factory_func = (createFactory*) dlsym(resource_ptr,
+                                                              "createFactory");
   const char* dlsym_error = dlerror();
   if (dlsym_error) {
     logger_->log_error("Cannot load library: %s", dlsym_error);
     return RESOURCE_FAILURE;
   }
 
-  ProcessorFactory *factory = create_factory_func();
+  ObjectFactory *factory = create_factory_func();
 
   std::lock_guard<std::mutex> lock(internal_mutex_);
 
-  loaded_factories_[factory->getClassName()] = 
-      std::unique_ptr<ProcessorFactory>(factory);
+  loaded_factories_[factory->getClassName()] =
+      std::unique_ptr<ObjectFactory>(factory);
 
   return RESOURCE_SUCCESS;
 
 }
 
-short ClassLoader::registerResource(io::DataStream &stream) {
-  // TODO: copy stream to fs so we can read 
-return 0;
 
-}
 
 } /* namespace processor */
 } /* namespace minifi */
