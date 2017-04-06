@@ -65,13 +65,21 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   }
 
   // Destructor
+<<<<<<< HEAD
   ~FlowFileRepository() {
+=======
+  virtual ~FlowFileRepository() {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
     if (db_)
       delete db_;
   }
 
   // initialize
   virtual bool initialize() {
+<<<<<<< HEAD
+=======
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
     std::string value;
 
     if (configure_->get(Configure::nifi_flowfile_repository_directory_default,
@@ -153,6 +161,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 		  return false;
   }
   
+<<<<<<< HEAD
   void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap)
   {
     this->connectionMap=connectionMap;
@@ -172,6 +181,11 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
 
  private:
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
+=======
+  void loadFlowFileToConnections(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap);
+  
+ private:
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   leveldb::DB* db_;
 };
 

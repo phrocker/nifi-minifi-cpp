@@ -24,9 +24,15 @@
 #include "ResourceClaim.h"
 #include "catch.hpp"
 #include <vector>
+<<<<<<< HEAD
 #include "core/logging/LogAppenders.h"
 #include "core/logging/Logger.h"
 #include "core/core.h"
+=======
+#include "core/logging/Logger.h"
+#include "core/core.h"
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
 class LogTestController {
  public:
@@ -53,6 +59,7 @@ class TestController {
 
   ~TestController() {
     for (auto dir : directories) {
+<<<<<<< HEAD
       DIR *created_dir;
       struct dirent *dir_entry;
       created_dir = opendir(dir);
@@ -68,10 +75,13 @@ class TestController {
         }
       }
       closedir(created_dir);
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
       rmdir(dir);
     }
   }
 
+<<<<<<< HEAD
   void setDebugToConsole() {
     std::ostringstream oss;
     std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<
@@ -91,13 +101,18 @@ class TestController {
     logger->updateLogger(std::move(outputLogger));
   }
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   void enableDebug() {
     log.enableDebug();
   }
 
   char *createTempDirectory(char *format) {
     char *dir = mkdtemp(format);
+<<<<<<< HEAD
     directories.push_back(dir);
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
     return dir;
   }
 

@@ -188,6 +188,7 @@ int Serializable::writeUTF(std::string str, DataStream *stream, bool widen) {
     } else {
       write(utflen, stream);
     }
+<<<<<<< HEAD
     return 1;
   }
 
@@ -219,6 +220,12 @@ int Serializable::writeUTF(std::string str, DataStream *stream, bool widen) {
   return ret;
 }
 
+=======
+    return ret;
+}
+
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 } /* namespace io */
 } /* namespace minifi */
 } /* namespace nifi */

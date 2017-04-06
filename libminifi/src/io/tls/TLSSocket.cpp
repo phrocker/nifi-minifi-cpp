@@ -15,8 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+<<<<<<< HEAD:libminifi/src/io/tls/TLSSocket.cpp
 #include "properties/Configure.h"
 #include "io/tls/TLSSocket.h"
+=======
+
+#include "properties/Configure.h"
+#include "io/TLSSocket.h"
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233:libminifi/src/io/TLSSocket.cpp
 #include "utils/StringUtils.h"
 
 #include "core/Property.h"

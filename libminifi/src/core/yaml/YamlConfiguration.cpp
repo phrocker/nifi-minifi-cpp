@@ -29,6 +29,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(
   uuid_t uuid;
 
   std::string flowName = rootFlowNode["name"].as<std::string>();
+<<<<<<< HEAD
   std::string id ;
   
   try {
@@ -43,6 +44,11 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(
     uuid_unparse(uuid,uuid_str);
     id = uuid_str;
   }
+=======
+  std::string id = rootFlowNode["id"].as<std::string>();
+
+  uuid_parse(id.c_str(), uuid);
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
   logger_->log_debug("parseRootProcessGroup: id => [%s]", id.c_str());
   logger_->log_debug("parseRootProcessGroup: name => [%s]", flowName.c_str());

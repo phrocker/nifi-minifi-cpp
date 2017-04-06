@@ -269,6 +269,12 @@ bool FlowFileRecord::Serialize() {
     return false;
   }
 
+<<<<<<< HEAD
+=======
+  // Persistent to the DB
+  
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   if (flow_repository_->Put(uuid_str_,
                             const_cast<uint8_t*>(outStream.getBuffer()),
                             outStream.getSize())) {

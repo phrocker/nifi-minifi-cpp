@@ -25,10 +25,17 @@
 /**
  * Test repository
  */
+<<<<<<< HEAD
 class TestRepository : public core::Repository {
  public:
   TestRepository()
       : Repository("repo_name", "./dir", 1000, 100, 0) {
+=======
+class TestRepository : public core::Repository{
+ public:
+  TestRepository() : Repository("repo_name", "./dir",
+            1000, 100, 0) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   }
   // initialize
   bool initialize() {
@@ -66,14 +73,21 @@ class TestRepository : public core::Repository {
     return repositoryResults;
   }
 
+<<<<<<< HEAD
   void run() {
+=======
+  void run(){
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
     // do nothing
   }
  protected:
   std::map<std::string, std::string> repositoryResults;
 };
 
+<<<<<<< HEAD
 class TestFlowController : public minifi::FlowController {
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
  public:
   TestFlowController(std::shared_ptr<core::Repository> repo,
@@ -82,10 +96,22 @@ class TestFlowController : public minifi::FlowController {
   }
   ~TestFlowController() {
 
+<<<<<<< HEAD
   }
   void load() {
 
   }
+=======
+class TestFlowController : public minifi::FlowController
+{
+
+public:
+	TestFlowController(std::shared_ptr<core::Repository> repo,std::shared_ptr<core::Repository> flow_file_repo) : minifi::FlowController(repo,flow_file_repo,nullptr)
+	{
+	}
+	~TestFlowController()
+	{
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
   bool start() {
     running_.store(true);
@@ -99,11 +125,28 @@ class TestFlowController : public minifi::FlowController {
     stop(true);
   }
 
+<<<<<<< HEAD
   void unload() {
     stop(true);
   }
 
   void reload(std::string file) {
+=======
+	bool start()
+	{
+		running_.store(true);
+		return true;
+	}
+
+	void stop(bool force)
+	{
+		running_.store(false);
+	}
+	void waitUnload(const uint64_t timeToWaitMs)
+	{
+		stop(true);
+	}
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
   }
 
@@ -124,6 +167,7 @@ class TestFlowController : public minifi::FlowController {
     return 0;
   }
 
+<<<<<<< HEAD
   std::shared_ptr<minifi::Connection> createConnection(std::string name,
                                                        uuid_t uuid) {
     return 0;
@@ -131,6 +175,15 @@ class TestFlowController : public minifi::FlowController {
  protected:
   void initializePaths(const std::string &adjustedFilename) {
   }
+=======
+	std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid){ return 0;}
+
+	core::ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid){ return 0;}
+
+	core::ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid){ return 0; }
+
+	std::shared_ptr<minifi::Connection> createConnection(std::string name, uuid_t uuid){ return 0; }
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 };
 
 #endif /* LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_ */

@@ -28,6 +28,10 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 #include "properties/Configure.h"
 #include "core/Relationship.h"
 #include "FlowFileRecord.h"
@@ -61,6 +65,7 @@ class FlowController : public core::CoreComponent {
   static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
   static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
 
+<<<<<<< HEAD
   /**
    * Flow controller constructor
    */
@@ -71,6 +76,11 @@ class FlowController : public core::CoreComponent {
 
   // Destructor
   virtual ~FlowController();
+=======
+  // Destructor
+  virtual ~FlowController() {
+  }
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
   // Set MAX TimerDrivenThreads
   virtual void setMaxTimerDrivenThreads(int number) {
@@ -99,7 +109,11 @@ class FlowController : public core::CoreComponent {
   }
 
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
+<<<<<<< HEAD
   virtual void load();
+=======
+  virtual void load() = 0;
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
   // Whether the Flow Controller is start running
   virtual bool isRunning() {
@@ -110,6 +124,7 @@ class FlowController : public core::CoreComponent {
     return initialized_.load();
   }
   // Start to run the Flow Controller which internally start the root process group and all its children
+<<<<<<< HEAD
   virtual bool start();
   // Unload the current flow YAML, clean the root process group and all its children
   virtual void stop(bool force);
@@ -123,6 +138,21 @@ class FlowController : public core::CoreComponent {
   void updatePropertyValue(std::string processorName, std::string propertyName,
                            std::string propertyValue) {
     if (root_  != nullptr)
+=======
+  virtual bool start() = 0;
+  // Unload the current flow YAML, clean the root process group and all its children
+  virtual void stop(bool force) = 0;
+  // Asynchronous function trigger unloading and wait for a period of time
+  virtual void waitUnload(const uint64_t timeToWaitMs) = 0;
+  // Unload the current flow xml, clean the root process group and all its children
+  virtual void unload() = 0;
+  // Load new xml
+  virtual void reload(std::string yamlFile) = 0;
+  // update property value
+  void updatePropertyValue(std::string processorName, std::string propertyName,
+                           std::string propertyValue) {
+    if (root_)
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
       root_->updatePropertyValue(processorName, propertyName, propertyValue);
   }
 
@@ -133,6 +163,7 @@ class FlowController : public core::CoreComponent {
 
  protected:
 
+<<<<<<< HEAD
   // function to load the flow file repo.
   void loadFlowRepo();
 
@@ -147,6 +178,8 @@ class FlowController : public core::CoreComponent {
   // configuration object
   Configure *configure_;
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   // Configuration File Name
   std::string configuration_file_name_;
   // NiFi property File Name
@@ -185,11 +218,93 @@ class FlowController : public core::CoreComponent {
   // flow configuration object.
   std::unique_ptr<core::FlowConfiguration> flow_configuration_;
 
+<<<<<<< HEAD
   // additional flow configuration object
   std::vector<std::unique_ptr<core::FlowConfiguration>> additional_configurations_;
 
 };
 
+=======
+  FlowController(std::shared_ptr<core::Repository> provenance_repo,
+                 std::shared_ptr<core::Repository> flow_file_repo,
+                 std::unique_ptr<core::FlowConfiguration> flow_configuration)
+      : CoreComponent(core::getClassName<FlowController>()),
+        root_(nullptr),
+        max_timer_driven_threads_(0),
+        max_event_driven_threads_(0),
+        running_(false),
+        initialized_(false),
+        provenance_repo_(provenance_repo),
+        flow_file_repo_(flow_file_repo),
+        protocol_(0),
+        _timerScheduler(provenance_repo_),
+        _eventScheduler(provenance_repo_),
+        flow_configuration_(std::move(flow_configuration)) {
+    if (provenance_repo == nullptr)
+      throw std::runtime_error("Provenance Repo should not be null");
+    if (flow_file_repo == nullptr)
+      throw std::runtime_error("Flow Repo should not be null");
+  }
+
+};
+
+/**
+ * Flow Controller implementation that defines the typical flow.
+ * of events.
+ */
+class FlowControllerImpl : public FlowController {
+ public:
+
+  // Destructor
+  virtual ~FlowControllerImpl();
+
+  // Life Cycle related function
+  // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
+  void load();
+  // Start to run the Flow Controller which internally start the root process group and all its children
+  bool start();
+  // Stop to run the Flow Controller which internally stop the root process group and all its children
+  void stop(bool force);
+  // Asynchronous function trigger unloading and wait for a period of time
+  void waitUnload(const uint64_t timeToWaitMs);
+  // Unload the current flow xml, clean the root process group and all its children
+  void unload();
+  // Load Flow File from persistent Flow Repo
+  void loadFlowRepo();
+  // Load new xml
+  void reload(std::string yamlFile);
+  // update property value
+  void updatePropertyValue(std::string processorName, std::string propertyName,
+                           std::string propertyValue) {
+    if (root_)
+      root_->updatePropertyValue(processorName, propertyName, propertyValue);
+  }
+
+  // Constructor
+  /*!
+   * Create a new Flow Controller
+   */
+  FlowControllerImpl(
+      std::shared_ptr<core::Repository> repo,
+      std::shared_ptr<core::Repository> flow_file_repo,
+      std::unique_ptr<core::FlowConfiguration> flow_configuration,
+      std::string name = DEFAULT_ROOT_GROUP_NAME);
+
+  // Prevent default copy constructor and assignment operation
+  // Only support pass by reference or pointer
+  FlowControllerImpl(const FlowController &parent) = delete;
+  FlowControllerImpl &operator=(const FlowController &parent) = delete;
+
+ private:
+
+  std::recursive_mutex mutex_;
+
+  // configuration object
+  Configure *configure_;
+
+};
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

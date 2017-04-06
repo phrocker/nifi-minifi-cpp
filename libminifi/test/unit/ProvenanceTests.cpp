@@ -16,6 +16,11 @@
  * limitations under the License.
  */
 
+<<<<<<< HEAD
+=======
+#ifndef PROVENANCE_TESTS
+#define PROVENANCE_TESTS
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 #include "../TestBase.h"
 
 #include "ProvenanceTestHelper.h"
@@ -90,3 +95,8 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   REQUIRE(record2.getChildrenUuids().size() == 0);
 
 }
+<<<<<<< HEAD
+=======
+
+#endif
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233

@@ -50,7 +50,11 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
   return record;
 }
 
+<<<<<<< HEAD
 std::shared_ptr<core::FlowFile> ProcessSession::create(std::shared_ptr<core::FlowFile> &&parent) {
+=======
+std::shared_ptr<core::FlowFile> ProcessSession::create(std::shared_ptr<core::FlowFile> &parent) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   std::map<std::string, std::string> empty;
   std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getProvenanceRepository(),
       empty);
@@ -530,6 +534,7 @@ void ProcessSession::read(std::shared_ptr<core::FlowFile> &&flow,
   }
 }
 
+<<<<<<< HEAD
 /**
   * Imports a file from the data stream
   * @param stream incoming data stream that contains the data to store into a file
@@ -621,6 +626,8 @@ void ProcessSession::importFrom(io::DataStream &stream,
   }
 }
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 void ProcessSession::import(std::string source,
                             std::shared_ptr<core::FlowFile> &flow,
                             bool keepSource, uint64_t offset) {
@@ -730,7 +737,10 @@ void ProcessSession::import(std::string source,
           fs.write(buf, input.gcount());
       }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
       if (fs.good() && fs.tellp() >= 0) {
         flow->setSize(fs.tellp());
         flow->setOffset(0);

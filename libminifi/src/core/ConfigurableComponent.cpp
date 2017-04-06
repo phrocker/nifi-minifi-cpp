@@ -28,14 +28,22 @@ namespace minifi {
 namespace core {
 
 ConfigurableComponent::ConfigurableComponent(std::shared_ptr<logging::Logger> logger)
+<<<<<<< HEAD
     : my_logger_(logger) {
+=======
+    : logger_(logger) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
 }
 
 ConfigurableComponent::ConfigurableComponent(
     const ConfigurableComponent &&other)
     : properties_(std::move(other.properties_)),
+<<<<<<< HEAD
       my_logger_(std::move(other.my_logger_)) {
+=======
+      logger_(std::move(other.logger_)) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
 }
 ConfigurableComponent::~ConfigurableComponent() {
@@ -57,7 +65,11 @@ bool ConfigurableComponent::getProperty(const std::string name,
   if (it != properties_.end()) {
     Property item = it->second;
     value = item.getValue();
+<<<<<<< HEAD
     my_logger_->log_info("Processor %s property name %s value %s", name.c_str(),
+=======
+    logger_->log_info("Processor %s property name %s value %s", name.c_str(),
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
                       item.getName().c_str(), value.c_str());
     return true;
   } else {
@@ -79,7 +91,11 @@ bool ConfigurableComponent::setProperty(const std::string name,
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
+<<<<<<< HEAD
     my_logger_->log_info("Component %s property name %s value %s", name.c_str(),
+=======
+    logger_->log_info("Component %s property name %s value %s", name.c_str(),
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
                       item.getName().c_str(), value.c_str());
     return true;
   } else {
@@ -101,7 +117,11 @@ bool ConfigurableComponent::setProperty(Property &prop, std::string value) {
     Property item = it->second;
     item.setValue(value);
     properties_[item.getName()] = item;
+<<<<<<< HEAD
     my_logger_->log_info("property name %s value %s", prop.getName().c_str(),
+=======
+    logger_->log_info("property name %s value %s", prop.getName().c_str(),
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
                       item.getName().c_str(), value.c_str());
     return true;
   } else {

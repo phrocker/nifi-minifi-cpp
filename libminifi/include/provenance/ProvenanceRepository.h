@@ -23,7 +23,10 @@
 #include "leveldb/status.h"
 #include "core/Repository.h"
 #include "core/core.h"
+<<<<<<< HEAD
 #include "provenance/Provenance.h"
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 namespace org {
 namespace apache {
 namespace nifi {
@@ -58,6 +61,7 @@ class ProvenanceRepository : public core::Repository,
     if (db_)
       delete db_;
   }
+<<<<<<< HEAD
   
   void start() {
   if (this->purge_period_ <= 0)
@@ -69,6 +73,8 @@ class ProvenanceRepository : public core::Repository,
   running_ = true;
   logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
 }
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
   // initialize
   virtual bool initialize() {
@@ -175,4 +181,7 @@ class ProvenanceRepository : public core::Repository,
 } /* namespace apache */
 } /* namespace org */
 #endif /* LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCEREPOSITORY_H_ */
+<<<<<<< HEAD
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233

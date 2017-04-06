@@ -38,8 +38,14 @@ class TailFile : public core::Processor {
   /*!
    * Create a new processor
    */
+<<<<<<< HEAD
   explicit TailFile(std::string name, uuid_t uuid = NULL)
       : core::Processor(name, uuid) {
+=======
+  TailFile(std::string name, uuid_t uuid = NULL)
+      : core::Processor(name, uuid) {
+    logger_ = logging::Logger::getLogger();
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
     _stateRecovered = false;
   }
   // Destructor
@@ -56,8 +62,14 @@ class TailFile : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi TailFile
+<<<<<<< HEAD
   virtual void onTrigger(core::ProcessContext *context,
                          core::ProcessSession *session);
+=======
+  virtual void onTrigger(
+      core::ProcessContext *context,
+      core::ProcessSession *session);
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   // Initialize, over write by NiFi TailFile
   virtual void initialize(void);
   // recoverState
@@ -68,7 +80,15 @@ class TailFile : public core::Processor {
  protected:
 
  private:
+<<<<<<< HEAD
   std::mutex tail_file_mutex_;
+=======
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
+  std::string _fileLocation;
+  // Property Specified Tailed File Name
+  std::string _fileName;
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   // File to save state
   std::string _stateFile;
   // State related to the tailed file
@@ -80,6 +100,7 @@ class TailFile : public core::Processor {
   std::string trimLeft(const std::string& s);
   std::string trimRight(const std::string& s);
   void parseStateFileLine(char *buf);
+<<<<<<< HEAD
   /**
    * Check roll over for the provided file.
    */
@@ -89,6 +110,12 @@ class TailFile : public core::Processor {
 
 REGISTER_RESOURCE(TailFile)
 
+=======
+  void checkRollOver();
+
+};
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 // Matched File Item for Roll over check
 typedef struct {
   std::string fileName;

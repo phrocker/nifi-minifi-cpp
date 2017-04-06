@@ -25,10 +25,17 @@
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "processors/TailFile.h"
+<<<<<<< HEAD
 #include "processors/ListenHTTP.h"
 #include "processors/ListenSyslog.h"
 #include "processors/GenerateFlowFile.h"
 #include "processors/RealTimeDataCollector.h"
+=======
+#include "processors/ListenSyslog.h"
+#include "processors/GenerateFlowFile.h"
+#include "processors/RealTimeDataCollector.h"
+#include "processors/ListenHTTP.h"
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 #include "processors/LogAttribute.h"
 #include "processors/ExecuteProcess.h"
 #include "processors/AppendHostInfo.h"
@@ -44,6 +51,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+<<<<<<< HEAD
 /**
  * Purpose: Flow configuration defines the mechanism
  * by which we will configure our flow controller
@@ -54,6 +62,10 @@ class FlowConfiguration : public CoreComponent {
    * Constructor that will be used for configuring
    * the flow controller.
    */
+=======
+class FlowConfiguration : public CoreComponent {
+ public:
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   FlowConfiguration(std::shared_ptr<core::Repository> repo,
                     std::shared_ptr<core::Repository> flow_file_repo,
                     const std::string path)
@@ -78,10 +90,13 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<minifi::Connection> createConnection(std::string name,
                                                        uuid_t uuid);
 
+<<<<<<< HEAD
   /**
    * Returns the configuration path string
    * @return config_path_
    */
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   const std::string &getConfigurationPath() {
     return config_path_;
   }
@@ -90,6 +105,7 @@ class FlowConfiguration : public CoreComponent {
     return getRoot(config_path_);
   }
 
+<<<<<<< HEAD
   /**
    * Base implementation that returns a null root pointer.
    * @return Extensions should return a non-null pointer in order to
@@ -99,6 +115,10 @@ class FlowConfiguration : public CoreComponent {
       const std::string &from_config) {
     return nullptr;
   }
+=======
+  virtual std::unique_ptr<core::ProcessGroup> getRoot(
+      const std::string &from_config) =0;
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
  protected:
   // configuration path

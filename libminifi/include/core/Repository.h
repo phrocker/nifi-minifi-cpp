@@ -72,6 +72,7 @@ class Repository : public CoreComponent {
   }
 
   // initialize
+<<<<<<< HEAD
   virtual bool initialize(){
     return true;
   }
@@ -92,6 +93,18 @@ class Repository : public CoreComponent {
   virtual  void run(){
     // no op
   }
+=======
+  virtual bool initialize() = 0;
+  // Put
+  virtual bool Put(std::string key, uint8_t *buf, int bufLen) = 0;
+  // Delete
+  virtual bool Delete(std::string key) = 0;
+
+  virtual bool Get(std::string key, std::string &value) = 0;
+
+  // Run function for the thread
+  virtual  void run() = 0;
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   // Start the repository monitor thread
   virtual void start();
   // Stop the repository monitor thread
@@ -137,6 +150,7 @@ class Repository : public CoreComponent {
   uint64_t repoSize();
   // size of the directory
   std::atomic<uint64_t> repo_size_;
+<<<<<<< HEAD
   // Run function for the thread
   void threadExecutor(){
       run();
@@ -144,6 +158,14 @@ class Repository : public CoreComponent {
 
   
     
+=======
+
+ private:
+  // Run function for the thread
+    void threadExecutor(){
+      run();
+    }
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 };
 
 } /* namespace core */

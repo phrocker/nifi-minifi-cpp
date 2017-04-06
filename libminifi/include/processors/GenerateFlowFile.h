@@ -90,8 +90,11 @@ class GenerateFlowFile : public core::Processor {
   uint64_t _dataSize;
 };
 
+<<<<<<< HEAD
 REGISTER_RESOURCE(GenerateFlowFile)
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

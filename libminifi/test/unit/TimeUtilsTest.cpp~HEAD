@@ -16,51 +16,27 @@
  * limitations under the License.
  */
 
-#include "core/Property.h"
+<<<<<<< HEAD:libminifi/test/unit/TimeUtilsTest.cpp:libminifi/test/unit/TimeUtilsTest.cpp
 
+
+
+=======
+#include <atomic>
+#include <mutex> 
+  
 namespace org {
 namespace apache {
-<<<<<<< HEAD
-namespace nifi {namespace minifi {
-=======
 namespace nifi {
 namespace minifi {
->>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
-namespace core {
+namespace io {
 
-// Get Name for the property
-std::string Property::getName() const {
-  return name_;
-}
-// Get Description for the property
-std::string Property::getDescription() {
-  return description_;
-}
-// Get value for the property
-std::string Property::getValue() const {
-  return value_;
-}
-// Set value for the property
-void Property::setValue(std::string value) {
-  value_ = value;
-}
-// Compare
-bool Property::operator <(const Property & right) const {
-  return name_ < right.name_;
-}
+std::atomic<SocketFactory*> SocketFactory::context_instance_;
+std::mutex SocketFactory::context_mutex_;
 
-const Property &Property::operator=(const Property &other) {
-  name_ = other.name_;
-  value_ = other.value_;
-  return *this;
-}
 
-<<<<<<< HEAD
-} /* namespace core */
-=======
-} /* namespace components */
->>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
+} /* namespace io */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233:libminifi/src/io/SocketFactory.cpp:libminifi/src/io/SocketFactory.cpp

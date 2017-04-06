@@ -26,7 +26,10 @@
 #include "core/ProcessSession.h"
 #include "core/core.h"
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 namespace org {
 namespace apache {
 namespace nifi {
@@ -34,7 +37,10 @@ namespace minifi {
 namespace processors {
 
 // AppendHostInfo Class
+<<<<<<< HEAD
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 class AppendHostInfo : public core::Processor {
  public:
   // Constructor
@@ -50,7 +56,10 @@ class AppendHostInfo : public core::Processor {
   }
   // Processor Name
   static const std::string ProcessorName;
+<<<<<<< HEAD
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   // Supported Properties
   static core::Property InterfaceName;
   static core::Property HostAttribute;
@@ -73,8 +82,11 @@ class AppendHostInfo : public core::Processor {
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 };
+<<<<<<< HEAD
 //
 REGISTER_RESOURCE(AppendHostInfo)
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
 } /* namespace processors */
 } /* namespace minifi */

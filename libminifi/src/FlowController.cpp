@@ -36,6 +36,10 @@
 #include "core/core.h"
 #include "core/repository/FlowFileRepository.h"
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 namespace org {
 namespace apache {
 namespace nifi {
@@ -43,6 +47,7 @@ namespace minifi {
 
 #define DEFAULT_CONFIG_NAME "conf/flow.yml"
 
+<<<<<<< HEAD
 FlowController::FlowController(
     std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo,
@@ -65,24 +70,41 @@ FlowController::FlowController(
   if (flow_file_repo == nullptr)
     throw std::runtime_error("Flow Repo should not be null");
 
+=======
+FlowControllerImpl::FlowControllerImpl(
+    std::shared_ptr<core::Repository> repo,
+    std::shared_ptr<core::Repository> flow_file_repo,
+    std::unique_ptr<core::FlowConfiguration> flow_configuration,
+    std::string name)
+    : FlowController(repo, flow_file_repo, std::move(flow_configuration)) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   uuid_generate(uuid_);
   setUUID(uuid_);
 
   // Setup the default values
+<<<<<<< HEAD
   if (flow_configuration_ != nullptr) {
     configuration_filename_ = flow_configuration_->getConfigurationPath();
   }
+=======
+  configuration_filename_ = flow_configuration_->getConfigurationPath();
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   max_event_driven_threads_ = DEFAULT_MAX_EVENT_DRIVEN_THREAD;
   max_timer_driven_threads_ = DEFAULT_MAX_TIMER_DRIVEN_THREAD;
   running_ = false;
   initialized_ = false;
   root_ = NULL;
+<<<<<<< HEAD
 
+=======
+  logger_ = logging::Logger::getLogger();
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   protocol_ = new FlowControlProtocol(this);
 
   // NiFi config properties
   configure_ = Configure::getConfigure();
 
+<<<<<<< HEAD
   if (!headless_mode) {
     std::string rawConfigFileString;
     configure_->get(Configure::nifi_flow_configuration_file,
@@ -104,13 +126,28 @@ FlowController::FlowController(
     }
 
     initializePaths(adjustedFilename);
+=======
+  std::string rawConfigFileString;
+  configure_->get(Configure::nifi_flow_configuration_file, rawConfigFileString);
+
+  if (!rawConfigFileString.empty()) {
+    configuration_filename_ = rawConfigFileString;
   }
 
-}
-
-void FlowController::initializePaths(const std::string &adjustedFilename) {
   char *path = NULL;
   char full_path[PATH_MAX];
+
+  std::string adjustedFilename;
+  if (!configuration_filename_.empty()) {
+    // perform a naive determination if this is a relative path
+    if (configuration_filename_.c_str()[0] != '/') {
+      adjustedFilename = adjustedFilename + configure_->getHome() + "/"
+          + configuration_filename_;
+    } else {
+      adjustedFilename = configuration_filename_;
+    }
+  }
+
   path = realpath(adjustedFilename.c_str(), full_path);
 
   if (path == NULL) {
@@ -143,8 +180,57 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
         "Could not locate path from provided configuration file name (%s).  Exiting.",
         full_path);
     exit(1);
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   }
 
+}
+
+<<<<<<< HEAD
+void FlowController::initializePaths(const std::string &adjustedFilename) {
+  char *path = NULL;
+  char full_path[PATH_MAX];
+  path = realpath(adjustedFilename.c_str(), full_path);
+
+  if (path == NULL) {
+    throw std::runtime_error(
+        "Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
+  }
+  std::string pathString(path);
+  configuration_filename_ = pathString;
+  logger_->log_info("FlowController NiFi Configuration file %s",
+                    pathString.c_str());
+
+  // Create the content repo directory if needed
+  struct stat contentDirStat;
+
+  if (stat(ResourceClaim::default_directory_path.c_str(), &contentDirStat)
+      != -1&& S_ISDIR(contentDirStat.st_mode)) {
+    path = realpath(ResourceClaim::default_directory_path.c_str(), full_path);
+    logger_->log_info("FlowController content directory %s", full_path);
+  } else {
+    if (mkdir(ResourceClaim::default_directory_path.c_str(), 0777) == -1) {
+      logger_->log_error("FlowController content directory creation failed");
+      exit(1);
+    }
+  }
+
+  std::string clientAuthStr;
+=======
+FlowControllerImpl::~FlowControllerImpl() {
+  stop(true);
+  unload();
+  if (NULL != protocol_)
+    delete protocol_;
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
+
+  if (!path) {
+    logger_->log_error(
+        "Could not locate path from provided configuration file name (%s).  Exiting.",
+        full_path);
+    exit(1);
+  }
+
+<<<<<<< HEAD
 }
 
 FlowController::~FlowController() {
@@ -158,6 +244,9 @@ FlowController::~FlowController() {
 }
 
 void FlowController::stop(bool force) {
+=======
+void FlowControllerImpl::stop(bool force) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
@@ -186,7 +275,11 @@ void FlowController::stop(bool force) {
  * @param timeToWaitMs Maximum time to wait before manually
  * marking running as false.
  */
+<<<<<<< HEAD
 void FlowController::waitUnload(const uint64_t timeToWaitMs) {
+=======
+void FlowControllerImpl::waitUnload(const uint64_t timeToWaitMs) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   if (running_) {
     // use the current time and increment with the provided argument.
     std::chrono::system_clock::time_point wait_time =
@@ -204,7 +297,11 @@ void FlowController::waitUnload(const uint64_t timeToWaitMs) {
   }
 }
 
+<<<<<<< HEAD
 void FlowController::unload() {
+=======
+void FlowControllerImpl::unload() {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop(true);
@@ -219,7 +316,11 @@ void FlowController::unload() {
   return;
 }
 
+<<<<<<< HEAD
 void FlowController::load() {
+=======
+void FlowControllerImpl::load() {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop(true);
@@ -229,6 +330,21 @@ void FlowController::load() {
                       configuration_filename_.c_str());
 
     this->root_ = flow_configuration_->getRoot(configuration_filename_);
+<<<<<<< HEAD
+=======
+    /*YAML::Node flow = YAML::LoadFile(configuration_filename_);
+
+     YAML::Node flowControllerNode = flow["Flow Controller"];
+     YAML::Node processorsNode = flow[CONFIG_YAML_PROCESSORS_KEY];
+     YAML::Node connectionsNode = flow["Connections"];
+     YAML::Node remoteProcessingGroupNode = flow["Remote Processing Groups"];
+
+     // Create the root process group
+     parseRootProcessGroupYaml(flowControllerNode);
+     parseProcessorNodeYaml(processorsNode, this->root_);
+     parseRemoteProcessGroupYaml(&remoteProcessingGroupNode, this->root_);
+     parseConnectionYaml(&connectionsNode, this->root_);*/
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
     // Load Flow File from Repo
     loadFlowRepo();
@@ -237,7 +353,11 @@ void FlowController::load() {
   }
 }
 
+<<<<<<< HEAD
 void FlowController::reload(std::string yamlFile) {
+=======
+void FlowControllerImpl::reload(std::string yamlFile) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   logger_->log_info("Starting to reload Flow Controller with yaml %s",
                     yamlFile.c_str());
@@ -247,7 +367,11 @@ void FlowController::reload(std::string yamlFile) {
   this->configuration_filename_ = yamlFile;
   load();
   start();
+<<<<<<< HEAD
   if (this->root_ != nullptr) {
+=======
+  if (!this->root_) {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
     this->configuration_filename_ = oldYamlFile;
     logger_->log_info("Rollback Flow Controller to YAML %s",
                       oldYamlFile.c_str());
@@ -258,6 +382,7 @@ void FlowController::reload(std::string yamlFile) {
   }
 }
 
+<<<<<<< HEAD
 void FlowController::loadFlowRepo() {
   if (this->flow_file_repo_) {
     std::map<std::string, std::shared_ptr<Connection>> connectionMap;
@@ -272,6 +397,19 @@ void FlowController::loadFlowRepo() {
 }
 
 bool FlowController::start() {
+=======
+void FlowControllerImpl::loadFlowRepo() {
+  if (this->flow_file_repo_) {
+    std::map<std::string, std::shared_ptr<Connection>> connectionMap;
+    this->root_->getConnections(connectionMap);
+    auto rep = std::static_pointer_cast<core::repository::FlowFileRepository>(
+        flow_file_repo_);
+    rep->loadFlowFileToConnections(connectionMap);
+  }
+}
+
+bool FlowControllerImpl::start() {
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (!initialized_) {
     logger_->log_error(
@@ -283,10 +421,16 @@ bool FlowController::start() {
       logger_->log_info("Starting Flow Controller");
       this->_timerScheduler.start();
       this->_eventScheduler.start();
+<<<<<<< HEAD
       if (this->root_ != nullptr) {
         this->root_->startProcessing(&this->_timerScheduler,
                                      &this->_eventScheduler);
       }
+=======
+      if (this->root_)
+        this->root_->startProcessing(&this->_timerScheduler,
+                                     &this->_eventScheduler);
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
       running_ = true;
       this->protocol_->start();
       this->provenance_repo_->start();

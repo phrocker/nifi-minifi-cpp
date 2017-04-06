@@ -74,11 +74,19 @@ bool SchedulingAgent::onTrigger(
     processor->decrementActiveTask();
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
+<<<<<<< HEAD
     processor->yield(admin_yield_duration_);
     processor->decrementActiveTask();
   } catch (...) {
     logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
     processor->yield(admin_yield_duration_);
+=======
+    processor->yield(_administrativeYieldDuration);
+    processor->decrementActiveTask();
+  } catch (...) {
+    logger_->log_debug("Caught Exception during SchedulingAgent::onTrigger");
+    processor->yield(_administrativeYieldDuration);
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
     processor->decrementActiveTask();
   }
 

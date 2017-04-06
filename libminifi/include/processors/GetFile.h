@@ -1,4 +1,9 @@
 /**
+<<<<<<< HEAD
+=======
+ * @file GetFile.h
+ * GetFile class declaration
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,7 +23,10 @@
 #ifndef __GET_FILE_H__
 #define __GET_FILE_H__
 
+<<<<<<< HEAD
 #include <atomic>
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -30,6 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
+<<<<<<< HEAD
   struct GetFileRequest{
     std::string directory = ".";
     bool recursive = true;
@@ -44,6 +53,8 @@ namespace processors {
     std::string fileFilter= "[^\\.].*";
   };
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 // GetFile Class
 class GetFile : public core::Processor {
  public:
@@ -51,9 +62,27 @@ class GetFile : public core::Processor {
   /*!
    * Create a new processor
    */
+<<<<<<< HEAD
   explicit GetFile(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid) {
 
+=======
+  GetFile(std::string name, uuid_t uuid = NULL)
+      : Processor(name, uuid) {
+    logger_ = logging::Logger::getLogger();
+    _directory = ".";
+    _recursive = true;
+    _keepSourceFile = false;
+    _minAge = 0;
+    _maxAge = 0;
+    _minSize = 0;
+    _maxSize = 0;
+    _ignoreHiddenFile = true;
+    _pollInterval = 0;
+    _batchSize = 10;
+    _lastDirectoryListingTime = getTimeMillis();
+    _fileFilter = "[^\\.].*";
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   }
   // Destructor
   virtual ~GetFile() {
@@ -80,6 +109,7 @@ class GetFile : public core::Processor {
   virtual void onTrigger(
       core::ProcessContext *context,
       core::ProcessSession *session);
+<<<<<<< HEAD
   /**
    * Function that's executed when the processor is scheduled.
    * @param context process context.
@@ -97,11 +127,22 @@ class GetFile : public core::Processor {
    * @param request get file request.
    */
   void performListing(std::string dir,const GetFileRequest &request);
+=======
+  // Initialize, over write by NiFi GetFile
+  virtual void initialize(void);
+  // perform directory listing
+  void performListing(std::string dir);
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
  protected:
 
  private:
+<<<<<<< HEAD
 
+=======
+  // Logger
+  std::shared_ptr<logging::Logger> logger_;
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   // Queue for store directory list
   std::queue<std::string> _dirList;
   // Get Listing size
@@ -114,6 +155,7 @@ class GetFile : public core::Processor {
   // Put full path file name into directory listing
   void putListing(std::string fileName);
   // Poll directory listing for files
+<<<<<<< HEAD
   void pollListing(std::queue<std::string> &list,const GetFileRequest &request);
   // Check whether file can be added to the directory listing
   bool acceptFile(std::string fullName, std::string name, const GetFileRequest &request);
@@ -131,6 +173,27 @@ class GetFile : public core::Processor {
 
 REGISTER_RESOURCE(GetFile)
 
+=======
+  void pollListing(std::queue<std::string> &list, int maxSize);
+  // Check whether file can be added to the directory listing
+  bool acceptFile(std::string fullName, std::string name);
+  // Mutex for protection of the directory listing
+  std::mutex mutex_;
+  std::string _directory;
+  bool _recursive;
+  bool _keepSourceFile;
+  int64_t _minAge;
+  int64_t _maxAge;
+  int64_t _minSize;
+  int64_t _maxSize;
+  bool _ignoreHiddenFile;
+  int64_t _pollInterval;
+  int64_t _batchSize;
+  uint64_t _lastDirectoryListingTime;
+  std::string _fileFilter;
+};
+
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

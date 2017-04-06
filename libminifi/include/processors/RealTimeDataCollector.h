@@ -137,8 +137,11 @@ class RealTimeDataCollector : public core::Processor {
   std::ifstream _fileStream;
 };
 
+<<<<<<< HEAD
 REGISTER_RESOURCE(RealTimeDataCollector)
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

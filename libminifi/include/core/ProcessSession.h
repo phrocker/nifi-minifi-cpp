@@ -77,6 +77,7 @@ class ProcessSession {
 // Create a new UUID FlowFile with no content resource claim and without parent
   std::shared_ptr<core::FlowFile> create();
 // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
+<<<<<<< HEAD
   std::shared_ptr<core::FlowFile> create(
       std::shared_ptr<core::FlowFile> &&parent);
 
@@ -84,6 +85,9 @@ class ProcessSession {
         std::shared_ptr<core::FlowFile> &parent){
     return create(parent);
   }
+=======
+  std::shared_ptr<core::FlowFile> create(std::shared_ptr<core::FlowFile> &parent);
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 // Clone a new UUID FlowFile from parent both for content resource claim and attributes
   std::shared_ptr<core::FlowFile> clone(
       std::shared_ptr<core::FlowFile> &parent);
@@ -127,6 +131,7 @@ class ProcessSession {
 // Penalize the flow
   void penalize(std::shared_ptr<core::FlowFile> &flow);
   void penalize(std::shared_ptr<core::FlowFile> &&flow);
+<<<<<<< HEAD
 
   /**
    * Imports a file from the data stream
@@ -135,6 +140,9 @@ class ProcessSession {
    */
   void importFrom(io::DataStream &stream, std::shared_ptr<core::FlowFile> &&flow);
   // import from the data source.
+=======
+// Import the existed file into the flow
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   void import(std::string source, std::shared_ptr<core::FlowFile> &flow,
               bool keepSource = true, uint64_t offset = 0);
   void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,

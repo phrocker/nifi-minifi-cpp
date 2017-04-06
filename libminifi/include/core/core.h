@@ -45,6 +45,7 @@ static inline std::string getClassName() {
   return name;
 }
 
+<<<<<<< HEAD
 template<typename T>
 struct class_operations {
   
@@ -75,6 +76,8 @@ typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type in
   return std::make_shared<T>();
 }
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 /**
  * Base component within MiNiFi
  * Purpose: Many objects store a name and UUID, therefore
@@ -140,9 +143,12 @@ class CoreComponent {
   const std::string & getUUIDStr()  {
     return uuidStr_;
   }
+<<<<<<< HEAD
   
   void loadComponent(){
   }
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
  protected:
   // A global unique identifier

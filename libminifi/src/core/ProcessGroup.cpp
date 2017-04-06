@@ -305,6 +305,7 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
   }
 }
 
+<<<<<<< HEAD
 void ProcessGroup::addControllerService(
     const std::string &nodeId,
     std::shared_ptr<core::controller::ControllerServiceNode> &node) {
@@ -331,6 +332,8 @@ std::shared_ptr<core::controller::ControllerServiceNode> ProcessGroup::findContr
   return nullptr;
 }
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 } /* namespace processor */
 } /* namespace minifi */
 } /* namespace nifi */

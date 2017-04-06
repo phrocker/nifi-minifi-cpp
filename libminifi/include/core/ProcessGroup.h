@@ -32,7 +32,10 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "core/logging/Logger.h"
+<<<<<<< HEAD
 #include "controller/ControllerServiceNode.h"
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 
 namespace org {
 namespace apache {
@@ -141,6 +144,7 @@ class ProcessGroup {
   std::shared_ptr<Processor> findProcessor(uuid_t uuid);
   // findProcessor based on name
   std::shared_ptr<Processor> findProcessor(const std::string &processorName);
+<<<<<<< HEAD
 
   /**
    * Add controller service
@@ -159,6 +163,8 @@ class ProcessGroup {
   std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(
       const std::string &nodeId);
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
   // removeConnection
   void removeConnection(std::shared_ptr<Connection> connection);
   // update property value
@@ -190,10 +196,13 @@ class ProcessGroup {
   // Transmitting
   std::atomic<bool> transmitting_;
 
+<<<<<<< HEAD
   // controller services
 
   std::map<std::string, std::shared_ptr<core::controller::ControllerServiceNode>> controller_service_nodes_;
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
  private:
 
   // Mutex for protection

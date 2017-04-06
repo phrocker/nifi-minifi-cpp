@@ -116,8 +116,11 @@ class ExecuteProcess : public core::Processor {
   pid_t _pid;
 };
 
+<<<<<<< HEAD
 REGISTER_RESOURCE(ExecuteProcess)
 
+=======
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

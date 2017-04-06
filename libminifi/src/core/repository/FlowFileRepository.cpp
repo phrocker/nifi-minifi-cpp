@@ -47,7 +47,11 @@ void FlowFileRepository::run() {
   return;
 }
 
+<<<<<<< HEAD
 void FlowFileRepository::loadComponent()
+=======
+void FlowFileRepository::loadFlowFileToConnections(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap)
+>>>>>>> d6774b32b40e36afbea80dd09495cceaa5db5233
  {
 
   std::vector<std::string> purgeList;
