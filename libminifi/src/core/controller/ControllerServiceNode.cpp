@@ -25,6 +25,13 @@ namespace minifi {
 namespace core {
 namespace controller {
 
+std::shared_ptr<ControllerService> &ControllerServiceNode::getControllerServiceImplementation() {
+  return controller_service_;
+}
+
+std::vector<std::shared_ptr<ControllerService> > &ControllerServiceNode::getLinkedControllerServices(){
+  return linked_controller_services_;
+}
 
 } /* namespace controller */
 } /* namespace core */

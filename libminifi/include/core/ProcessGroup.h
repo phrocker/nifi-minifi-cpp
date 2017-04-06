@@ -192,7 +192,7 @@ class ProcessGroup {
 
   // controller services
 
-  std::map<std::string, core::controller::ControllerServiceNode> controller_service_nodes_;
+  std::map<std::string, std::shared_ptr<core::controller::ControllerServiceNode>> controller_service_nodes_;
 
  private:
 

@@ -15,54 +15,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_PROCESSGROUPNODE_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_PROCESSGROUPNODE_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_
+#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_
 
+#include "core/core.h"
+#include "ControllerServiceNode.h"
+#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
+#include "ControllerService.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+namespace controller {
 
-class ProcessGroupNode {
- public:
-  /**
-   * @return the Process Group that this Controller Service belongs to, or <code>null</code> if the Controller Service
-   *         does not belong to any Process Group
-   */
-  std::shared_ptr<ProcessGroup> &getProcessGroup();
+class StandardControllerServiceNode : public ControllerServiceNode {
 
-  /**
-   * Sets the Process Group for this Controller Service
-   *
-   * @param group the group that the service belongs to
-   */
+  StandardControllerServiceNode(std::shared_ptr<ControllerService> service,
+                                const std::string &id)
+      : ControllerServiceNode(service, id) {
+  }
+  std::shared_ptr<core::ProcessGroup> &getProcessGroup();
+
   void setProcessGroup(std::shared_ptr<ProcessGroup> &processGroup);
+
+  StandardControllerServiceNode(const StandardControllerServiceNode &other) = delete;
+  StandardControllerServiceNode &operator=(
+      const StandardControllerServiceNode &parent) = delete;
 
  protected:
 
-  std::mutex mutex_;
+  // process group.
+  std::shared_ptr<core::ProcessGroup> process_group_;
 
-  std::shared_ptr<ProcessGroup> process_group_;
 };
 
-std::shared_ptr<ProcessGroup> &ProcessGroupNode::getProcessGroup() {
+std::shared_ptr<core::ProcessGroup> &StandardControllerServiceNode::getProcessGroup() {
   std::lock_guard<std::mutex> lock(mutex_);
   return process_group_;
 }
 
-void ProcessGroupNode::setProcessGroup(
+void StandardControllerServiceNode::setProcessGroup(
     std::shared_ptr<ProcessGroup> &processGroup) {
   std::lock_guard<std::mutex> lock(mutex_);
   process_group_ = processGroup;
 }
 
+} /* namespace controller */
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_PROCESSGROUPNODE_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_STANDARDCONTROLLERSERVICENODE_H_ */

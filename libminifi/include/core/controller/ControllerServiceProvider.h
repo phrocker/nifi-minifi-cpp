@@ -55,15 +55,21 @@ class ControllerServiceProvider : public CoreComponent,
    * @param firstTimeAdded for service
    * @return the service node
    */
-  ControllerServiceNode & createControllerService(const std::string &type, const std::string &id,
-  bool firstTimeAdded) {
+  std::unique_ptr<ControllerServiceNode> createControllerService(
+      const std::string &type, const std::string &id,
+      bool firstTimeAdded) {
 
-    std::shared_ptr<ControllerService> new_controller_service = extension_loader_.instantiate<ControllerService>(type, id);
+    std::shared_ptr<ControllerService> new_controller_service =
+        extension_loader_.instantiate<ControllerService>(type, id);
 
-    if (nullptr = new_controller_service)
-    {
-
+    if (nullptr == new_controller_service) {
+      return nullptr;
     }
+
+    ControllerServiceNode *newNode = new ControllerServiceNode(
+        new_controller_service, id);
+
+    return std::unique_ptr<ControllerServiceNode>(newNode);
 
   }
 

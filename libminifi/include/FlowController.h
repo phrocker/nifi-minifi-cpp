@@ -185,6 +185,9 @@ class FlowController : public core::CoreComponent {
   // flow configuration object.
   std::unique_ptr<core::FlowConfiguration> flow_configuration_;
 
+  // additional flow configuration object
+  std::vector<std::unique_ptr<core::FlowConfiguration>> additional_configurations_;
+
 };
 
 } /* namespace minifi */

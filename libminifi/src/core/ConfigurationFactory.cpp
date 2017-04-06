@@ -51,8 +51,6 @@ namespace core {
       } else if (class_name_lc == "yamlconfiguration") {
 	// only load if the class is defined.
         return std::unique_ptr<core::FlowConfiguration>(instantiate<core::YamlConfiguration>(repo, flow_file_repo, path));
-            
-
       } else {
         if (fail_safe) {
           return std::unique_ptr<core::FlowConfiguration>(

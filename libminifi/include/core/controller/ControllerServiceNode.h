@@ -20,7 +20,7 @@
 
 #include "core/core.h"
 #include "core/ConfigurableComponent.h"
-#include "core/ProcessGroupNode.h"
+#include "core/logging/Logger.h"
 #include "ControllerService.h"
 
 namespace org {
@@ -30,14 +30,15 @@ namespace minifi {
 namespace core {
 namespace controller {
 
-class ControllerServiceNode : public CoreComponent,
-    public ConfigurableComponent, public ProcessGroupNode {
+class ControllerServiceNode : public CoreComponent, public ConfigurableComponent {
  public:
 
   ControllerServiceNode(std::shared_ptr<ControllerService> service,
-                        const std::string &id)
+                        const std::string &id, Configure *configuration)
       : CoreComponent(id),
-        controller_service_(service) {
+        ConfigurableComponent(logging::Logger::getLogger()),
+        controller_service_(service),
+        configuration_(configuration) {
 
   }
 
@@ -52,16 +53,22 @@ class ControllerServiceNode : public CoreComponent,
    *
    * @return the actual implementation of the Controller Service
    */
-  std::shared_ptr<ControllerService> getControllerServiceImplementation();
+  std::shared_ptr<ControllerService> &getControllerServiceImplementation();
+
+  std::vector<std::shared_ptr<ControllerService> > &getLinkedControllerServices();
 
   ControllerServiceNode(const ControllerServiceNode &other) = delete;
   ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
  protected:
 
-  std::mutex mutex_;
-
-  std::shared_ptr<core::ProcessGroup> process_group_;
+  bool canEdit() {
+    return false;
+  }
+  Configure *configuration_;
+  // controller service.
   std::shared_ptr<ControllerService> controller_service_;
+  // linked controller services.
+  std::vector<std::shared_ptr<ControllerService> > linked_controller_services_;
 };
 
 } /* namespace controller */

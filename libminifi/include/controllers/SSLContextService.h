@@ -15,41 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_
+#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
+#define LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
 
+#include "core/controller/ControllerService.h"
 #include "core/core.h"
-#include "core/ConfigurableComponent.h"
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace core {
-namespace controller {
+namespace controllers {
 
-class ControllerService : public CoreComponent, public ConfigurableComponent {
- public:
+/*
+const char *Configure::nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
+const char *Configure::nifi_security_client_certificate = "nifi.security.client.certificate";
+const char *Configure::nifi_security_client_private_key = "nifi.security.client.private.key";
+const char *Configure::nifi_security_client_pass_phrase = "nifi.security.client.pass.phrase";
+const char *Configure::nifi_security_client_ca_certificate = "nifi.security.client.ca.certificate";
+*/
+class SSLContextService : public core::controller::ControllerService {
 
-  ControllerService()
-      : CoreComponent(core::getClassName<ControllerService>()),
-        ConfigurableComponent(logging::Logger::getLogger()) {
+
+  SSL*  *createSSLContext() {
+      return 0;
+    }
+
+
+  virtual void initialize(){
 
   }
 
-  virtual void initialize() = 0;
-
- protected:
-  virtual bool canEdit() {
-    return false;
-  }
 };
 
-} /* namespace controller */
-} /* namespace core */
+} /* namespace controllers */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICE_H_ */
+#endif /* LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_ */
