@@ -21,6 +21,9 @@
 #include "Site2SitePeer.h"
 #include "Site2SiteClientProtocol.h"
 #include <uuid/uuid.h>
+#include "core/logging/LogAppenders.h"
+#include "core/logging/BaseLogger.h"
+#include "SiteToSiteHelper.h"
 #include <algorithm>
 #include <string>
 #include <memory>
@@ -140,6 +143,115 @@ TEST_CASE("TestWriteUTF3", "[MINIFI193]"){
   REQUIRE(verifyString == stringOne);
 
 
+}
+
+void sunny_path(SiteToSiteResponder &collector)
+{
+  
+  char a = 0x14;
+  std::string resp_code;
+  resp_code.insert(resp_code.begin(),a);
+  collector.push_response(resp_code);
+  collector.push_response(resp_code);
+  collector.push_response(resp_code);
+  collector.push_response(resp_code);
+}
+
+TEST_CASE("TestSiteToSiteVerifyNegotiation", "[S2S2]"){
+
+  
+   std::ostringstream oss;
+
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<logging::BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+                                                                         0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
+  //logger->setLogLevel("off");
+
+  SiteToSiteResponder collector;
+  
+  
+  sunny_path(collector);
+  
+  std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr<minifi::Site2SitePeer>( new minifi::Site2SitePeer(std::unique_ptr<DataStream>(new BaseStream(&collector)),"fake_host",65433));
+
+  minifi::Site2SiteClientProtocol protocol(std::move(peer));
 
 
+  std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
+
+  uuid_t fakeUUID;
+
+  uuid_parse(uuid_str.c_str(),fakeUUID);
+
+  protocol.setPortId(fakeUUID);
+ 
+  protocol.bootstrap();
+
+  REQUIRE(collector.get_next_client_response() == "SHUTDOWN");
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "30000");
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "REQUEST_EXPIRATION_MILLIS");
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "c56a4180-65aa-42ec-a945-5fd21dec0538");
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "PORT_IDENTIFIER");
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "false");
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "GZIP");
+  collector.get_next_client_response();
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "nifi://fake_host:65433");
+  collector.get_next_client_response();
+  collector.get_next_client_response();
+  collector.get_next_client_response();
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "SocketFlowFileProtocol");
+  collector.get_next_client_response();
+  REQUIRE(collector.get_next_client_response() == "NiFi");
+  
+}
+
+
+TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S2]"){
+
+  
+   std::ostringstream oss;
+
+  std::unique_ptr<logging::BaseLogger> outputLogger = std::unique_ptr<logging::BaseLogger>(
+      new org::apache::nifi::minifi::core::logging::OutputStreamAppender(oss,
+                                                                         0));
+  std::shared_ptr<logging::Logger> logger = logging::Logger::getLogger();
+  logger->updateLogger(std::move(outputLogger));
+  //logger->setLogLevel("off");
+
+  SiteToSiteResponder collector;
+  
+  
+  char a = 0xFF;
+  std::string resp_code;
+  resp_code.insert(resp_code.begin(),a);
+  collector.push_response(resp_code);
+  collector.push_response(resp_code);
+  
+  std::unique_ptr<minifi::Site2SitePeer> peer = std::unique_ptr<minifi::Site2SitePeer>( new minifi::Site2SitePeer(std::unique_ptr<DataStream>(new BaseStream(&collector)),"fake_host",65433));
+
+  minifi::Site2SiteClientProtocol protocol(std::move(peer));
+
+
+  std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
+
+  uuid_t fakeUUID;
+
+  uuid_parse(uuid_str.c_str(),fakeUUID);
+
+  protocol.setPortId(fakeUUID);
+ 
+  REQUIRE( false == protocol.bootstrap() );
+
+  
+  
 }
