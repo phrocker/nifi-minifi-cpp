@@ -20,14 +20,7 @@
 #include "io/ClientSocket.h"
 
 using namespace org::apache::nifi::minifi::io;
-TEST_CASE("TestSocket", "[TestSocket1]") {
 
-  Socket socket("localhost", 8183);
-  REQUIRE(-1 == socket.initialize());
-  REQUIRE("localhost" == socket.getHostname());
-  socket.closeStream();
-
-}
 
 TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
 
@@ -171,5 +164,15 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket6]") {
   REQUIRE(-1 == client.writeData(buffer, 1));
 
   server.closeStream();
+
+}
+
+
+TEST_CASE("TestSocket", "[TestSocket1]") {
+
+  Socket socket("localhost", 8183);
+  REQUIRE(-1 == socket.initialize());
+  REQUIRE("localhost" == socket.getHostname());
+  socket.closeStream();
 
 }

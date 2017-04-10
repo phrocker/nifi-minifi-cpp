@@ -295,7 +295,7 @@ bool Site2SiteClientProtocol::handShake() {
   ret = this->readRespond(code, message);
 
   if (ret <= 0) {
-    // tearDown();
+    logger_->log_info("No response code to read");
     return false;
   }
 

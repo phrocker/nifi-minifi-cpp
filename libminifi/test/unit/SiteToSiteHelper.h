@@ -17,8 +17,8 @@
  */
 #ifndef LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
 #define LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_
-
-#include <stack>
+#include <algorithm>
+#include <queue>
 #include "io/BaseStream.h"
 #include "io/EndianCheck.h"
 #include "core/Core.h"
@@ -27,8 +27,8 @@
  */
 class SiteToSiteResponder : public minifi::io::BaseStream {
 private:
-  std::stack<std::string> server_responses_;
-  std::stack<std::string> client_responses_;
+  std::queue<std::string> server_responses_;
+  std::queue<std::string> client_responses_;
  public:
   SiteToSiteResponder() {
   }
@@ -44,7 +44,7 @@ private:
   
   std::string get_next_response()
   {
-    std::string ret = server_responses_.top();
+    std::string ret = server_responses_.front();
     server_responses_.pop();
     return ret;
   }
@@ -59,7 +59,7 @@ private:
   }
 
   std::string get_next_client_response(){
-    std::string ret = client_responses_.top();
+    std::string ret = client_responses_.front();
     client_responses_.pop();
     return ret;
   }
@@ -72,7 +72,6 @@ private:
    * @return resulting read size
    **/
   virtual int read(uint8_t &value){
-
     value = get_next_response().c_str()[0];
     return 1;
   }
@@ -107,18 +106,21 @@ private:
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t *value, int len){
+  virtual int read(uint8_t *value, int buflen){
     std::string str = get_next_response();
-    memcpy(value,str.c_str(),str.size());
-    return len;
+    int min = std::min((int)str.size(),buflen);
+    memcpy(value,str.c_str(),min);
+    return min;
   }
   
   virtual int readData(uint8_t *buf, int buflen){
-    
+
     std::string str = get_next_response();
     memset(buf,0x00,buflen);
-    memcpy(buf,str.c_str(),str.size());
-    return str.size();
+
+    int min = std::min((int)str.size(),buflen);
+    memcpy(buf,str.data(),min);
+    return min;
   }
 
   /**
