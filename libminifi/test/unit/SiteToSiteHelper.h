@@ -26,52 +26,62 @@
  * Test repository
  */
 class SiteToSiteResponder : public minifi::io::BaseStream {
-private:
+ private:
   std::queue<std::string> server_responses_;
   std::queue<std::string> client_responses_;
+  bool failOnWrite;
  public:
   SiteToSiteResponder() {
+    failOnWrite = false;
+
   }
   // initialize
   virtual short initialize() {
     return 1;
   }
-  
-  void push_response(std::string resp)
-  {
+
+  void push_response(std::string resp) {
     server_responses_.push(resp);
   }
-  
-  std::string get_next_response()
-  {
-    std::string ret = server_responses_.front();
-    server_responses_.pop();
-    return ret;
-  }
-  
-  int writeData(uint8_t *value, int size) {
-  client_responses_.push(std::string((char*)value,size));
-  return size;
-}
 
-  bool has_next_client_response(){
+  std::string get_next_response() {
+    if (!server_responses_.empty()) {
+      std::string ret = server_responses_.front();
+      server_responses_.pop();
+      return ret;
+    } else
+      return "";
+  }
+
+  void setFailOnWrite(bool failOnWrite) {
+    this->failOnWrite = failOnWrite;
+  }
+
+  int writeData(uint8_t *value, int size) {
+    if (failOnWrite) {
+      return -1;
+    }
+    client_responses_.push(std::string((char*) value, size));
+    return size;
+  }
+
+  bool has_next_client_response() {
     return !client_responses_.empty();
   }
 
-  std::string get_next_client_response(){
+  std::string get_next_client_response() {
     std::string ret = client_responses_.front();
     client_responses_.pop();
     return ret;
   }
 
-  
   /**
    * reads a byte from the stream
    * @param value reference in which will set the result
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t &value){
+  virtual int read(uint8_t &value) {
     value = get_next_response().c_str()[0];
     return 1;
   }
@@ -83,8 +93,11 @@ private:
    * @return resulting read size
    **/
   virtual int read(uint16_t &base_value, bool is_little_endian =
-                       minifi::io::EndiannessCheck::IS_LITTLE){
-    base_value = std::stoi(get_next_response());
+                       minifi::io::EndiannessCheck::IS_LITTLE) {
+    std::string resp = get_next_response();
+    if (IsNullOrEmpty(resp))
+      return 0;
+    base_value = std::stoi(resp);
     return 2;
   }
 
@@ -94,7 +107,7 @@ private:
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(char &value){
+  virtual int read(char &value) {
     value = get_next_response().c_str()[0];
     return 1;
   }
@@ -106,20 +119,20 @@ private:
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int read(uint8_t *value, int buflen){
+  virtual int read(uint8_t *value, int buflen) {
     std::string str = get_next_response();
-    int min = std::min((int)str.size(),buflen);
-    memcpy(value,str.c_str(),min);
+    int min = std::min((int) str.size(), buflen);
+    memcpy(value, str.c_str(), min);
     return min;
   }
-  
-  virtual int readData(uint8_t *buf, int buflen){
+
+  virtual int readData(uint8_t *buf, int buflen) {
 
     std::string str = get_next_response();
-    memset(buf,0x00,buflen);
+    memset(buf, 0x00, buflen);
 
-    int min = std::min((int)str.size(),buflen);
-    memcpy(buf,str.data(),min);
+    int min = std::min((int) str.size(), buflen);
+    memcpy(buf, str.data(), min);
     return min;
   }
 
@@ -130,8 +143,11 @@ private:
    * @return resulting read size
    **/
   virtual int read(uint32_t &value, bool is_little_endian =
-                       minifi::io::EndiannessCheck::IS_LITTLE){
-    value = std::stoul(get_next_response());
+                       minifi::io::EndiannessCheck::IS_LITTLE) {
+    std::string resp = get_next_response();
+    if (IsNullOrEmpty(resp))
+      return 0;
+    value = std::stoul(resp);
     return 4;
   }
 
@@ -142,12 +158,13 @@ private:
    * @return resulting read size
    **/
   virtual int read(uint64_t &value, bool is_little_endian =
-                       minifi::io::EndiannessCheck::IS_LITTLE){
-    value = std::stoull(get_next_response());
+                       minifi::io::EndiannessCheck::IS_LITTLE) {
+    std::string resp = get_next_response();
+    if (IsNullOrEmpty(resp))
+      return 0;
+    value = std::stoull(resp);
     return 4;
   }
-  
-  
 
   /**
    * read UTF from stream
@@ -155,12 +172,12 @@ private:
    * @param stream stream from which we will read
    * @return resulting read size
    **/
-  virtual int readUTF(std::string &str, bool widen = false){
-      str = get_next_response();    
-      return str.length();
-      
+  virtual int readUTF(std::string &str, bool widen = false) {
+    str = get_next_response();
+    return str.length();
+
   }
-  
+
 };
 
 #endif /* LIBMINIFI_TEST_UNIT_PROVENANCETESTHELPER_H_ */
