@@ -18,9 +18,8 @@
 
 #include <uuid/uuid.h>
 #include <fstream>
-
-#include "../unit/ProvenanceTestHelper.h"
 #include "FlowController.h"
+#include "../unit/ProvenanceTestHelper.h"
 #include "core/logging/LogAppenders.h"
 #include "core/logging/BaseLogger.h"
 #include "processors/GetFile.h"

@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <uuid/uuid.h>
 #include <fstream>
 #include "FlowController.h"
@@ -25,13 +26,14 @@
 #include "processors/GetFile.h"
 #include "core/Core.h"
 #include "Exception.h"
-#include "../../include/core/FlowFile.h"
-#include "../unit/MockClasses.h"
-#include "../unit/ProvenanceTestHelper.h"
+#include "core/FlowFile.h"
+#include "MockClasses.h"
+#include "ProvenanceTestHelper.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "core/Processor.h"
 #include "core/controller/ControllerServiceMap.h"
 #include "core/controller/StandardControllerServiceNode.h"
+
 namespace ControllerServiceTests {
 
 TEST_CASE("Test ControllerServicesMap", "[cs1]") {
