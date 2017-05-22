@@ -73,7 +73,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   attributes.insert(std::pair<std::string, std::string>("tomato", "tomatoe"));
   std::shared_ptr<core::repository::FlowFileRepository> frepo =
       std::make_shared<core::repository::FlowFileRepository>(
-          "./content_repository", 0, 0, 0);
+          "ff","./content_repository", 0, 0, 0);
   std::shared_ptr<minifi::FlowFileRecord> ffr1 = std::make_shared<
       minifi::FlowFileRecord>(frepo, attributes);
 

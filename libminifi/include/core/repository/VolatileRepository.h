@@ -24,6 +24,7 @@
 #include <map>
 #include "core/Core.h"
 #include "Connection.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -32,8 +33,7 @@ namespace minifi {
 namespace core {
 namespace repository {
 
-
-static uint16_t accounting_size = sizeof(void*) * 2 + sizeof(uint64_t)
+static uint16_t accounting_size = sizeof(std::vector<uint8_t>) + sizeof(std::string)
     + sizeof(size_t);
 
 class RepoValue {
@@ -48,12 +48,14 @@ class RepoValue {
         key_(key)
 	{
 	  buffer_.resize(size);
-    std::memcpy(buffer_.data(), ptr, size);
+	std::memcpy(buffer_.data(), ptr, size);
+	fast_size_ = key.size() + size;
   }
 
   explicit RepoValue(RepoValue &&other) noexcept
       : key_(std::move(other.key_)),
-        buffer_(std::move(other.buffer_)){
+        buffer_(std::move(other.buffer_)),
+        fast_size_(other.fast_size_){
   }
   
   ~RepoValue()
@@ -72,7 +74,7 @@ class RepoValue {
    * system word size
    */
   uint64_t size() {
-    return buffer_.size() + accounting_size;
+    return fast_size_;
   }
 
   size_t bufferSize() {
@@ -91,10 +93,15 @@ class RepoValue {
   }
 
  private:
+  size_t fast_size_;
   std::string key_;
   std::vector<uint8_t> buffer_;
 };
 
+/**
+ * Purpose: Atomic Entry allows us to create a statically
+ * sized ring buffer, with the ability to create 
+ **/
 class AtomicEntry {
 
  public:
@@ -175,14 +182,16 @@ class AtomicEntry {
 class VolatileRepository : public core::Repository,
     public std::enable_shared_from_this<VolatileRepository> {
  public:
+   
+   static const char *volatile_repo_max_count;
   // Constructor
 
-  VolatileRepository(std::string dir = REPOSITORY_DIRECTORY,
+  VolatileRepository(std::string repo_name="",std::string dir = REPOSITORY_DIRECTORY,
                      int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes =
                      MAX_REPOSITORY_STORAGE_SIZE,
                      uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : Repository(core::getClassName<VolatileRepository>(), "",
+      : Repository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "",
                    maxPartitionMillis, maxPartitionBytes, purgePeriod),
         max_size_(maxPartitionBytes * 0.75),
         current_index_(0),
@@ -199,10 +208,24 @@ class VolatileRepository : public core::Repository,
     }
   }
 
-  // initialize
+  /**
+   * Initialize thevolatile repsitory
+   **/
   virtual bool initialize(const std::shared_ptr<Configure> &configure) {
-//    configure->get("nifi.volatile.repository.max_size")
-    max_count_ = 10000;
+    std::string value = "";
+    
+    int64_t max_cnt=0;
+    std::stringstream strstream;
+    strstream << Configure::nifi_volatile_repository_options << getName() << "." <<  volatile_repo_max_count;
+    if ( configure->get(strstream.str(),value)){
+	if ( core::Property::StringToInt(value, max_cnt))
+	{
+	    max_count_ = max_cnt;
+	}
+	
+    }
+    
+    logger_->log_debug("Resizing value_vector_ for %s count is %d",getName(),max_count_);
     value_vector_.reserve(max_count_);
     for (int i = 0; i < max_count_; i++) {
       value_vector_.emplace_back(new AtomicEntry());
@@ -212,13 +235,14 @@ class VolatileRepository : public core::Repository,
 
   virtual void run();
 
+  /**
+   * Places a new object into the volatile memory area
+   * @param key key to add to the repository
+   * @param buf buffer 
+   **/
   virtual bool Put(std::string key, uint8_t *buf, int bufLen) {
-    //if (exceedsCapacity(bufLen)) {
-      //purge();
-    //}
     RepoValue new_value(key, buf, bufLen);
 
-    logger_->log_info("constructed");
     const size_t size = new_value.size();
     bool updated = false;
     size_t reclaimed_size=0;
@@ -234,7 +258,7 @@ class VolatileRepository : public core::Repository,
           continue;
         }
       }
-      logger_->log_info("Set repo value at %d",private_index);
+      logger_->log_info("Set repo value at %d out of %d",private_index,max_count_);
       updated = value_vector_.at(private_index)->setRepoValue(
           new_value,reclaimed_size);
       
