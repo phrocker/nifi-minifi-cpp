@@ -44,6 +44,7 @@ TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
 
 TEST_CASE("Test Find file", "[getfileCreate2]") {
   TestController testController;
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
@@ -60,7 +61,7 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -148,11 +149,13 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
   std::shared_ptr<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask> taskReport = std::static_pointer_cast<
       org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(processorReport);
   taskReport->setBatchSize(1);
-  std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> recordsReport;
+  std::vector<std::shared_ptr<core::SerializableComponent>> recordsReport;
+  recordsReport.push_back(std::make_shared<provenance::ProvenanceEventRecord>());
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   std::string jsonStr;
-  repo->getProvenanceRecord(recordsReport, 1);
+  std::size_t deserialized = 0;
+  repo->DeSerialize(recordsReport, deserialized);
   taskReport->getJsonReport(&contextReport, &sessionReport, recordsReport, jsonStr);
   REQUIRE(recordsReport.size() == 1);
   REQUIRE(taskReport->getName() == std::string(org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask::ReportTaskName));
@@ -161,11 +164,10 @@ TEST_CASE("Test Find file", "[getfileCreate2]") {
 
 TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   TestController testController;
-
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
-
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   char format[] = "/tmp/gt.XXXXXX";
@@ -174,7 +176,8 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
+
   connection->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -242,6 +245,7 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
 
 TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   TestController testController;
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
@@ -259,10 +263,11 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   uuid_t logattribute_uuid;
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, "getfileCreate2Connection");
+  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   connection->setRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, "logattribute");
+  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
+
   connection2->setRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
@@ -334,6 +339,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   records = reporter->getEvents();
 
+  std::cout << LogTestController::getInstance().log_output.str() << std::endl;
   REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
   REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
