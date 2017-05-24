@@ -39,8 +39,10 @@ namespace minifi {
 
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::map<std::string, std::string> attributes, std::shared_ptr<ResourceClaim> claim)
+FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::map<std::string, std::string> attributes,
+                               std::shared_ptr<ResourceClaim> claim)
     : FlowFile(),
+      content_repo_(content_repo),
       flow_repository_(flow_repository),
       logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
 
@@ -65,9 +67,11 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
     claim_->increaseFlowFileRecordOwnedCount();
 }
 
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::FlowFile> &event, const std::string &uuidConnection)
+FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event,
+                               const std::string &uuidConnection)
     : FlowFile(),
       snapshot_(""),
+      content_repo_(content_repo),
       flow_repository_(flow_repository),
       logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
   entry_date_ = event->getEntryDate();
@@ -84,10 +88,11 @@ FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository
   }
 }
 
-FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::FlowFile> &event)
+FlowFileRecord::FlowFileRecord(std::shared_ptr<core::Repository> flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::shared_ptr<core::FlowFile> &event)
     : FlowFile(),
       uuid_connection_(""),
       snapshot_(""),
+      content_repo_(content_repo),
       flow_repository_(flow_repository),
       logger_(logging::LoggerFactory<FlowFileRecord>::getLogger()) {
 }
@@ -104,7 +109,7 @@ FlowFileRecord::~FlowFileRecord() {
     if (claim_->getFlowFileRecordOwnedCount() <= 0) {
       logger_->log_debug("Delete Resource Claim %s", claim_->getContentFullPath().c_str());
       if (!this->stored || !flow_repository_->Get(uuid_str_, value)) {
-        std::remove(claim_->getContentFullPath().c_str());
+        content_repo_->remove(claim_);
       }
     }
   }

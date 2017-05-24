@@ -35,14 +35,10 @@ void ConfigurationListener::start() {
   pull_interval_ = 60 * 1000;
   std::string value;
   // grab the value for configuration
-  if (configure_->get(Configure::nifi_configuration_listener_pull_interval,
-      value)) {
+  if (configure_->get(Configure::nifi_configuration_listener_pull_interval, value)) {
     core::TimeUnit unit;
-    if (core::Property::StringToTime(value, pull_interval_, unit)
-        && core::Property::ConvertTimeUnitToMS(pull_interval_, unit,
-            pull_interval_)) {
-      logger_->log_info("Configuration Listener pull interval: [%d] ms",
-           pull_interval_);
+    if (core::Property::StringToTime(value, pull_interval_, unit) && core::Property::ConvertTimeUnitToMS(pull_interval_, unit, pull_interval_)) {
+      logger_->log_info("Configuration Listener pull interval: [%d] ms", pull_interval_);
     }
   }
 
@@ -51,39 +47,27 @@ void ConfigurationListener::start() {
     org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, this->need_client_certificate_);
   }
 
-  if (configure_->get(
-          Configure::nifi_configuration_listener_client_ca_certificate,
-      this->ca_certificate_)) {
-    logger_->log_info("Configuration Listener CA certificates: [%s]",
-        this->ca_certificate_);
+  if (configure_->get(Configure::nifi_configuration_listener_client_ca_certificate, this->ca_certificate_)) {
+    logger_->log_info("Configuration Listener CA certificates: [%s]", this->ca_certificate_);
   }
 
   if (this->need_client_certificate_) {
     std::string passphrase_file;
 
-    if (!(configure_->get(
-        Configure::nifi_configuration_listener_client_certificate, this->certificate_)
-        && configure_->get(Configure::nifi_configuration_listener_private_key,
-            this->private_key_))) {
-      logger_->log_error(
-          "Certificate and Private Key PEM file not configured for configuration listener, error: %s.",
-          std::strerror(errno));
+    if (!(configure_->get(Configure::nifi_configuration_listener_client_certificate, this->certificate_) && configure_->get(Configure::nifi_configuration_listener_private_key, this->private_key_))) {
+      logger_->log_error("Certificate and Private Key PEM file not configured for configuration listener, error: %s.", std::strerror(errno));
     }
 
-    if (configure_->get(
-        Configure::nifi_configuration_listener_client_pass_phrase,
-        passphrase_file)) {
+    if (configure_->get(Configure::nifi_configuration_listener_client_pass_phrase, passphrase_file)) {
       // load the passphase from file
       std::ifstream file(passphrase_file.c_str(), std::ifstream::in);
       if (file.good()) {
-        this->passphrase_.assign((std::istreambuf_iterator<char>(file)),
-            std::istreambuf_iterator<char>());
+        this->passphrase_.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         file.close();
       }
     }
 
-    logger_->log_info("Configuration Listener certificate: [%s], private key: [%s], passphrase file: [%s]",
-            this->certificate_, this->private_key_, passphrase_file);
+    logger_->log_info("Configuration Listener certificate: [%s], private key: [%s], passphrase file: [%s]", this->certificate_, this->private_key_, passphrase_file);
   }
 
   thread_ = std::thread(&ConfigurationListener::threadExecutor, this);
@@ -102,7 +86,7 @@ void ConfigurationListener::stop() {
 }
 
 void ConfigurationListener::run() {
-  std::unique_lock<std::mutex> lk(mutex_);
+  std::unique_lock < std::mutex > lk(mutex_);
   std::condition_variable cv;
   int64_t interval = 0;
   while (!cv.wait_for(lk, std::chrono::milliseconds(100), [this] {return (running_ == false);})) {

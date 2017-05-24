@@ -27,10 +27,12 @@
 #include <deque>
 #include <iostream>
 #include <set>
+
 #include <string>
 #include <type_traits>
 #include <utility>
 
+#include "Exception.h"
 #include "../include/core/logging/Logger.h"
 #include "../include/core/ProcessContext.h"
 #include "../include/core/ProcessorNode.h"
@@ -49,16 +51,15 @@ core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "9999");
 core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
 core::Relationship RemoteProcessorGroupPort::relation;
 
-std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol(
-bool create = true) {
+std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
   std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
   if (!available_protocols_.try_dequeue(nextProtocol)) {
     if (create) {
       // create
-      nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
+      nextProtocol = std::unique_ptr < Site2SiteClientProtocol > (new Site2SiteClientProtocol(nullptr));
       nextProtocol->setPortId(protocol_uuid_);
-      std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(host_, port_));
-      std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), host_, port_));
+      std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr < org::apache::nifi::minifi::io::DataStream > (stream_factory_->createSocket(host_, port_));
+      std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer > (new Site2SitePeer(std::move(str), host_, port_));
       nextProtocol->setPeer(std::move(peer_));
     }
   }
@@ -123,31 +124,40 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     uuid_parse(value.c_str(), protocol_uuid_);
   }
 
-  std::unique_ptr<Site2SiteClientProtocol> protocol_ = getNextProtocol();
+  std::unique_ptr<Site2SiteClientProtocol> protocol_ = nullptr;
+  try {
+    protocol_ = getNextProtocol();
 
-  if (!protocol_) {
-    context->yield();
-    return;
-  }
+    if (!protocol_) {
+      context->yield();
+      return;
+    }
+    if (!protocol_->bootstrap()) {
+      // bootstrap the client protocol if needeed
+      context->yield();
+      std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor > (context->getProcessorNode().getProcessor());
+      logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
 
-  if (!protocol_->bootstrap()) {
-    // bootstrap the client protocol if needeed
-    context->yield();
-    std::shared_ptr<Processor> processor = std::static_pointer_cast<Processor>(context->getProcessorNode().getProcessor());
-    logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
+      return;
+    }
+
+    if (direction_ == RECEIVE) {
+      protocol_->receiveFlowFiles(context, session);
+    } else {
+      protocol_->transferFlowFiles(context, session);
+    }
+
     returnProtocol(std::move(protocol_));
     return;
+  } catch (const minifi::Exception &ex2) {
+    context->yield();
+    session->rollback();
+  } catch (...) {
+    context->yield();
+    session->rollback();
   }
 
-  if (direction_ == RECEIVE) {
-    protocol_->receiveFlowFiles(context, session);
-  } else {
-    protocol_->transferFlowFiles(context, session);
-  }
-
-  returnProtocol(std::move(protocol_));
-
-  return;
+  throw std::exception();
 }
 
 } /* namespace minifi */

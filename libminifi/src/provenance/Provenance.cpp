@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "core/Repository.h"
 #include "io/DataStream.h"
 #include "io/Serializable.h"
 #include "provenance/Provenance.h"
@@ -38,17 +39,23 @@ const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREAT
     "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
 
 // DeSerialize
-bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Repository> &repo, std::string key) {
+bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) {
   std::string value;
   bool ret;
 
-  ret = repo->Get(key, value);
+  const std::shared_ptr<core::Repository> repo = std::dynamic_pointer_cast < core::Repository > (store);
+
+  if (nullptr == repo || IsNullOrEmpty(uuidStr_)) {
+    logger_->log_error("Repo could not be assigned");
+    return false;
+  }
+  ret = repo->Get(uuidStr_, value);
 
   if (!ret) {
-    logger_->log_error("NiFi Provenance Store event %s can not found", key.c_str());
+    logger_->log_error("NiFi Provenance Store event %s can not be found", uuidStr_);
     return false;
   } else {
-    logger_->log_debug("NiFi Provenance Read event %s length %d", key.c_str(), value.length());
+    logger_->log_debug("NiFi Provenance Read event %s length %d", uuidStr_, value.length());
   }
 
   org::apache::nifi::minifi::io::DataStream stream((const uint8_t*) value.data(), value.length());
@@ -56,20 +63,20 @@ bool ProvenanceEventRecord::DeSerialize(const std::shared_ptr<core::Repository> 
   ret = DeSerialize(stream);
 
   if (ret) {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %d eventType %d success", _eventIdStr.c_str(), stream.getSize(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %d eventType %d success", uuidStr_, stream.getSize(), _eventType);
   } else {
-    logger_->log_debug("NiFi Provenance retrieve event %s size %d eventType %d fail", _eventIdStr.c_str(), stream.getSize(), _eventType);
+    logger_->log_debug("NiFi Provenance retrieve event %s size %d eventType %d fail", uuidStr_, stream.getSize(), _eventType);
   }
 
   return ret;
 }
 
-bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::Repository> &repo) {
+bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::SerializableComponent> &repo) {
   org::apache::nifi::minifi::io::DataStream outStream;
 
   int ret;
 
-  ret = writeUTF(this->_eventIdStr, &outStream);
+  ret = writeUTF(this->uuidStr_, &outStream);
   if (ret <= 0) {
     return false;
   }
@@ -110,7 +117,7 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::Repository> &r
     return false;
   }
 
-  ret = writeUTF(this->uuid_, &outStream);
+  ret = writeUTF(this->flow_uuid_, &outStream);
   if (ret <= 0) {
     return false;
   }
@@ -198,20 +205,20 @@ bool ProvenanceEventRecord::Serialize(const std::shared_ptr<core::Repository> &r
     }
   }
   // Persistent to the DB
-  if (repo->Put(_eventIdStr, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
-    logger_->log_debug("NiFi Provenance Store event %s size %d success", _eventIdStr.c_str(), outStream.getSize());
+  if (repo->Serialize(uuidStr_, const_cast<uint8_t*>(outStream.getBuffer()), outStream.getSize())) {
+    logger_->log_debug("NiFi Provenance Store event %s size %d success", uuidStr_, outStream.getSize());
   } else {
-    logger_->log_error("NiFi Provenance Store event %s size %d fail", _eventIdStr.c_str(), outStream.getSize());
+    logger_->log_error("NiFi Provenance Store event %s size %d fail", uuidStr_, outStream.getSize());
   }
   return true;
 }
 
-bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
+bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t bufferSize) {
   int ret;
 
   org::apache::nifi::minifi::io::DataStream outStream(buffer, bufferSize);
 
-  ret = readUTF(this->_eventIdStr, &outStream);
+  ret = readUTF(this->uuidStr_, &outStream);
 
   if (ret <= 0) {
     return false;
@@ -254,7 +261,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const int bufferS
     return false;
   }
 
-  ret = readUTF(this->uuid_, &outStream);
+  ret = readUTF(this->flow_uuid_, &outStream);
   if (ret <= 0) {
     return false;
   }

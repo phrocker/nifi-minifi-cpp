@@ -698,12 +698,18 @@ bool Site2SiteClientProtocol::send(std::string transactionID, DataPacket *packet
     if (ret != 8) {
       return false;
     }
-    if (flowFile->getSize()) {
+    if (flowFile->getSize() > 0) {
       Site2SiteClientProtocol::ReadCallback callback(packet);
       session->read(flowFile, &callback);
       if (flowFile->getSize() != packet->_size) {
         return false;
       }
+    }
+    if (packet->payload_.length() == 0 && len == 0) {
+      if (flowFile->getResourceClaim() == nullptr)
+        logger_->log_debug("no claim");
+      else
+        logger_->log_debug("Flowfile empty %s", flowFile->getResourceClaim()->getContentFullPath());
     }
   } else if (packet->payload_.length() > 0) {
     len = packet->payload_.length();
@@ -771,7 +777,7 @@ void Site2SiteClientProtocol::receiveFlowFiles(core::ProcessContext *context, co
         // transaction done
         break;
       }
-      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+      std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
 
       if (!flowFile) {
         throw Exception(SITE2SITE_EXCEPTION, "Flow File Creation Failed");
@@ -1069,12 +1075,13 @@ bool Site2SiteClientProtocol::complete(std::string transactionID) {
 }
 
 void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context, core::ProcessSession *session) {
-  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast<FlowFileRecord>(session->get());
+  std::shared_ptr<FlowFileRecord> flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
   Transaction *transaction = NULL;
 
-  if (!flow)
+  if (!flow) {
     return;
+  }
 
   if (_peerState != READY) {
     bootstrap();
@@ -1122,7 +1129,7 @@ void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context, c
       if (transferNanos > _batchSendNanos)
         break;
 
-      flow = std::static_pointer_cast<FlowFileRecord>(session->get());
+      flow = std::static_pointer_cast < FlowFileRecord > (session->get());
 
       if (!flow) {
         continueTransaction = false;
@@ -1130,11 +1137,15 @@ void Site2SiteClientProtocol::transferFlowFiles(core::ProcessContext *context, c
     }  // while true
 
     if (!confirm(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed");
+      std::stringstream ss;
+      ss << "Confirm Failed for " << transactionID;
+      throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
       return;
     }
     if (!complete(transactionID)) {
-      throw Exception(SITE2SITE_EXCEPTION, "Complete Failed");
+      std::stringstream ss;
+      ss << "Complete Failed for " << transactionID;
+      throw Exception(SITE2SITE_EXCEPTION, ss.str().c_str());
       return;
     }
     logger_->log_info("Site2Site transaction %s successfully send flow record %d, content bytes %d", transactionID.c_str(), transaction->_transfers, transaction->_bytes);

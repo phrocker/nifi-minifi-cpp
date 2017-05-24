@@ -19,6 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_CORE_H_
 
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <uuid/uuid.h>
@@ -128,6 +129,8 @@ class CoreComponent {
    * @param uuid uuid to apply to the internal representation.
    */
   void setUUID(uuid_t uuid);
+
+  void setUUIDStr(const std::string uuidStr);
 
   /**
    * Returns the UUID through the provided object.

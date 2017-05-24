@@ -200,7 +200,7 @@ void TailFile::checkRollOver(const std::string &fileLocation, const std::string 
 }
 
 void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
-  std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
+  std::lock_guard < std::mutex > tail_lock(tail_file_mutex_);
   std::string value;
   std::string fileLocation = "";
   std::string fileName = "";
@@ -228,7 +228,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
       context->yield();
       return;
     }
-    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
+    std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast < FlowFileRecord > (session->create());
     if (!flowFile)
       return;
     std::size_t found = _currentTailFileName.find_last_of(".");
