@@ -39,7 +39,7 @@ namespace core {
 std::shared_ptr<core::FlowFile> ProcessSession::create() {
   std::map<std::string, std::string> empty;
 
-  std::shared_ptr<core::FlowFile> record = std::make_shared < FlowFileRecord > (process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
+  std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
 
   _addedFlowFiles[record->getUUIDStr()] = record;
   logger_->log_debug("Create FlowFile with UUID %s", record->getUUIDStr().c_str());
@@ -52,7 +52,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
 
 std::shared_ptr<core::FlowFile> ProcessSession::create(std::shared_ptr<core::FlowFile> &&parent) {
   std::map<std::string, std::string> empty;
-  std::shared_ptr<core::FlowFile> record = std::make_shared < FlowFileRecord > (process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
+  std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
 
   if (record) {
     _addedFlowFiles[record->getUUIDStr()] = record;
@@ -94,7 +94,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(std::shared_ptr<core::Flow
 
 std::shared_ptr<core::FlowFile> ProcessSession::cloneDuringTransfer(std::shared_ptr<core::FlowFile> &parent) {
   std::map<std::string, std::string> empty;
-  std::shared_ptr<core::FlowFile> record = std::make_shared < FlowFileRecord > (process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
+  std::shared_ptr<core::FlowFile> record = std::make_shared<FlowFileRecord>(process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
 
   if (record) {
     this->_clonedFlowFiles[record->getUUIDStr()] = record;
@@ -213,7 +213,7 @@ void ProcessSession::transfer(std::shared_ptr<core::FlowFile> &&flow, Relationsh
 }
 
 void ProcessSession::write(std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared < ResourceClaim > (process_context_->getContentRepository(),
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository(),
   DEFAULT_CONTENT_DIRECTORY);
 
   try {
@@ -267,7 +267,7 @@ void ProcessSession::write(std::shared_ptr<core::FlowFile> &flow, OutputStreamCa
 }
 
 void ProcessSession::write(std::shared_ptr<core::FlowFile> &&flow, OutputStreamCallback *callback) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared < ResourceClaim > (process_context_->getContentRepository());
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
   try {
     uint64_t startTime = getTimeMillis();
     claim->increaseFlowFileRecordOwnedCount();
@@ -461,7 +461,7 @@ void ProcessSession::read(std::shared_ptr<core::FlowFile> &&flow, InputStreamCal
  *
  */
 void ProcessSession::importFrom(io::DataStream &stream, std::shared_ptr<core::FlowFile> &&flow) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared < ResourceClaim > (process_context_->getContentRepository());
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
   int max_read = getpagesize();
   std::vector<uint8_t> charBuffer;
   charBuffer.resize(max_read);
@@ -528,7 +528,7 @@ void ProcessSession::importFrom(io::DataStream &stream, std::shared_ptr<core::Fl
 }
 
 void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> &flow, bool keepSource, uint64_t offset) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared < ResourceClaim > (process_context_->getContentRepository());
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
   char *buf = NULL;
   int size = 4096;
   buf = new char[size];
@@ -564,7 +564,6 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
       }
 
       if (!invalidWrite) {
-        std::cout << "Import " << stream->getSize() << std::endl;
         flow->setSize(stream->getSize());
         flow->setOffset(0);
         if (flow->getResourceClaim() != nullptr) {
@@ -615,7 +614,7 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
 }
 
 void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> &&flow, bool keepSource, uint64_t offset) {
-  std::shared_ptr<ResourceClaim> claim = std::make_shared < ResourceClaim > (process_context_->getContentRepository());
+  std::shared_ptr<ResourceClaim> claim = std::make_shared<ResourceClaim>(process_context_->getContentRepository());
   char *buf = NULL;
   int size = 4096;
   buf = new char[size];
@@ -651,7 +650,6 @@ void ProcessSession::import(std::string source, std::shared_ptr<core::FlowFile> 
         }
       }
       if (!invalidWrite) {
-        std::cout << "Import " << stream->getSize() << std::endl;
         flow->setSize(stream->getSize());
         flow->setOffset(0);
         if (flow->getResourceClaim() != nullptr) {
@@ -747,13 +745,14 @@ void ProcessSession::commit() {
       }
     }
 
-    // Do the samething for added flow file
+    // Do the same thing for added flow file
     for (const auto it : _addedFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
       if (record->isDeleted())
         continue;
       std::map<std::string, Relationship>::iterator itRelationship = this->_transferRelationship.find(record->getUUIDStr());
       if (itRelationship != _transferRelationship.end()) {
+        logger_->log_debug("size is %d for there", _addedFlowFiles.size());
         Relationship relationship = itRelationship->second;
         // Find the relationship, we need to find the connections for that relationship
         std::set<std::shared_ptr<Connectable>> connections = process_context_->getProcessorNode().getOutGoingConnections(relationship.getName());
@@ -764,17 +763,21 @@ void ProcessSession::commit() {
             std::string message = "Connect empty for non auto terminated relationship " + relationship.getName();
             throw Exception(PROCESS_SESSION_EXCEPTION, message.c_str());
           } else {
+            logger_->log_debug("added flow file is auto terminated");
             // Autoterminated
             remove(record);
           }
         } else {
+          logger_->log_debug("size is %d for here", _addedFlowFiles.size());
           // We connections, clone the flow and assign the connection accordingly
           for (std::set<std::shared_ptr<Connectable>>::iterator itConnection = connections.begin(); itConnection != connections.end(); ++itConnection) {
             std::shared_ptr<Connectable> connection(*itConnection);
+            logger_->log_debug("size is %d for here %s", _addedFlowFiles.size(), connection->getName());
             if (itConnection == connections.begin()) {
               // First connection which the flow need be routed to
               record->setConnection(connection);
             } else {
+              logger_->log_debug("clone is %d for here %s", _addedFlowFiles.size(), connection->getName());
               // Clone the flow file and route to the connection
               std::shared_ptr<core::FlowFile> cloneRecord;
               cloneRecord = this->cloneDuringTransfer(record);
@@ -799,7 +802,7 @@ void ProcessSession::commit() {
         continue;
       }
 
-      connection = std::static_pointer_cast < Connection > (record->getConnection());
+      connection = std::static_pointer_cast<Connection>(record->getConnection());
       if ((connection) != nullptr)
         connection->put(record);
     }
@@ -808,7 +811,7 @@ void ProcessSession::commit() {
       if (record->isDeleted()) {
         continue;
       }
-      connection = std::static_pointer_cast < Connection > (record->getConnection());
+      connection = std::static_pointer_cast<Connection>(record->getConnection());
       if ((connection) != nullptr)
         connection->put(record);
     }
@@ -818,7 +821,7 @@ void ProcessSession::commit() {
       if (record->isDeleted()) {
         continue;
       }
-      connection = std::static_pointer_cast < Connection > (record->getConnection());
+      connection = std::static_pointer_cast<Connection>(record->getConnection());
       if ((connection) != nullptr)
         connection->put(record);
     }
@@ -847,9 +850,9 @@ void ProcessSession::rollback() {
     // Requeue the snapshot of the flowfile back
     for (const auto &it : _originalFlowFiles) {
       std::shared_ptr<core::FlowFile> record = it.second;
-      connection = std::static_pointer_cast < Connection > (record->getOriginalConnection());
+      connection = std::static_pointer_cast<Connection>(record->getOriginalConnection());
       if ((connection) != nullptr) {
-        std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast < FlowFileRecord > (record);
+        std::shared_ptr<FlowFileRecord> flowf = std::static_pointer_cast<FlowFileRecord>(record);
         flowf->setSnapShot(false);
         connection->put(record);
       }
@@ -874,10 +877,11 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
   std::shared_ptr<Connectable> first = process_context_->getProcessorNode().getNextIncomingConnection();
 
   if (first == NULL) {
+    logger_->log_debug("Get is null for %s", process_context_->getProcessorNode().getName());
     return NULL;
   }
 
-  std::shared_ptr<Connection> current = std::static_pointer_cast < Connection > (first);
+  std::shared_ptr<Connection> current = std::static_pointer_cast<Connection>(first);
 
   do {
     std::set<std::shared_ptr<core::FlowFile> > expired;
@@ -896,14 +900,14 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
       ret->setDeleted(false);
       _updatedFlowFiles[ret->getUUIDStr()] = ret;
       std::map<std::string, std::string> empty;
-      std::shared_ptr<core::FlowFile> snapshot = std::make_shared < FlowFileRecord > (process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
+      std::shared_ptr<core::FlowFile> snapshot = std::make_shared<FlowFileRecord>(process_context_->getProvenanceRepository(), process_context_->getContentRepository(), empty);
       logger_->log_debug("Create Snapshot FlowFile with UUID %s", snapshot->getUUIDStr().c_str());
       snapshot = ret;
       // save a snapshot
       _originalFlowFiles[snapshot->getUUIDStr()] = snapshot;
       return ret;
     }
-    current = std::static_pointer_cast < Connection > (process_context_->getProcessorNode().getNextIncomingConnection());
+    current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode().getNextIncomingConnection());
   } while (current != NULL && current != first);
 
   return NULL;
