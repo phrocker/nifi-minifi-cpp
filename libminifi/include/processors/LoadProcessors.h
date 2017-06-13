@@ -26,6 +26,7 @@
 #include "GenerateFlowFile.h"
 #include "GetFile.h"
 #include "ListenHTTP.h"
+#include "InvokeHTTP.h"
 #include "LogAttribute.h"
 #include "PutFile.h"
 #include "TailFile.h"
