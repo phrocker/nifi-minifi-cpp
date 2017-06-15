@@ -573,8 +573,7 @@ class Site2SiteClientProtocol {
         if (readSize == 0) {
           break;
         }
-        if (readSize < 0)
-            {
+        if (readSize < 0) {
           return -1;
         }
         int ret = _packet->_transaction->getStream().writeData(buffer, readSize);
