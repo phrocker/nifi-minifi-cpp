@@ -105,7 +105,16 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
     }
 
   }
+  
+  friend std::ostream& operator<< (std::ostream& stream, const ResourceClaim& claim) {	
+	stream << claim._contentFullPath;
+	return stream;
+        }
 
+        friend std::ostream& operator<< (std::ostream& stream, const std::shared_ptr<ResourceClaim>& claim) {	
+	stream << claim->_contentFullPath;
+	return stream;
+        }
  protected:
 
   std::atomic<bool> deleted_;

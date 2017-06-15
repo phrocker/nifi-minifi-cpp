@@ -43,7 +43,7 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
       deleted_(false),
       logger_(logging::LoggerFactory<ResourceClaim>::getLogger()) {
 
-  char uuidStr[37];
+  char uuidStr[37] = {0};
 
   // Generate the global UUID for the resource claim
   uuid_generate(uuid_);

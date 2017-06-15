@@ -140,6 +140,7 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
   std::atomic<uint16_t> current_index_;
   // value vector.
   std::vector<AtomicEntry<T>*> value_vector_;
+
   // max count we are allowed to store.
   uint32_t max_count_;
   // maximum estimated size
@@ -245,8 +246,9 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
     }
     logger_->log_debug("Set repo value at %d out of %d", private_index, max_count_);
     updated = value_vector_.at(private_index)->setRepoValue(new_value, old_value, reclaimed_size);
-    if (updated)
+    if (updated && reclaimed_size > 0)
     {
+      std::lock_guard<std::mutex> lock(mutex_);
       purge_list_.push_back(old_value.getKey());
     }
     if (reclaimed_size > 0) {
