@@ -82,7 +82,6 @@ class SchedulingAgent {
   // start
   void start() {
     running_ = true;
-
   }
   // stop
   void stop() {
