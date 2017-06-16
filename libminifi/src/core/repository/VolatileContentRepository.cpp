@@ -151,7 +151,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const std::share
 }
 
 bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  logger_->log_debug("enter remove for %s", claim->getContentFullPath());
+  logger_->log_debug("enter remove for %s, reducing %d", claim->getContentFullPath(),current_size_.load());
   if (__builtin_expect(minimize_locking_ == true, 1)) {
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto ent = master_list_.find(claim->getContentFullPath());

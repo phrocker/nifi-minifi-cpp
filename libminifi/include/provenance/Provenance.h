@@ -449,6 +449,7 @@ class ProvenanceReporter {
   // Add event
   void add(ProvenanceEventRecord *event) {
     _events.insert(event);
+    logger_->log_debug("Prove reporter now %d",_events.size());
   }
   // Remove event
   void remove(ProvenanceEventRecord *event) {

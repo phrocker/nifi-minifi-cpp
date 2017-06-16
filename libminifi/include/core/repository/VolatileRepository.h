@@ -244,8 +244,9 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
         continue;
       }
     }
-    logger_->log_debug("Set repo value at %d out of %d", private_index, max_count_);
+    
     updated = value_vector_.at(private_index)->setRepoValue(new_value, old_value, reclaimed_size);
+    logger_->log_debug("Set repo value at %d out of %d updated %d current_size %d, adding %d to  %d", private_index, max_count_,updated==true,reclaimed_size,size, current_size_.load());
     if (updated && reclaimed_size > 0)
     {
       std::lock_guard<std::mutex> lock(mutex_);

@@ -203,7 +203,7 @@ class AtomicEntry {
     // delete the underlying pointer
     bool lock = false;
     if (!write_pending_.compare_exchange_weak(lock, true))
-        {
+    {
       return false;
     }
     if (has_value_) {
