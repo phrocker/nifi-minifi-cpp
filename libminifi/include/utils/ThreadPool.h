@@ -33,6 +33,35 @@ namespace minifi {
 namespace utils {
 
 /**
+ * Worker task helper that determines
+ * whether or not we will run
+ */
+template<typename T>
+class AfterExecute {
+ public:
+  virtual ~AfterExecute() {
+
+  }
+
+  explicit AfterExecute() {
+
+  }
+
+  explicit AfterExecute(AfterExecute &&other) {
+
+  }
+  virtual bool isFinished(const T &result) = 0;
+  virtual bool isCancelled(const T &result) = 0;
+  /**
+   * Time to wait before re-running this task if necessary
+   * @return milliseconds since epoch after which we are eligible to re-run this task.
+   */
+  virtual int64_t wait_time() {
+    return 0;
+  }
+};
+
+/**
  * Worker task
  * purpose: Provides a wrapper for the functor
  * and returns a future based on the template argument.
@@ -40,12 +69,26 @@ namespace utils {
 template<typename T>
 class Worker {
  public:
-  explicit Worker(std::function<T()> &task)
-      : task(task) {
+  explicit Worker(std::function<T()> &task, std::unique_ptr<AfterExecute<T>> run_determinant)
+      : task(task),
+        run_determinant_(std::move(run_determinant)),
+        time_slice_(-1) {
     promise = std::make_shared<std::promise<T>>();
   }
 
-  explicit Worker() {
+  explicit Worker(std::function<T()> &task)
+      : task(task),
+        run_determinant_(nullptr),
+        time_slice_(-1) {
+    promise = std::make_shared<std::promise<T>>();
+  }
+
+  explicit Worker()
+      : time_slice_(-1) {
+  }
+
+  virtual ~Worker() {
+
   }
 
   /**
@@ -53,16 +96,33 @@ class Worker {
    */
   Worker(Worker &&other)
       : task(std::move(other.task)),
-        promise(other.promise) {
+        promise(other.promise),
+        run_determinant_(std::move(other.run_determinant_)),
+        time_slice_(-1) {
   }
 
   /**
-   * Runs the task and takes the output from the funtor
+   * Runs the task and takes the output from the functor
    * setting the result into the promise
+   * @return whether or not to continue running
+   *   false == finished || error
+   *   true == run again
    */
-  void run() {
+  virtual bool run() {
     T result = task();
-    promise->set_value(result);
+    if (run_determinant_ == nullptr || (run_determinant_->isFinished(result) || run_determinant_->isCancelled(result))) {
+      promise->set_value(result);
+      return false;
+    }
+    return true;
+  }
+
+  virtual int64_t getTimeSlice() {
+    return time_slice_;
+  }
+
+  virtual void resetTimeSlice() {
+    time_slice_ = -1;
   }
 
   Worker<T>(const Worker<T>&) = delete;
@@ -71,9 +131,10 @@ class Worker {
   Worker<T>& operator =(Worker<T> &&);
 
   std::shared_ptr<std::promise<T>> getPromise();
-
- private:
+   protected:
+  int64_t time_slice_;
   std::function<T()> task;
+  std::unique_ptr<AfterExecute<T>> run_determinant_;
   std::shared_ptr<std::promise<T>> promise;
 };
 
@@ -81,6 +142,7 @@ template<typename T>
 Worker<T>& Worker<T>::operator =(Worker<T> && other) {
   task = std::move(other.task);
   promise = other.promise;
+  run_determinant_ = std::move(other.run_determinant_);
   return *this;
 }
 
@@ -254,7 +316,21 @@ void ThreadPool<T>::run_tasks() {
       tasks_available_.wait_for(lock, waitperiod);
       continue;
     }
-    task.run();
+    bool wait_to_run = false;
+    if (task.getTimeSlice() > 1) {
+      std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+      if (task.getTimeSlice() > ms.count()) {
+        wait_to_run = true;
+      }
+    }
+    // if we have to wait we re-queue the worker.
+    if (wait_to_run || task.run()) {
+      bool enqueued = false;
+      while (!enqueued) {
+        enqueued = worker_queue_.enqueue(std::move(task));
+      }
+
+    }
   }
   current_workers_--;
 

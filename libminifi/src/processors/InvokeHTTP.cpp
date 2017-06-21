@@ -329,7 +329,7 @@ void InvokeHTTP::onTrigger(core::ProcessContext *context, core::ProcessSession *
     if (claim) {
       utils::ByteInputCallBack *callback = new utils::ByteInputCallBack();
       session->read(flowFile, callback);
-      utils::CallBackPosition *callbackObj = new utils::CallBackPosition;
+      utils::HTTPUploadCallback *callbackObj = new utils::HTTPUploadCallback;
       callbackObj->ptr = callback;
       callbackObj->pos = 0;
       logger_->log_info("InvokeHTTP -- Setting callback");

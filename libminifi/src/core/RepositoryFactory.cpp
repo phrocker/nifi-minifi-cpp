@@ -48,14 +48,12 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
   try {
     std::shared_ptr<core::Repository> return_obj = nullptr;
     if (class_name_lc == "flowfilerepository") {
-      std::cout << "creating flow" << std::endl;
       return_obj = instantiate<core::repository::FlowFileRepository>(repo_name);
     } else if (class_name_lc == "provenancerepository") {
       return_obj = instantiate<provenance::ProvenanceRepository>(repo_name);
     } else if (class_name_lc == "volatilerepository") {
       return_obj = instantiate<repository::VolatileRepository>(repo_name);
     } else if (class_name_lc == "nooprepository") {
-      std::cout << "creating noop" << std::endl;
       return_obj = instantiate<core::Repository>(repo_name);
     }
 

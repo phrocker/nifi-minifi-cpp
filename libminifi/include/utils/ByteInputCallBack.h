@@ -48,6 +48,12 @@ class ByteInputCallBack : public InputStreamCallback {
 
   }
 
+  void write(std::string content) {
+    vec.resize(content.length());
+    std::copy(content.begin(), content.end(), std::back_inserter(vec));
+    ptr = &vec[0];
+  }
+
   char *getBuffer() {
     return ptr;
   }

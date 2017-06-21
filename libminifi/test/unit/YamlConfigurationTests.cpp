@@ -152,7 +152,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
 
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
-  REQUIRE(1 == connectionMap.size());
+  REQUIRE(2 == connectionMap.size());
   // This is a map of UUID->Connection, and we don't know UUID, so just going to loop over it
   for (auto it : connectionMap) {
     REQUIRE(it.second);
@@ -186,4 +186,3 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   REQUIRE_THROWS_AS(yamlConfig->getRoot(configYamlStream), std::invalid_argument);
 }
 }
-

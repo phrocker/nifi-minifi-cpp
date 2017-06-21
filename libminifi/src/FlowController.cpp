@@ -33,7 +33,10 @@
 #include <utility>
 #include <memory>
 #include <string>
+
+#include "../include/core/state/metrics/QueueMetrics.h"
 #include "yaml-cpp/yaml.h"
+#include "c2/C2Agent.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessGroup.h"
 #include "utils/StringUtils.h"
@@ -52,7 +55,8 @@ std::shared_ptr<utils::IdGenerator> FlowController::id_generator_ = utils::IdGen
 #define DEFAULT_CONFIG_NAME "conf/flow.yml"
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                               std::unique_ptr<core::FlowConfiguration> flow_configuration, const std::string name, bool headless_mode)
+                               std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                               const std::string name, bool headless_mode)
     : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
       root_(nullptr),
       max_timer_driven_threads_(0),
@@ -155,7 +159,7 @@ FlowController::~FlowController() {
   provenance_repo_ = nullptr;
 }
 
-bool FlowController::applyConfiguration(std::string &configurePayload) {
+bool FlowController::applyConfiguration(const std::string &configurePayload) {
   std::unique_ptr<core::ProcessGroup> newRoot;
   try {
     newRoot = std::move(flow_configuration_->getRootFromPayload(configurePayload));
@@ -169,7 +173,8 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
     return false;
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d",
-      newRoot->getName().c_str(), newRoot->getVersion());
+                    newRoot->getName().c_str(),
+                    newRoot->getVersion());
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
@@ -180,7 +185,7 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
   return start();
 }
 
-void FlowController::stop(bool force) {
+int16_t FlowController::stop(bool force, uint64_t timeToWait) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
@@ -196,6 +201,7 @@ void FlowController::stop(bool force) {
     if (this->root_)
       this->root_->stopProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
   }
+  return 0;
 }
 
 /**
@@ -242,21 +248,14 @@ void FlowController::load() {
     stop(true);
   }
   if (!initialized_) {
-    std::string listenerType;
-    // grab the value for configuration
-    if (this->http_configuration_listener_ == nullptr && configuration_->get(Configure::nifi_configuration_listener_type, listenerType)) {
-      if (listenerType == "http") {
-        this->http_configuration_listener_ =
-              std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
-      }
-    }
-
     logger_->log_info("Initializing timers");
     if (nullptr == timer_scheduler_) {
-      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);
+      timer_scheduler_ = std::make_shared<TimerDrivenSchedulingAgent>(
+          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, configuration_);
     }
     if (nullptr == event_scheduler_) {
-      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(std::static_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this()), provenance_repo_, configuration_);
+      event_scheduler_ = std::make_shared<EventDrivenSchedulingAgent>(
+          std::static_pointer_cast<core::controller::ControllerServiceProvider>(std::dynamic_pointer_cast<FlowController>(shared_from_this())), provenance_repo_, configuration_);
     }
     logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
 
@@ -315,19 +314,37 @@ void FlowController::loadFlowRepo() {
   }
 }
 
-bool FlowController::start() {
+int16_t FlowController::start() {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (!initialized_) {
     logger_->log_error("Can not start Flow Controller because it has not been initialized");
-    return false;
+    return -1;
   } else {
     if (!running_) {
       logger_->log_info("Starting Flow Controller");
       controller_service_provider_->enableAllControllerServices();
       this->timer_scheduler_->start();
       this->event_scheduler_->start();
+
       if (this->root_ != nullptr) {
+        start_time_ = std::chrono::steady_clock::now();
         this->root_->startProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
+
+        state::StateManager::initialize();
+        std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+                                                                           configuration_);
+        registerUpdateListener(agent);
+
+        std::shared_ptr<state::metrics::QueueMetrics> queueMetrics = std::make_shared<state::metrics::QueueMetrics>();
+
+        std::map<std::string, std::shared_ptr<Connection>> connections;
+        root_->getConnections(connections);
+        for (auto con : connections) {
+          queueMetrics->addConnection(con.second);
+        }
+
+        std::lock_guard<std::mutex> lock(metrics_mutex_);
+        metrics_[queueMetrics->getName()] = queueMetrics;
       }
       running_ = true;
       this->protocol_->start();
@@ -335,7 +352,7 @@ bool FlowController::start() {
       this->flow_file_repo_->start();
       logger_->log_info("Started Flow Controller");
     }
-    return true;
+    return 0;
   }
 }
 /**
@@ -475,6 +492,45 @@ std::shared_ptr<core::controller::ControllerService> FlowController::getControll
  */
 void FlowController::enableAllControllerServices() {
   controller_service_provider_->enableAllControllerServices();
+}
+
+int16_t FlowController::applyUpdate(const std::string &configuration) {
+  applyConfiguration(configuration);
+  return 0;
+}
+
+int16_t FlowController::clearConnection(const std::string &connection) {
+  if (root_ != nullptr) {
+    logger_->log_info("Attempting to clear connection %s", connection);
+    std::map<std::string, std::shared_ptr<Connection>> connections;
+    root_->getConnections(connections);
+    auto conn = connections.find(connection);
+    if (conn != connections.end()) {
+      logger_->log_info("Clearing connection %s", connection);
+      conn->second->drain();
+    }
+  }
+  return -1;
+}
+
+int16_t FlowController::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector) {
+  auto now = std::chrono::steady_clock::now();
+  auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_metrics_capture_).count();
+  std::lock_guard<std::mutex> lock(metrics_mutex_);
+  if (time_since > 30000) {
+    for (auto metric : metrics_) {
+    }
+  }
+  for (auto metric : metrics_) {
+    metric_vector.push_back(metric.second);
+  }
+  return 0;
+}
+
+uint64_t FlowController::getUptime() {
+  auto now = std::chrono::steady_clock::now();
+  auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_).count();
+  return time_since;
 }
 
 } /* namespace minifi */

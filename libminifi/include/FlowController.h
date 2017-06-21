@@ -44,11 +44,10 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
-#include "ConfigurationListener.h"
-#include "HttpConfigurationListener.h"
-
 #include "core/Property.h"
 #include "utils/Id.h"
+#include "core/state/metrics/MetricsBase.h"
+#include "core/state/StateManager.h"
 
 namespace org {
 namespace apache {
@@ -62,7 +61,7 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::controller::ControllerServiceProvider, public std::enable_shared_from_this<FlowController> {
+class FlowController : public core::controller::ControllerServiceProvider, public state::StateManager {
  public:
   static const int DEFAULT_MAX_TIMER_DRIVEN_THREAD = 10;
   static const int DEFAULT_MAX_EVENT_DRIVEN_THREAD = 5;
@@ -116,9 +115,23 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
     return initialized_.load();
   }
   // Start to run the Flow Controller which internally start the root process group and all its children
-  virtual bool start();
+  virtual int16_t start();
+  virtual int16_t pause() {
+    return -1;
+  }
   // Unload the current flow YAML, clean the root process group and all its children
-  virtual void stop(bool force);
+  virtual int16_t stop(bool force, uint64_t timeToWait = 0);
+  virtual int16_t applyUpdate(const std::string &configuration);
+  virtual int16_t drainRepositories() {
+
+    return -1;
+  }
+
+  virtual int16_t clearConnection(const std::string &connection);
+
+  virtual int16_t applyUpdate(const std::shared_ptr<state::Update> &updateController) {
+    return -1;
+  }
   // Asynchronous function trigger unloading and wait for a period of time
   virtual void waitUnload(const uint64_t timeToWaitMs);
   // Unload the current flow xml, clean the root process group and all its children
@@ -145,7 +158,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // first it will validate the payload with the current root node config for flowController
   // like FlowController id/name is the same and new version is greater than the current version
   // after that, it will apply the configuration
-  bool applyConfiguration(std::string &configurePayload);
+  bool applyConfiguration(const std::string &configurePayload);
 
   // get name
   std::string getName() {
@@ -265,6 +278,18 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    */
   virtual void enableAllControllerServices();
 
+  /**
+   * Retrieves all emtrics from this source.
+   * @param metric_vector -- metrics will be placed in this vector.
+   * @return result of the get operation.
+   *  0 Success
+   *  1 No error condition, but cannot obtain lock in timely manner.
+   *  -1 failure
+   */
+  virtual int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector);
+
+  virtual uint64_t getUptime();
+
  protected:
 
   // function to load the flow file repo.
@@ -321,10 +346,19 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // flow configuration object.
   std::unique_ptr<core::FlowConfiguration> flow_configuration_;
 
+  // metrics information
+
+  std::chrono::steady_clock::time_point start_time_;
+
+  std::mutex metrics_mutex_;
+  // metrics cache
+  std::map<std::string, std::shared_ptr<state::metrics::Metrics>> metrics_;
+  // metrics last run
+  std::chrono::steady_clock::time_point last_metrics_capture_;
+
  private:
   std::shared_ptr<logging::Logger> logger_;
   // http configuration listener object.
-  std::unique_ptr<HttpConfigurationListener> http_configuration_listener_;
   std::string serial_number_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };

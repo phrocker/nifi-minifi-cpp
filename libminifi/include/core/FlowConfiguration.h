@@ -99,7 +99,7 @@ class FlowConfiguration : public CoreComponent {
   }
 
   virtual std::unique_ptr<core::ProcessGroup> getRootFromPayload(
-      std::string &yamlConfigPayload) {
+      const std::string &yamlConfigPayload) {
     return nullptr;
   }
 

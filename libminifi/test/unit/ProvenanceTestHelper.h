@@ -155,16 +155,21 @@ class TestFlowController : public minifi::FlowController {
 
   }
 
-  bool start() {
+  int16_t start() {
     running_.store(true);
-    return true;
+    return 0;
   }
 
-  void stop(bool force) {
+  int16_t stop(bool force, uint64_t timeToWait = 0) {
     running_.store(false);
+    return 0;
   }
   void waitUnload(const uint64_t timeToWaitMs) {
     stop(true);
+  }
+
+  int16_t pause(){
+    return -1;
   }
 
   void unload() {

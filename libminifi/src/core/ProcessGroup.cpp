@@ -240,6 +240,7 @@ void ProcessGroup::updatePropertyValue(std::string processorName, std::string pr
 void ProcessGroup::getConnections(std::map<std::string, std::shared_ptr<Connection>> &connectionMap) {
   for (auto connection : connections_) {
     connectionMap[connection->getUUIDStr()] = connection;
+    connectionMap[connection->getName()] = connection;
   }
   for (auto processGroup : child_process_groups_) {
     processGroup->getConnections(connectionMap);

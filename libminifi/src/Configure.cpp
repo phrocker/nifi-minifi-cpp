@@ -53,14 +53,6 @@ const char *Configure::nifi_security_client_pass_phrase =
     "nifi.security.client.pass.phrase";
 const char *Configure::nifi_security_client_ca_certificate =
     "nifi.security.client.ca.certificate";
-const char *Configure::nifi_configuration_listener_pull_interval =
-    "nifi.configuration.listener.pull.interval";
-const char *Configure::nifi_configuration_listener_http_url =
-    "nifi.configuration.listener.http.url";
-const char *Configure::nifi_configuration_listener_rest_url =
-    "nifi.configuration.listener.rest.url";
-const char *Configure::nifi_configuration_listener_type =
-    "nifi.configuration.listener.type";
 const char *Configure::nifi_configuration_listener_need_ClientAuth =
     "nifi.configuration.listener.need.ClientAuth";
 const char *Configure::nifi_configuration_listener_client_certificate =

@@ -60,7 +60,7 @@ class SchedulingAgent {
         logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()) {
     running_ = false;
     repo_ = repo;
-    utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(configure_->getInt(Configure::nifi_flow_engine_threads, 8), true);
+    utils::ThreadPool<bool> pool = utils::ThreadPool<bool>(configure_->getInt(Configure::nifi_flow_engine_threads, 2), true);
     component_lifecycle_thread_pool_ = std::move(pool);
     component_lifecycle_thread_pool_.start();
   }
