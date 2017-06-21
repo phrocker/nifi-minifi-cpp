@@ -153,7 +153,8 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
   // decrement Active Task Counts
   void decrementActiveTask(void) {
-    active_tasks_--;
+    if (active_tasks_ > 0)
+      active_tasks_--;
   }
   void clearActiveTask(void) {
     active_tasks_ = 0;
@@ -183,7 +184,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     if (yield_expiration_ > curTime)
       return (yield_expiration_ - curTime);
     else
-      return 0;;
+      return 0;
   }
   // Whether flow file queued in incoming connection
   bool flowFilesQueued();
@@ -223,7 +224,17 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Check all incoming connections for work
   bool isWorkAvailable();
 
+  void setStreamFactory(std::shared_ptr<minifi::io::StreamFactory> stream_factory) {
+    stream_factory_ = stream_factory;
+  }
+
  protected:
+
+  virtual void notifyStop() {
+
+  }
+
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
   // Processor state
   std::atomic<ScheduledState> state_;

@@ -191,6 +191,8 @@ class TestPlan {
 
   std::shared_ptr<minifi::Connection> buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest = false);
 
+  std::shared_ptr<org::apache::nifi::minifi::io::StreamFactory> stream_factory;
+
   std::atomic<bool> finalized;
 
   std::shared_ptr<core::ContentRepository> content_repo_;
@@ -223,7 +225,7 @@ class TestController {
 
   TestController()
       : log(LogTestController::getInstance()) {
-    minifi::ResourceClaim::default_directory_path = const_cast<char*>("./");
+    minifi::setDefaultDirectory("./");
     log.reset();
     utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());
   }
@@ -247,6 +249,8 @@ class TestController {
     }
   }
 
+
+
   ~TestController() {
     for (auto dir : directories) {
       DIR *created_dir;
@@ -262,8 +266,9 @@ class TestController {
             unlink(file.c_str());
           }
         }
+        closedir(created_dir);
       }
-      closedir(created_dir);
+
       rmdir(dir);
     }
   }
@@ -275,6 +280,8 @@ class TestController {
   }
 
  protected:
+
+
 
   std::mutex test_mutex;
   //std::map<std::string,>

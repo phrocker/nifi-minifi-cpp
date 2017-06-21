@@ -50,9 +50,9 @@ class ProcessSession {
   ProcessSession(ProcessContext *processContext = NULL)
       : process_context_(processContext),
         logger_(logging::LoggerFactory<ProcessSession>::getLogger()) {
-    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode().getName());
+    logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
     auto repo = processContext->getProvenanceRepository();
-    provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode().getUUIDStr(), process_context_->getProcessorNode().getName());
+    provenance_report_ = new provenance::ProvenanceReporter(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
   }
 
 // Destructor
@@ -124,7 +124,8 @@ class ProcessSession {
   bool keepSource = true,
               uint64_t offset = 0);
   void import(std::string source, std::vector<std::shared_ptr<FlowFileRecord>> flows,
-  bool keepSource, uint64_t offset, char inputDelimiter);
+  bool keepSource,
+              uint64_t offset, char inputDelimiter);
 
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer

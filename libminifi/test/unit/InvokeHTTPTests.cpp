@@ -83,8 +83,8 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
 
-  core::ProcessorNode node(listenhttp);
-  core::ProcessorNode node2(invokehttp);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
+  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(invokehttp);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
   core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
   core::ProcessContext context2(node2, controller_services_provider, repo, repo, content_repo);
@@ -204,8 +204,8 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   invokehttp->addConnection(connection);
   invokehttp->addConnection(connection2);
 
-  core::ProcessorNode node(invokehttp);
-  core::ProcessorNode node2(listenhttp);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(invokehttp);
+  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(listenhttp);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
   core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
   core::ProcessContext context2(node2, controller_services_provider, repo, repo,  content_repo);

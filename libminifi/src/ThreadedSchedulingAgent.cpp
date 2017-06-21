@@ -67,7 +67,8 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     return;
   }
 
-  core::ProcessorNode processor_node(processor);
+  std::shared_ptr<core::ProcessorNode>  processor_node = std::make_shared<core::ProcessorNode>(processor);
+
   auto processContext = std::make_shared < core::ProcessContext > (processor_node, controller_service_provider_, repo_, flow_repo_, content_repo_);
   auto sessionFactory = std::make_shared < core::ProcessSessionFactory > (processContext.get());
 
@@ -78,9 +79,12 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   ThreadedSchedulingAgent *agent = this;
   for (int i = 0; i < processor->getMaxConcurrentTasks(); i++) {
     // reference the disable function from serviceNode
+    processor->incrementActiveTasks();
+
     std::function<uint64_t()> f_ex = [agent, processor, processContext, sessionFactory] () {
       return agent->run(processor, processContext.get(), sessionFactory.get());
     };
+
     // create a functor that will be submitted to the thread pool.
     std::unique_ptr<TimerAwareMonitor> monitor = std::unique_ptr<TimerAwareMonitor>(new TimerAwareMonitor(&running_));
     utils::Worker<uint64_t> functor(f_ex, processor->getUUIDStr(), std::move(monitor));

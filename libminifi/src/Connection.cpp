@@ -174,7 +174,7 @@ void Connection::drain() {
     auto &&item = queue_.front();
     queue_.pop();
   }
-
+  queued_data_size_ = 0;
   logger_->log_debug("Drain connection %s", name_.c_str());
 }
 

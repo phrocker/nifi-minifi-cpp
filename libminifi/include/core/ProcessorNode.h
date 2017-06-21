@@ -39,6 +39,8 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
 
   explicit ProcessorNode(const ProcessorNode &other);
 
+  explicit ProcessorNode(const ProcessorNode &&other);
+
   /**
    * Get property using the provided name.
    * @param name property name.

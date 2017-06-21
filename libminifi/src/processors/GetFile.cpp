@@ -133,6 +133,9 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 
 void GetFile::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   // Perform directory list
+
+  metrics_->iterations_++;
+
   logger_->log_info("Is listing empty %i", isListingEmpty());
   if (isListingEmpty()) {
     if (request_.pollInterval == 0 || (getTimeMillis() - last_listing_time_) > request_.pollInterval) {
@@ -229,7 +232,8 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
     regfree(&regex);
     if (ret)
       return false;
-
+    metrics_->input_bytes_ += statbuf.st_size;
+    metrics_->accepted_files_++;
     return true;
   }
 
@@ -265,6 +269,11 @@ void GetFile::performListing(std::string dir, const GetFileRequest &request) {
     }
   }
   closedir(d);
+}
+
+int16_t GetFile::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector) {
+  metric_vector.push_back(metrics_);
+  return 0;
 }
 
 } /* namespace processors */

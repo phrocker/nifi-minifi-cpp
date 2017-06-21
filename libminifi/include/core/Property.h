@@ -167,6 +167,10 @@ class Property {
       timeunit = SECOND;
       output = ival;
       return true;
+    } else if (unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs") {
+      timeunit = MILLISECOND;
+      output = ival;
+      return true;
     } else if (unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes") {
       timeunit = MINUTE;
       output = ival;

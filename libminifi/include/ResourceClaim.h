@@ -41,12 +41,17 @@ namespace minifi {
 // Default content directory
 #define DEFAULT_CONTENT_DIRECTORY "./content_repository"
 
+extern std::string default_directory_path;
+
+extern void setDefaultDirectory(std::string);
+
 // ResourceClaim Class
 class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
  public:
 
-  static char *default_directory_path;
+
+
   // Constructor
   /*!
    * Create a new resource claim

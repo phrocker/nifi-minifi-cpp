@@ -71,6 +71,9 @@ bool Processor::isRunning() {
 
 void Processor::setScheduledState(ScheduledState state) {
   state_ = state;
+  if (state == STOPPED) {
+    notifyStop();
+  }
 }
 
 bool Processor::addConnection(std::shared_ptr<Connectable> conn) {

@@ -71,7 +71,7 @@ TEST_CASE("Test GetFileLikeIt'sThreaded", "[getfileCreate3]") {
   processor->addConnection(connection);
   REQUIRE(dir != NULL);
 
-  core::ProcessorNode node(processor);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
   core::ProcessContext context(node, controller_services_provider, test_repo, test_repo);
   core::ProcessSessionFactory factory(&context);

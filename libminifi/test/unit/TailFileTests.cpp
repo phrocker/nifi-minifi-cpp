@@ -76,7 +76,7 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
 
     processor->addConnection(connection);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
 
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);
@@ -143,7 +143,7 @@ TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
 
     processor->addConnection(connection);
 
-    core::ProcessorNode node(processor);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
 
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_services_provider = nullptr;
     core::ProcessContext context(node, controller_services_provider, repo, repo, content_repo);

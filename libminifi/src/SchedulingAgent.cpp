@@ -42,7 +42,7 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
 void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_trace("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
-  std::function < bool() > f_ex = [serviceNode] {
+  std::function< bool()> f_ex = [serviceNode] {
     return serviceNode->enable();
   };
   // create a functor that will be submitted to the thread pool.
@@ -55,7 +55,7 @@ void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::
 
 void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   // reference the disable function from serviceNode
-  std::function < bool() > f_ex = [serviceNode] {
+  std::function< bool()> f_ex = [serviceNode] {
     return serviceNode->disable();
   };
   // create a functor that will be submitted to the thread pool.
@@ -71,8 +71,10 @@ bool SchedulingAgent::hasTooMuchOutGoing(std::shared_ptr<core::Processor> proces
 }
 
 bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
-  if (processor->isYield())
+  if (processor->isYield()) {
+    logger_->log_debug("Not running %s since it must yield", processor->getName());
     return false;
+  }
 
   // No need to yield, reset yield expiration to 0
   processor->clearYield();
@@ -89,6 +91,7 @@ bool SchedulingAgent::onTrigger(std::shared_ptr<core::Processor> processor, core
 
   processor->incrementActiveTasks();
   try {
+    logger_->log_debug("Triggering %s", processor->getName());
     processor->onTrigger(processContext, sessionFactory);
     processor->decrementActiveTask();
   } catch (Exception &exception) {

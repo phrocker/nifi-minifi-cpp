@@ -44,6 +44,7 @@
 #include "core/Property.h"
 #include "core/Relationship.h"
 #include "Site2SitePeer.h"
+#include "utils/HTTPUtils.h"
 
 namespace org {
 namespace apache {
@@ -72,7 +73,7 @@ std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtoc
         minifi::Site2SitePeerStatus peer;
         nextProtocol->setPortId(protocol_uuid_);
         {
-          std::lock_guard < std::mutex > lock(site2site_peer_mutex_);
+          std::lock_guard<std::mutex> lock(site2site_peer_mutex_);
           peer = site2site_peer_status_list_[this->site2site_peer_index_];
           site2site_peer_index_++;
           if (site2site_peer_index_ >= site2site_peer_status_list_.size()) {
@@ -110,33 +111,30 @@ void RemoteProcessorGroupPort::initialize() {
   std::set<core::Relationship> relationships;
   relationships.insert(relation);
   setSupportedRelationships(relationships);
-  curl_global_init(CURL_GLOBAL_DEFAULT);
-  {
-    std::lock_guard < std::mutex > lock(site2site_peer_mutex_);
-    if (!url_.empty()) {
-      refreshPeerList();
-      if (site2site_peer_status_list_.size() > 0)
+  std::lock_guard<std::mutex> lock(site2site_peer_mutex_);
+  if (!url_.empty()) {
+    refreshPeerList();
+    if (site2site_peer_status_list_.size() > 0)
+      site2site_peer_index_ = 0;
+  }
+  // populate the site2site protocol for load balancing between them
+  if (site2site_peer_status_list_.size() > 0) {
+    int count = site2site_peer_status_list_.size();
+    if (max_concurrent_tasks_ > count)
+      count = max_concurrent_tasks_;
+    for (int i = 0; i < count; i++) {
+      std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
+      nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
+      nextProtocol->setPortId(protocol_uuid_);
+      minifi::Site2SitePeerStatus peer = site2site_peer_status_list_[this->site2site_peer_index_];
+      site2site_peer_index_++;
+      if (site2site_peer_index_ >= site2site_peer_status_list_.size()) {
         site2site_peer_index_ = 0;
-    }
-    // populate the site2site protocol for load balancing between them
-    if (site2site_peer_status_list_.size() > 0) {
-      int count = site2site_peer_status_list_.size();
-      if (max_concurrent_tasks_ > count)
-        count = max_concurrent_tasks_;
-      for (int i = 0; i < count; i++) {
-        std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
-        nextProtocol = std::unique_ptr < Site2SiteClientProtocol > (new Site2SiteClientProtocol(nullptr));
-        nextProtocol->setPortId(protocol_uuid_);
-        minifi::Site2SitePeerStatus peer = site2site_peer_status_list_[this->site2site_peer_index_];
-        site2site_peer_index_++;
-        if (site2site_peer_index_ >= site2site_peer_status_list_.size()) {
-          site2site_peer_index_ = 0;
-        }
-        std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr < org::apache::nifi::minifi::io::DataStream > (stream_factory_->createSocket(peer.host_, peer.port_));
-        std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer > (new Site2SitePeer(std::move(str), peer.host_, peer.port_));
-        nextProtocol->setPeer(std::move(peer_));
-        returnProtocol(std::move(nextProtocol));
       }
+      std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(peer.host_, peer.port_));
+      std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), peer.host_, peer.port_));
+      nextProtocol->setPeer(std::move(peer_));
+      returnProtocol(std::move(nextProtocol));
     }
   }
 }
@@ -164,7 +162,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
   }
 
   if (context->getProperty(port.getName(), value) && !value.empty() && core::Property::StringToInt(value, lvalue)) {
-    port_ = static_cast<int> (lvalue);
+    port_ = static_cast<int>(lvalue);
   }
 
   if (context->getProperty(portUUID.getName(), value) && !value.empty()) {
@@ -182,7 +180,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     if (!protocol_->bootstrap()) {
       // bootstrap the client protocol if needeed
       context->yield();
-      std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor > (context->getProcessorNode().getProcessor());
+      std::shared_ptr<Processor> processor = std::static_pointer_cast < Processor > (context->getProcessorNode()->getProcessor());
       logger_->log_error("Site2Site bootstrap failed yield period %d peer ", processor->getYieldPeriodMsec());
 
       return;
@@ -210,7 +208,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
 
 void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
   if (this->host_.empty() || this->port_ == -1 || this->protocol_.empty())
-      return;
+    return;
 
   std::string fullUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/controller/";
 
@@ -222,51 +220,30 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
 
   if (!rest_user_name_.empty()) {
     std::string loginUrl = this->protocol_ + this->host_ + ":" + std::to_string(this->port_) + "/nifi-api/access/token/";
-    token = utils::get_token(loginUrl, this->rest_user_name_, this->rest_password_, this->securityConfig_);
-    logger_->log_debug("Token from NiFi REST Api endpoint %s", token);
+    utils::HTTPClient client(loginUrl, ssl_service);
+    client.setVerbose();
+    token = utils::get_token(client, this->rest_user_name_, this->rest_password_);
+    logger_->log_debug("Token from NiFi REST Api endpoint %s,  %s", loginUrl, token);
     if (token.empty())
-        return;
+      return;
   }
 
-  CURL *http_session = curl_easy_init();
+  utils::HTTPClient client(fullUrl.c_str(), ssl_service);
 
-  if (fullUrl.find("https") != std::string::npos) {
-    this->securityConfig_.configureSecureConnection(http_session);
-  }
+  client.initialize("GET");
 
   struct curl_slist *list = NULL;
   if (!token.empty()) {
     std::string header = "Authorization: " + token;
     list = curl_slist_append(list, header.c_str());
-    curl_easy_setopt(http_session, CURLOPT_HTTPHEADER, list);
+    client.setHeaders(list);
   }
 
-  curl_easy_setopt(http_session, CURLOPT_URL, fullUrl.c_str());
-
-  utils::HTTPRequestResponse content;
-  curl_easy_setopt(http_session, CURLOPT_WRITEFUNCTION,
-      &utils::HTTPRequestResponse::recieve_write);
-
-  curl_easy_setopt(http_session, CURLOPT_WRITEDATA,
-      static_cast<void*>(&content));
-
-  CURLcode res = curl_easy_perform(http_session);
-  if (list)
-    curl_slist_free_all(list);
-
-  if (res == CURLE_OK) {
-    std::string response_body(content.data.begin(), content.data.end());
+  if (client.submit() == CURLE_OK && client.getResponseCode() == 200) {
+    std::string response_body = client.getResponseBody();
     int64_t http_code = 0;
-    curl_easy_getinfo(http_session, CURLINFO_RESPONSE_CODE, &http_code);
-    char *content_type;
-    /* ask for the content-type */
-    curl_easy_getinfo(http_session, CURLINFO_CONTENT_TYPE, &content_type);
 
-    bool isSuccess = ((int32_t) (http_code / 100)) == 2
-        && res != CURLE_ABORTED_BY_CALLBACK;
-    bool body_empty = IsNullOrEmpty(content.data);
-
-    if (isSuccess && !body_empty) {
+    if (!response_body.empty()) {
       std::string controller = std::move(response_body);
       logger_->log_debug("controller config %s", controller.c_str());
       Json::Value value;
@@ -289,10 +266,8 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
     }
   } else {
     logger_->log_error(
-        "ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed %s\n",
-        curl_easy_strerror(res));
+                       "ProcessGroup::refreshRemoteSite2SiteInfo -- curl_easy_perform() failed \n");
   }
-  curl_easy_cleanup(http_session);
 }
 
 void RemoteProcessorGroupPort::refreshPeerList() {
@@ -302,15 +277,15 @@ void RemoteProcessorGroupPort::refreshPeerList() {
 
   this->site2site_peer_status_list_.clear();
 
-  std::unique_ptr < Site2SiteClientProtocol> protocol;
-  protocol = std::unique_ptr < Site2SiteClientProtocol
-      > (new Site2SiteClientProtocol(nullptr));
+  std::unique_ptr<Site2SiteClientProtocol> protocol;
+  protocol = std::unique_ptr<Site2SiteClientProtocol
+      >(new Site2SiteClientProtocol(nullptr));
   protocol->setPortId(protocol_uuid_);
   std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str =
-      std::unique_ptr < org::apache::nifi::minifi::io::DataStream
-          > (stream_factory_->createSocket(host_, site2site_port_));
-  std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr < Site2SitePeer
-      > (new Site2SitePeer(std::move(str), host_, site2site_port_));
+      std::unique_ptr<org::apache::nifi::minifi::io::DataStream
+      >(stream_factory_->createSocket(host_, site2site_port_));
+  std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer
+      >(new Site2SitePeer(std::move(str), host_, site2site_port_));
   protocol->setPeer(std::move(peer_));
   protocol->getPeerList(site2site_peer_status_list_);
 }

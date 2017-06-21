@@ -47,7 +47,6 @@ std::shared_ptr<core::controller::StandardControllerServiceNode> newCsNode(std::
   std::shared_ptr<core::controller::ControllerService> service = std::make_shared<MockControllerService>();
   std::shared_ptr<core::controller::StandardControllerServiceNode> testNode = std::make_shared<core::controller::StandardControllerServiceNode>(service, provider, id,
                                                                                                                                                 std::make_shared<minifi::Configure>());
-
   return testNode;
 }
 
@@ -110,13 +109,17 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::controller::ControllerServiceNode> notexistNode = pg->findControllerService("MockItLikeItsWrong");
   assert(notexistNode == nullptr);
   controller->load();
-  controller->start();
-  std::shared_ptr<core::controller::ControllerServiceNode> ssl_client_cont = controller->getControllerServiceNode("SSLClientServiceTest");
-  ssl_client_cont->enable();
-  assert(ssl_client_cont != nullptr);
-  assert(ssl_client_cont->getControllerServiceImplementation() != nullptr);
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_cont->getControllerServiceImplementation());
-
+  std::shared_ptr<core::controller::ControllerServiceNode> ssl_client_cont = nullptr;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_client = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(control_mutex);
+    controller->start();
+    ssl_client_cont = controller->getControllerServiceNode("SSLClientServiceTest");
+    ssl_client_cont->enable();
+    assert(ssl_client_cont != nullptr);
+    assert(ssl_client_cont->getControllerServiceImplementation() != nullptr);
+    ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_cont->getControllerServiceImplementation());
+  }
   assert(ssl_client->getCACertificate().length() > 0);
 
   // now let's disable one of the controller services.
@@ -136,20 +139,20 @@ int main(int argc, char **argv) {
   }
   std::shared_ptr<core::controller::ControllerServiceNode> mock_cont = controller->getControllerServiceNode("MockItLikeIts1995");
   assert(cs_id->enabled());
-  {
+{
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->disableReferencingServices(mock_cont);
     disabled = true;
     waitToVerifyProcessor();
   }
-  assert(cs_id->enabled() == false);
-  {
+    assert(cs_id->enabled() == false);
+{
     std::lock_guard<std::mutex> lock(control_mutex);
     controller->enableReferencingServices(mock_cont);
     disabled = false;
     waitToVerifyProcessor();
   }
-  assert(cs_id->enabled() == true);
+    assert(cs_id->enabled() == true);
 
   controller->waitUnload(60000);
   return 0;

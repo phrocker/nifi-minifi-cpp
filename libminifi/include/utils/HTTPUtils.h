@@ -20,12 +20,12 @@
 #define __HTTP_UTILS_H__
 
 #include <curl/curl.h>
-#include <vector>
-#include <iostream>
-#include <string>
 #include <curl/curlbuild.h>
 #include <curl/easy.h>
-#include <openssl/ssl.h>
+#include <uuid/uuid.h>
+#include <regex.h>
+#include <vector>
+#include "controllers/SSLContextService.h"
 #include "ByteInputCallBack.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-struct CallBackPosition {
+struct HTTPUploadCallback {
   ByteInputCallBack *ptr;
   size_t pos;
 };
@@ -68,7 +68,7 @@ struct HTTPRequestResponse {
 
   static size_t send_write(char * data, size_t size, size_t nmemb, void * p) {
     if (p != 0) {
-      CallBackPosition *callback = (CallBackPosition*) p;
+      HTTPUploadCallback *callback = (HTTPUploadCallback*) p;
       if (callback->pos <= callback->ptr->getBufferSize()) {
         char *ptr = callback->ptr->getBuffer();
         int len = callback->ptr->getBufferSize() - callback->pos;
@@ -130,171 +130,136 @@ static void parse_url(std::string &url, std::string &host, int &port, std::strin
   }
 }
 
-// HTTPSecurityConfiguration
-class HTTPSecurityConfiguration {
-public:
-
-  // Constructor
-  /*!
-   * Create a new HTTPSecurityConfiguration
-   */
-  HTTPSecurityConfiguration(bool need_client_certificate, std::string certificate,
-      std::string private_key, std::string passphrase, std::string ca_certificate) :
-        need_client_certificate_(need_client_certificate), certificate_(certificate),
-        private_key_(private_key), passphrase_(passphrase), ca_certificate_(ca_certificate) {
-    logger_ = logging::LoggerFactory<HTTPSecurityConfiguration>::getLogger();
+/**
+ * Purpose and Justification: Initializes and cleans up curl once. Cleanup will only occur at the end of our execution since we are relying on a static variable.
+ */
+class HTTPClientInitializer {
+ public:
+  static HTTPClientInitializer *getInstance() {
+    static HTTPClientInitializer initializer;
+    return &initializer;
   }
-  // Destructor
-  virtual ~HTTPSecurityConfiguration() {
+ private:
+  ~HTTPClientInitializer() {
+    curl_global_cleanup();
   }
-
-  HTTPSecurityConfiguration(std::shared_ptr<Configure> configure) {
-    logger_ = logging::LoggerFactory<HTTPSecurityConfiguration>::getLogger();
-    need_client_certificate_ = false;
-    std::string clientAuthStr;
-    if (configure->get(Configure::nifi_https_need_ClientAuth, clientAuthStr)) {
-      org::apache::nifi::minifi::utils::StringUtils::StringToBool(clientAuthStr, this->need_client_certificate_);
-    }
-
-    if (configure->get(Configure::nifi_https_client_ca_certificate, this->ca_certificate_)) {
-      logger_->log_info("HTTPSecurityConfiguration CA certificates: [%s]", this->ca_certificate_);
-    }
-
-    if (this->need_client_certificate_) {
-      std::string passphrase_file;
-
-      if (!(configure->get(Configure::nifi_https_client_certificate, this->certificate_) && configure->get(Configure::nifi_https_client_private_key, this->private_key_))) {
-        logger_->log_error("Certificate and Private Key PEM file not configured for HTTPSecurityConfiguration, error: %s.", std::strerror(errno));
-      }
-
-      if (configure->get(Configure::nifi_https_client_pass_phrase, passphrase_file)) {
-        // load the passphase from file
-        std::ifstream file(passphrase_file.c_str(), std::ifstream::in);
-        if (file.good()) {
-          this->passphrase_.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-          file.close();
-        }
-      }
-
-      logger_->log_info("HTTPSecurityConfiguration certificate: [%s], private key: [%s], passphrase file: [%s]", this->certificate_, this->private_key_, passphrase_file);
-    }
+  HTTPClientInitializer() {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
   }
+};
 
-  /**
-    * Configures a secure connection
-    */
-  void configureSecureConnection(CURL *http_session) {
-    curl_easy_setopt(http_session, CURLOPT_VERBOSE, 1L);
-    curl_easy_setopt(http_session, CURLOPT_CAINFO, this->ca_certificate_.c_str());
-    curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
-    curl_easy_setopt(http_session, CURLOPT_SSL_VERIFYPEER, 1L);
-    if (this->need_client_certificate_) {
-      CURLcode ret;
-      ret = curl_easy_setopt(http_session, CURLOPT_SSL_CTX_FUNCTION,
-          &HTTPSecurityConfiguration::configureSSLContext);
-      if (ret != CURLE_OK)
-        logger_->log_error("CURLOPT_SSL_CTX_FUNCTION not supported %d", ret);
-      curl_easy_setopt(http_session, CURLOPT_SSL_CTX_DATA,
-          static_cast<void*>(this));
-      curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "PEM");
-    }
-  }
+/**
+ * Purpose and Justification: Pull the basics for an HTTPClient into a self contained class. Simply provide
+ * the URL and an SSLContextService ( can be null).
+ *
+ * Since several portions of the code have been relying on curl, we can encapsulate most CURL HTTP
+ * operations here without maintaining it everywhere. Further, this will help with testing as we
+ * only need to to test our usage of CURL once
+ */
+class HTTPClient {
+ public:
+  HTTPClient(
+      const std::string &url,
+      const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
-  static CURLcode configureSSLContext(CURL *curl, void *ctx, void *param) {
-    minifi::utils::HTTPSecurityConfiguration *config =
-        static_cast<minifi::utils::HTTPSecurityConfiguration *>(param);
-    SSL_CTX* sslCtx = static_cast<SSL_CTX*>(ctx);
+  ~HTTPClient();
 
-    SSL_CTX_load_verify_locations(sslCtx, config->ca_certificate_.c_str(), 0);
-    SSL_CTX_use_certificate_file(sslCtx, config->certificate_.c_str(),
-        SSL_FILETYPE_PEM);
-    SSL_CTX_set_default_passwd_cb(sslCtx,
-        HTTPSecurityConfiguration::pemPassWordCb);
-    SSL_CTX_set_default_passwd_cb_userdata(sslCtx, param);
-    SSL_CTX_use_PrivateKey_file(sslCtx, config->private_key_.c_str(),
-        SSL_FILETYPE_PEM);
-    // verify private key
-    if (!SSL_CTX_check_private_key(sslCtx)) {
-      config->logger_->log_error(
-          "Private key does not match the public certificate, error : %s",
-          std::strerror(errno));
+  void setVerbose();
+
+  void initialize(const std::string &method);
+
+  void setConnectionTimeout(int64_t timeout);
+
+  void setReadTimeout(int64_t timeout);
+
+  void setUploadCallback(HTTPUploadCallback *callbackObj);
+
+  struct curl_slist *build_header_list(std::string regex, const std::map<std::string, std::string> &attributes);
+
+  void setContentType(std::string content_type);
+
+  std::string escape(std::string string_to_escape);
+
+  void setPostFields(std::string input);
+
+  void setHeaders(struct curl_slist *list);
+
+  CURLcode submit();
+
+  CURLcode getResponseResult();
+
+  int64_t &getResponseCode();
+
+  const char *getContentType();
+
+  std::string getResponseBody();
+
+  void set_request_method(const std::string method);
+
+  void setUseChunkedEncoding();
+
+  void setDisablePeerVerification();
+
+ protected:
+
+  inline bool matches(const std::string &value, const std::string &sregex);
+
+  static CURLcode configure_ssl_context(CURL *curl, void *ctx, void *param) {
+    minifi::controllers::SSLContextService *ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
+    if (!ssl_context_service->configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {
       return CURLE_FAILED_INIT;
     }
-
-    config->logger_->log_debug(
-        "HTTPSecurityConfiguration load Client Certificates OK");
     return CURLE_OK;
   }
 
-  static int pemPassWordCb(char *buf, int size, int rwflag, void *param) {
-    minifi::utils::HTTPSecurityConfiguration *config =
-        static_cast<minifi::utils::HTTPSecurityConfiguration *>(param);
+  void configure_secure_connection(CURL *http_session);
 
-    if (config->passphrase_.length() > 0) {
-      memset(buf, 0x00, size);
-      memcpy(buf, config->passphrase_.c_str(),
-          config->passphrase_.length() - 1);
-      return config->passphrase_.length() - 1;
-    }
-    return 0;
-  }
+  bool isSecure(const std::string &url);
+  struct curl_slist *headers_;
+  utils::HTTPRequestResponse content_;
+  CURLcode res;
+  int64_t http_code;
+  char *content_type;
 
-protected:
-  bool need_client_certificate_;
-  std::string certificate_;
-  std::string private_key_;
-  std::string passphrase_;
-  std::string ca_certificate_;
+  int64_t connect_timeout_;
+  // read timeout.
+  int64_t read_timeout_;
 
-private:
+  std::string content_type_;
+
   std::shared_ptr<logging::Logger> logger_;
+  CURL *http_session_;
+  std::string url_;
+  std::string method_;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 };
 
-static std::string get_token(std::string loginUrl, std::string username, std::string password, HTTPSecurityConfiguration &securityConfig) {
+//static std::string get_token(HTTPClientstd::string loginUrl, std::string username, std::string password, HTTPSecurityConfiguration &securityConfig) {
+static std::string get_token(HTTPClient &client, std::string username, std::string password) {
   utils::HTTPRequestResponse content;
   std::string token;
-  CURL *login_session = curl_easy_init();
-  if (loginUrl.find("https") != std::string::npos) {
-     securityConfig.configureSecureConnection(login_session);
-   }
-  curl_easy_setopt(login_session, CURLOPT_URL, loginUrl.c_str());
-  struct curl_slist *list = NULL;
-  list = curl_slist_append(list, "Content-Type: application/x-www-form-urlencoded");
-  list = curl_slist_append(list, "Accept: text/plain");
-  curl_easy_setopt(login_session, CURLOPT_HTTPHEADER, list);
+
+  client.setContentType("application/x-www-form-urlencoded");
+
+  client.set_request_method("POST");
+
   std::string payload = "username=" + username + "&" + "password=" + password;
-  char *output = curl_easy_escape(login_session, payload.c_str(), payload.length());
-  curl_easy_setopt(login_session, CURLOPT_WRITEFUNCTION,
-      &utils::HTTPRequestResponse::recieve_write);
-  curl_easy_setopt(login_session, CURLOPT_WRITEDATA,
-      static_cast<void*>(&content));
-  curl_easy_setopt(login_session, CURLOPT_POSTFIELDSIZE, strlen(output));
-  curl_easy_setopt(login_session, CURLOPT_POSTFIELDS, output);
-  curl_easy_setopt(login_session, CURLOPT_POST, 1);
-  CURLcode res = curl_easy_perform(login_session);
-  curl_slist_free_all(list);
-  curl_free(output);
-  if (res == CURLE_OK) {
-    std::string response_body(content.data.begin(), content.data.end());
-    int64_t http_code = 0;
-    curl_easy_getinfo(login_session, CURLINFO_RESPONSE_CODE, &http_code);
-    char *content_type;
-    /* ask for the content-type */
-    curl_easy_getinfo(login_session, CURLINFO_CONTENT_TYPE, &content_type);
 
-    bool isSuccess = ((int32_t) (http_code / 100)) == 2
-        && res != CURLE_ABORTED_BY_CALLBACK;
-    bool body_empty = IsNullOrEmpty(content.data);
+  client.setPostFields(client.escape(payload));
 
-    if (isSuccess && !body_empty) {
+  client.submit();
+
+  if (client.submit() == CURLE_OK && client.getResponseCode() == 200) {
+
+    std::string response_body = client.getResponseBody();
+
+    if (!response_body.empty()) {
       token = "Bearer " + response_body;
     }
   }
-  curl_easy_cleanup(login_session);
 
   return token;
 }
-
 
 } /* namespace utils */
 } /* namespace minifi */

@@ -30,7 +30,7 @@ namespace nifi {
 namespace minifi {
 
 uint64_t TimerDrivenSchedulingAgent::run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory) {
-  while (this->running_) {
+  while (this->running_ && processor->isRunning()) {
     bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
     if (processor->isYield()) {
       // Honor the yield
@@ -41,7 +41,7 @@ uint64_t TimerDrivenSchedulingAgent::run(std::shared_ptr<core::Processor> proces
     }
     return processor->getSchedulingPeriodNano() / 1000000;
   }
-  return 0;
+  return processor->getSchedulingPeriodNano() / 1000000;
 }
 
 } /* namespace minifi */
