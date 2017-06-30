@@ -46,7 +46,7 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /**
    * Run function that accepts the processor, context and session factory.
    */
-  void run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory);
+  uint64_t run(std::shared_ptr<core::Processor> processor, core::ProcessContext *processContext, core::ProcessSessionFactory *sessionFactory);
 
  private:
   // Prevent default copy constructor and assignment operation
