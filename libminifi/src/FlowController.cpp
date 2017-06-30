@@ -52,7 +52,8 @@ std::shared_ptr<utils::IdGenerator> FlowController::id_generator_ = utils::IdGen
 #define DEFAULT_CONFIG_NAME "conf/flow.yml"
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
-                               std::unique_ptr<core::FlowConfiguration> flow_configuration, const std::string name, bool headless_mode)
+                               std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                               const std::string name, bool headless_mode)
     : core::controller::ControllerServiceProvider(core::getClassName<FlowController>()),
       root_(nullptr),
       max_timer_driven_threads_(0),
@@ -169,7 +170,8 @@ bool FlowController::applyConfiguration(std::string &configurePayload) {
     return false;
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d",
-      newRoot->getName().c_str(), newRoot->getVersion());
+                    newRoot->getName().c_str(),
+                    newRoot->getVersion());
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
@@ -184,17 +186,16 @@ void FlowController::stop(bool force) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     // immediately indicate that we are not running
-    running_ = false;
-
     logger_->log_info("Stop Flow Controller");
-    this->timer_scheduler_->stop();
-    this->event_scheduler_->stop();
-    this->flow_file_repo_->stop();
-    this->provenance_repo_->stop();
-    // Wait for sometime for thread stop
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     if (this->root_)
       this->root_->stopProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
+    this->flow_file_repo_->stop();
+    this->provenance_repo_->stop();
+    // stop after we've attempted to stop the processors.
+    this->timer_scheduler_->stop();
+    this->event_scheduler_->stop();
+    running_ = false;
+
   }
 }
 
@@ -247,7 +248,7 @@ void FlowController::load() {
     if (this->http_configuration_listener_ == nullptr && configuration_->get(Configure::nifi_configuration_listener_type, listenerType)) {
       if (listenerType == "http") {
         this->http_configuration_listener_ =
-              std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
+            std::unique_ptr<minifi::HttpConfigurationListener>(new minifi::HttpConfigurationListener(shared_from_this(), configuration_));
       }
     }
 
