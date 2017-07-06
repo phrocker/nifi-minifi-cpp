@@ -63,7 +63,6 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     if (running_)
       return;
     thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
-    thread_.detach();
     running_ = true;
     logger_->log_info("%s Repository Monitor Thread Start", name_.c_str());
   }
