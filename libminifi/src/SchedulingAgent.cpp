@@ -39,8 +39,8 @@ bool SchedulingAgent::hasWorkToDo(std::shared_ptr<core::Processor> processor) {
     return false;
 }
 
-void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
-  logger_->log_trace("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
+std::future<bool> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the enable function from serviceNode
   std::function< bool()> f_ex = [serviceNode] {
     return serviceNode->enable();
@@ -51,9 +51,12 @@ void SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::
   // we aren't terribly concerned with the result.
   std::future<bool> future;
   component_lifecycle_thread_pool_.execute(std::move(functor), future);
+  future.wait();
+  return future;
 }
 
-void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+std::future<bool> SchedulingAgent::disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
+  logger_->log_info("Disabling CSN in SchedulingAgent %s", serviceNode->getName());
   // reference the disable function from serviceNode
   std::function< bool()> f_ex = [serviceNode] {
     return serviceNode->disable();
@@ -64,6 +67,8 @@ void SchedulingAgent::disableControllerService(std::shared_ptr<core::controller:
   // we aren't terribly concerned with the result.
   std::future<bool> future;
   component_lifecycle_thread_pool_.execute(std::move(functor), future);
+  future.wait();
+  return future;
 }
 
 bool SchedulingAgent::hasTooMuchOutGoing(std::shared_ptr<core::Processor> processor) {

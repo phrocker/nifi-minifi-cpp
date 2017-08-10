@@ -29,7 +29,7 @@
 #include "C2Payload.h"
 #include "C2Protocol.h"
 #include "io/validation.h"
-#include "protocols/RESTSender.h"
+#include "protocols/Protocols.h"
 
 namespace org {
 namespace apache {

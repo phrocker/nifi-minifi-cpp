@@ -42,11 +42,12 @@ int ssl_protocol_en(void *ssl_context, void *user_data) {
 
 RESTReceiver::RESTReceiver(std::string name, uuid_t uuid)
     : HeartBeatReporter(name, uuid),
-      logger_(logging::LoggerFactory<Connectable>::getLogger()) {
+      logger_(logging::LoggerFactory<RESTReceiver>::getLogger()) {
 }
 
 void RESTReceiver::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
   HeartBeatReporter::initialize(controller, configure);
+  logger_->log_debug("Initializing rest receiveer");
   if (nullptr != configuration_) {
     std::string listeningPort, rootUri, caCert;
     configuration_->get("c2.rest.listener.port", listeningPort);

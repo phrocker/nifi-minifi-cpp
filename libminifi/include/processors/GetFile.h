@@ -38,7 +38,8 @@ struct GetFileRequest {
   int64_t minAge = 0;
   int64_t maxAge = 0;
   int64_t minSize = 0;
-  int64_t maxSize = 0;bool ignoreHiddenFile = true;
+  int64_t maxSize = 0;
+  bool ignoreHiddenFile = true;
   int64_t pollInterval = 0;
   int64_t batchSize = 10;
   std::string fileFilter = "[^\\.].*";

@@ -189,7 +189,7 @@ void GetFile::putListing(std::string fileName) {
 void GetFile::pollListing(std::queue<std::string> &list, const GetFileRequest &request) {
   std::lock_guard < std::mutex > lock(mutex_);
 
-  while (!_dirList.empty() && (request.maxSize == 0 || list.size() < request.maxSize)) {
+  while (!_dirList.empty() && (request.batchSize == 0 || list.size() < request.batchSize)) {
     std::string fileName = _dirList.front();
     _dirList.pop();
     list.push(fileName);
