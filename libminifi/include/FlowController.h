@@ -301,7 +301,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual void enableAllControllerServices();
 
   /**
-   * Retrieves all emtrics from this source.
+   * Retrieves all metrics from this source.
    * @param metric_vector -- metrics will be placed in this vector.
    * @return result of the get operation.
    *  0 Success
