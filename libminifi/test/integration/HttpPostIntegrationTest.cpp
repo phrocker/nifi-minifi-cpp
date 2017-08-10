@@ -59,6 +59,7 @@ class HttpTestHarness : public IntegrationBase {
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
     LogTestController::getInstance().setDebug<core::ProcessContext>();
     LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
+    LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<processors::ListenHTTP>();
     LogTestController::getInstance().setDebug<processors::ListenHTTP::WriteCallback>();
     LogTestController::getInstance().setDebug<processors::ListenHTTP::Handler>();
@@ -72,6 +73,7 @@ class HttpTestHarness : public IntegrationBase {
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
+    configuration->set("nifi.flow.engine.threads","8");
   }
 
   void cleanup() {
