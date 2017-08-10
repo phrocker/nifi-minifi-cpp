@@ -73,7 +73,7 @@ class HttpTestHarness : public IntegrationBase {
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
-    configuration->set("nifi.flow.engine.threads","8");
+    configuration->set("nifi.flow.engine.threads", "8");
   }
 
   void cleanup() {
