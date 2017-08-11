@@ -60,7 +60,7 @@ class ResourceClaim : public std::enable_shared_from_this<ResourceClaim> {
 
   ResourceClaim(const std::string path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager, bool deleted = false);
   // Destructor
-  virtual ~ResourceClaim() {
+  ~ResourceClaim() {
   }
   // increaseFlowFileRecordOwnedCount
   void increaseFlowFileRecordOwnedCount() {
