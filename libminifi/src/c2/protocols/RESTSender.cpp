@@ -60,8 +60,8 @@ C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &pa
       Json::Value payload_content_values;
       bool use_sub_option = true;
       if (payload_content.op == payload.getOperation()) {
-        for (auto content : payload_content.content) {
-          if (payload_content.content.size() == 1 && payload_content.name == content.first) {
+        for (auto content : payload_content.operation_arguments) {
+          if (payload_content.operation_arguments.size() == 1 && payload_content.name == content.first) {
             json_payload[payload_content.name] = content.second;
             use_sub_option = false;
           } else {

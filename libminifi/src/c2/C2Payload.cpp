@@ -41,7 +41,7 @@ C2ContentResponse::C2ContentResponse(const C2ContentResponse &other)
       ttl(other.ttl),
       name(other.name),
       ident(other.ident),
-      content(other.content) {
+      operation_arguments(other.operation_arguments) {
 }
 
 C2ContentResponse::C2ContentResponse(const C2ContentResponse &&other)
@@ -51,7 +51,7 @@ C2ContentResponse::C2ContentResponse(const C2ContentResponse &&other)
       ttl(std::move(other.ttl)),
       ident(std::move(other.ident)),
       name(std::move(other.name)),
-      content(std::move(other.content)) {
+      operation_arguments(std::move(other.operation_arguments)) {
 }
 
 C2ContentResponse &C2ContentResponse::operator=(const C2ContentResponse &&other) {
@@ -61,7 +61,7 @@ C2ContentResponse &C2ContentResponse::operator=(const C2ContentResponse &&other)
   ttl = std::move(other.ttl);
   name = std::move(other.name);
   ident = std::move(other.ident);
-  content = std::move(other.content);
+  operation_arguments = std::move(other.operation_arguments);
   return *this;
 }
 
@@ -71,7 +71,7 @@ C2ContentResponse &C2ContentResponse::operator=(const C2ContentResponse &other) 
   delay = other.delay;
   ttl = other.ttl;
   name = other.name;
-  content = other.content;
+  operation_arguments = other.operation_arguments;
   return *this;
 }
 
@@ -144,15 +144,15 @@ const std::vector<C2ContentResponse> &C2Payload::getContent() const {
 void C2Payload::addContent(const C2ContentResponse &&content) {
   for (auto &existing_content : content_) {
     if (existing_content.name == content.name) {
-      for (auto subcontent : existing_content.content) {
+      for (auto subcontent : existing_content.operation_arguments) {
       }
 
-      for (auto subcontent : content.content) {
+      for (auto subcontent : content.operation_arguments) {
       }
 
-      existing_content.content.insert(content.content.begin(), content.content.end());
+      existing_content.operation_arguments.insert(content.operation_arguments.begin(), content.operation_arguments.end());
 
-      for (auto subcontent : existing_content.content) {
+      for (auto subcontent : existing_content.operation_arguments) {
       }
 
       return;

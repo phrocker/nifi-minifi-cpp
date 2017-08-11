@@ -66,7 +66,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
 
           if (request.isMember("content") && request["content"].size() > 0) {
             for (const auto &name : request["content"].getMemberNames()) {
-              new_command.content[name] = request["content"][name].asString();
+              new_command.operation_arguments[name] = request["content"][name].asString();
             }
           }
           nested_payload.addContent(std::move(new_command));
@@ -112,8 +112,8 @@ Json::Value RESTProtocol::serializeJsonPayload(Json::Value &json_root, const C2P
     Json::Value payload_content_values;
     bool use_sub_option = true;
     if (payload_content.op == payload.getOperation()) {
-      for (auto content : payload_content.content) {
-        if (payload_content.content.size() == 1 && payload_content.name == content.first) {
+      for (auto content : payload_content.operation_arguments) {
+        if (payload_content.operation_arguments.size() == 1 && payload_content.name == content.first) {
           json_payload[payload_content.name] = content.second;
           use_sub_option = false;
         } else {

@@ -191,9 +191,9 @@ void C2Agent::performHeartBeat() {
 
     for (auto &component : components) {
       if (component->isRunning()) {
-        component_payload.content[component->getComponentName()] = "enabled";
+        component_payload.operation_arguments[component->getComponentName()] = "enabled";
       } else {
-        component_payload.content[component->getComponentName()] = "disabled";
+        component_payload.operation_arguments[component->getComponentName()] = "disabled";
       }
     }
     payload.addContent(std::move(component_payload));
@@ -202,11 +202,11 @@ void C2Agent::performHeartBeat() {
   C2ContentResponse state(Operation::HEARTBEAT);
   state.name = "state";
   if (update_sink_->isRunning()) {
-    state.content["running"] = "true";
+    state.operation_arguments["running"] = "true";
   } else {
-    state.content["running"] = "false";
+    state.operation_arguments["running"] = "false";
   }
-  state.content["uptime"] = std::to_string(update_sink_->getUptime());
+  state.operation_arguments["uptime"] = std::to_string(update_sink_->getUptime());
 
   payload.addContent(std::move(state));
 
@@ -233,7 +233,7 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
       C2ContentResponse response(metric_payload.getOperation());
       response.name = name;
 
-      response.content[metric.name] = metric.value;
+      response.operation_arguments[metric.name] = metric.value;
 
       metric_payload.addContent(std::move(response));
     }
@@ -310,7 +310,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       // we've been told to clear something
       if (resp.name == "connection") {
         logger_->log_debug("Clearing connection %s", resp.name);
-        for (auto connection : resp.content) {
+        for (auto connection : resp.operation_arguments) {
           update_sink_->clearConnection(connection.second);
         }
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
@@ -384,9 +384,9 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
     auto reporter = std::dynamic_pointer_cast<state::metrics::MetricsReporter>(update_sink_);
 
     if (reporter != nullptr) {
-      auto metricsClass = resp.content.find("metricsClass");
+      auto metricsClass = resp.operation_arguments.find("metricsClass");
       uint8_t metric_class_id = 0;
-      if (metricsClass != resp.content.end()) {
+      if (metricsClass != resp.operation_arguments.end()) {
         // we have a class
         try {
           metric_class_id = std::stoi(metricsClass->second);
@@ -418,7 +418,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
       C2ContentResponse option(Operation::ACKNOWLEDGE);
       option.name = key;
       if (configuration_->get(key, value)) {
-        option.content[key] = value;
+        option.operation_arguments[key] = value;
         options.addContent(std::move(option));
       }
     }
@@ -433,8 +433,8 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
 void C2Agent::handle_update(const C2ContentResponse &resp) {
   // we've been told to update something
   if (resp.name == "configuration") {
-    auto url = resp.content.find("location");
-    if (url != resp.content.end()) {
+    auto url = resp.operation_arguments.find("location");
+    if (url != resp.operation_arguments.end()) {
       // just get the raw data.
       C2Payload payload(Operation::UPDATE, false, true);
 
@@ -446,8 +446,8 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       }
       // send
     } else {
-      auto update_text = resp.content.find("configuration_data");
-      if (update_text != resp.content.end()) {
+      auto update_text = resp.operation_arguments.find("configuration_data");
+      if (update_text != resp.operation_arguments.end()) {
         update_sink_->applyUpdate(update_text->second);
       }
     }
@@ -457,11 +457,11 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     // unnecessary objects.
     running_configuration->clear();
 
-    for (auto entry : resp.content) {
+    for (auto entry : resp.operation_arguments) {
       running_configuration->set(entry.first, entry.second);
     }
 
-    if (resp.content.size() > 0)
+    if (resp.operation_arguments.size() > 0)
       configure(running_configuration);
   }
 }

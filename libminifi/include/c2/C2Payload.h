@@ -70,7 +70,7 @@ class C2ContentResponse {
   // name applied to commands
   std::string name;
   // commands that correspond with the operation.
-  std::map<std::string, std::string> content;
+  std::map<std::string, std::string> operation_arguments;
 //  std::vector<std::string> content;
 };
 
