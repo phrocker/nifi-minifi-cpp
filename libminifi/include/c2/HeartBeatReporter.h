@@ -37,10 +37,12 @@ class HeartBeatReporter : public core::Connectable {
  public:
 
   HeartBeatReporter(std::string name, uuid_t uuid)
-      : core::Connectable(name, uuid), controller_(nullptr), configuration_(nullptr) {
+      : core::Connectable(name, uuid),
+        controller_(nullptr),
+        configuration_(nullptr) {
   }
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure){
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
     controller_ = controller;
     configuration_ = configure;
   }
