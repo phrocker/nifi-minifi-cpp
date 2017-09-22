@@ -25,9 +25,9 @@
 #include <string>
 #include <vector>
 #include <queue>
-#include <sharkbite/data/constructs/rfile/RFile.h>
-#include <sharkbite/data/constructs/KeyValue.h>
-#include <sharkbite/data/streaming/EndianTranslation.h>
+#include <data/constructs/rfile/RFile.h>
+#include <data/constructs/KeyValue.h>
+#include <data/streaming/EndianTranslation.h>
 #include <map>
 #include <set>
 #include <sstream>
@@ -55,7 +55,7 @@ static void writeRfile(std::string outputFile, bool bigEndian, std::vector<cclie
 
   cclient::data::streams::OutputStream *stream = new cclient::data::streams::OutputStream(&ofs, 0);
 
-  cclient::data::streams::ByteOutputStream *outStream = new cclient::data::streams::BigEndianByteStream(250 * 1024 * 1024,stream);
+  cclient::data::streams::ByteOutputStream *outStream = new cclient::data::streams::BigEndianByteStream(250 * 1024 * 1024, stream);
 
   cclient::data::compression::Compressor *compressor = new cclient::data::compression::ZLibCompressor(256 * 1024);
 
@@ -74,11 +74,9 @@ static void writeRfile(std::string outputFile, bool bigEndian, std::vector<cclie
   outStream->flush();
   newRFile->close();
 
-
   delete outStream;
 
   delete stream;
-
 
   delete newRFile;
 
@@ -100,7 +98,7 @@ void AccumuloWriter::onSchedule(std::shared_ptr<core::ProcessContext> context, s
   }
 
   current_count_ = 0;
-  key_count_=0;
+  key_count_ = 0;
 }
 void AccumuloWriter::initialize() {
   // Set the supported properties
@@ -116,127 +114,131 @@ void AccumuloWriter::initialize() {
 
 void AccumuloWriter::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   logger_->log_info("Enter Accumulo Writer %d %d", current_count_.load(), max_keys_);
-  std::string dashLine = "--------------------------------------------------";
-  bool logPayload = false;
-  std::ostringstream message;
+  std::shared_ptr<core::FlowFile> flow = nullptr;
   std::lock_guard<std::mutex> lock(rfile_mutex_);
-  std::shared_ptr<core::FlowFile> flow = session->get();
+  do {
+    std::string dashLine = "--------------------------------------------------";
+    bool logPayload = false;
+    std::ostringstream message;
+    flow = session->get();
 
+    if (!flow || output_dir_.empty()) {
+      logger_->log_info("Exit Accumulo Writer: no flow");
+      return;
+    }
 
-  if (!flow || output_dir_.empty()) {
-    logger_->log_info("Exit Accumulo Writer: no flow");
-    return;
-  }
-
-  message << "Logging for flow file " << "\n";
-  message << dashLine;
-  message << "\nStandard FlowFile Attributes";
-  message << "\n" << "UUID:" << flow->getUUIDStr();
-  message << "\n" << "EntryDate:" << getTimeStr(flow->getEntryDate());
-  message << "\n" << "lineageStartDate:" << getTimeStr(flow->getlineageStartDate());
-  message << "\n" << "Size:" << flow->getSize() << " Offset:" << flow->getOffset();
-  message << "\nFlowFile Attributes Map Content";
-  std::map<std::string, std::string> attrs = flow->getAttributes();
-  std::map<std::string, std::string>::iterator it;
-  for (it = attrs.begin(); it != attrs.end(); it++) {
-    message << "\n" << "key:" << it->first << " value:" << it->second;
-  }
-  message << "\nFlowFile Resource Claim Content";
-  std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
-  if (claim) {
-    message << "\n" << "Content Claim:" << claim->getContentFullPath();
-  }
-  if (logPayload && flow->getSize() <= 1024 * 1024) {
-    message << "\n" << "Payload:" << "\n";
-    ReadCallback callback(flow->getSize());
-    session->read(flow, &callback);
-    for (unsigned int i = 0, j = 0; i < callback.read_size_; i++) {
-      message << std::hex << callback.buffer_[i];
-      j++;
-      if (j == 80) {
-        message << '\n';
-        j = 0;
+    message << "Logging for flow file " << "\n";
+    message << dashLine;
+    message << "\nStandard FlowFile Attributes";
+    message << "\n" << "UUID:" << flow->getUUIDStr();
+    message << "\n" << "EntryDate:" << getTimeStr(flow->getEntryDate());
+    message << "\n" << "lineageStartDate:" << getTimeStr(flow->getlineageStartDate());
+    message << "\n" << "Size:" << flow->getSize() << " Offset:" << flow->getOffset();
+    message << "\nFlowFile Attributes Map Content";
+    std::map<std::string, std::string> attrs = flow->getAttributes();
+    std::map<std::string, std::string>::iterator it;
+    for (it = attrs.begin(); it != attrs.end(); it++) {
+      message << "\n" << "key:" << it->first << " value:" << it->second;
+    }
+    message << "\nFlowFile Resource Claim Content";
+    std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
+    if (claim) {
+      message << "\n" << "Content Claim:" << claim->getContentFullPath();
+    }
+    if (logPayload && flow->getSize() <= 1024 * 1024) {
+      message << "\n" << "Payload:" << "\n";
+      ReadCallback callback(flow->getSize());
+      session->read(flow, &callback);
+      for (unsigned int i = 0, j = 0; i < callback.read_size_; i++) {
+        message << std::hex << callback.buffer_[i];
+        j++;
+        if (j == 80) {
+          message << '\n';
+          j = 0;
+        }
       }
     }
-  }
-  std::string vis = "00000001";
-  message << "\n" << dashLine << std::ends;
-  std::string output = message.str();
+    std::string vis = "00000001";
+    message << "\n" << dashLine << std::ends;
+    std::string output = message.str();
 
-  char rw[13], cf[9], cq[9], cv[9];
+    char rw[13], cf[9], cq[9], cv[9];
 
-  cclient::data::Value *v = new cclient::data::Value(output);
+    cclient::data::Value *v = new cclient::data::Value(output);
 
-  cclient::data::Key *k = new cclient::data::Key();
+    cclient::data::Key *k = new cclient::data::Key();
 
-  std::string rowSt = "2";
+    std::string rowSt = "2";
 
-  memset(rw, 0x00, 13);
-  sprintf(rw, "bat");
+    memset(rw, 0x00, 13);
+    sprintf(rw, "bat");
 
-  k->setRow((const char*) rw, 3);
+    k->setRow((const char*) rw, 3);
 
-  key_count_++;
-  current_count_++;
-  memset(cf, 0x00, 13);
-  sprintf(cf, "%08d", key_count_.load());
+    key_count_++;
+    current_count_++;
+    memset(cf, 0x00, 13);
+    sprintf(cf, "%08d", key_count_.load());
 
-  k->setColFamily((const char*) cf, 8);
+    k->setColFamily((const char*) cf, 8);
 
-  k->setColQualifier((const char*) cf, 8);
+    k->setColQualifier((const char*) cf, 8);
 
-  k->setColVisibility (vis.c_str (), vis.size ());
+    k->setColVisibility(vis.c_str(), vis.size());
 
-  k->setTimeStamp(1445105294261L);
+    k->setTimeStamp(1445105294261L);
 
-  cclient::data::KeyValue *kv = new cclient::data::KeyValue();
+    cclient::data::KeyValue *kv = new cclient::data::KeyValue();
 
-  kv->setKey(k);
-  kv->setValue(v);
+    kv->setKey(k);
+    kv->setValue(v);
 
-  keyValues.push_back(kv);
+    keyValues.push_back(kv);
 
-  if (current_count_ > max_keys_) {
-    std::string outputDir = output_dir_ + "/";
+    if (current_count_ > max_keys_) {
+      std::string outputDir = output_dir_ + "/";
 
-    uuid_t uid;
+      uuid_t uid;
 
-    std::shared_ptr<utils::IdGenerator> id_gen = utils::IdGenerator::getIdGenerator();
-    id_gen->generate(uid);
+      std::shared_ptr<utils::IdGenerator> id_gen = utils::IdGenerator::getIdGenerator();
+      id_gen->generate(uid);
 
-    char uuidStr[37];
-    uuid_unparse_lower(uid, uuidStr);
-    std::string id = uuidStr;
+      char uuidStr[37];
+      uuid_unparse_lower(uid, uuidStr);
+      std::string id = uuidStr;
 
-    outputDir += id;
+      outputDir += id;
 
-    logger_->log_debug("Writing rfile %s",outputDir);
+      logger_->log_debug("Writing rfile %s", outputDir);
 
-    mkdir(outputDir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
+      mkdir(outputDir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
-    std::string rfile = outputDir + "/rf.rf";
+      std::string rfile = outputDir + "/rf.rf";
 
-    logger_->log_info("Writing %d to %s", keyValues.size(), rfile);
-    writeRfile(rfile, true, keyValues);
+      logger_->log_info("Writing %d to %s", keyValues.size(), rfile);
+      writeRfile(rfile, true, keyValues);
 
-    for (std::vector<cclient::data::KeyValue*>::iterator it = keyValues.begin(); it != keyValues.end(); ++it) {
-      delete (*it)->getKey();
-      delete (*it);
+      for (std::vector<cclient::data::KeyValue*>::iterator it = keyValues.begin(); it != keyValues.end(); ++it) {
+        delete (*it)->getKey();
+        delete (*it);
+      }
+      keyValues.clear();
+
+      current_count_ = 0;
+
+      flow->addAttribute("Rfile", outputDir);
+
+      session->import(rfile,flow,false,0);
+
+      session->transfer(flow, Import);
+      return;
     }
-    keyValues.clear();
-
-    current_count_ = 0;
-
-    flow->addAttribute("Rfile",outputDir);
-
-    session->transfer(flow, Import);
-    return;
-  }
 
 //  flow->pu
 
-  // Transfer to the relationship
-  session->transfer(flow, Success);
+// Transfer to the relationship
+    session->transfer(flow, Success);
+  } while (flow != nullptr);
 }
 
 } /* namespace processors */

@@ -29,7 +29,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
-#include <sharkbite/data/constructs/KeyValue.h>
+#include <data/constructs/KeyValue.h>
 
 namespace org {
 namespace apache {

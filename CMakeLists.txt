@@ -147,7 +147,7 @@ set(CPACK_COMPONENTS_ALL bin)
 
 include(CPack)
 
-include(BuildTests)
+#include(BuildTests)
 
 include(BuildDocs)
 

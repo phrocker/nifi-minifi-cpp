@@ -132,7 +132,6 @@ void BulkImport::onTrigger(core::ProcessContext *context, core::ProcessSession *
   }
 
   std::string rfiledir;
-
   flow->getAttribute("Rfile", rfiledir);
   logger_->log_info("get rf %s",rfiledir);
   if (!rfiledir.empty()) {
