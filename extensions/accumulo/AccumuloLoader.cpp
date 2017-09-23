@@ -21,7 +21,7 @@
 
 extern "C" {
 
-void *createFactory(void) {
+void *createAccumuloFactory(void) {
   return new AccumuloObjectFactory();
 }
 

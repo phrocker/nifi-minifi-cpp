@@ -82,9 +82,11 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         procCfg.id = getOrGenerateId(&procNode);
 
         auto lib_location = procNode["Library Location"];
-        if (lib_location){
+        auto lib_function = procNode["Library Function"];
+        if (lib_location && lib_function){
           auto lib_location_str = lib_location.as<std::string>();
-          registerResource(lib_location_str);
+          auto lib_function_str = lib_function.as<std::string>();
+          registerResource(lib_location_str, lib_function_str);
         }
 
         uuid_parse(procCfg.id.c_str(), uuid);

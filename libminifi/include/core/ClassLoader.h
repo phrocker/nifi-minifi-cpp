@@ -213,7 +213,7 @@ class ClassLoader {
    * This will attempt to load objects within this resource.
    * @return return code: RESOURCE_FAILURE or RESOURCE_SUCCESS
    */
-  uint16_t registerResource(const std::string &resource);
+  uint16_t registerResource(const std::string &resource, const std::string &resourceName);
 
   /**
    * Register a class with the give ProcessorFactory

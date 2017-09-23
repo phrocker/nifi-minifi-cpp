@@ -63,7 +63,9 @@ class __attribute__((visibility("default"))) AccumuloObjectFactory : public core
   }
 
 };
+
+
 extern "C" {
-void *createFactory(void);
+void *createAccumuloFactory(void);
 }
 #endif /* EXTENSIONS_ACCUMULO_ACCUMULOLOADER_H_ */

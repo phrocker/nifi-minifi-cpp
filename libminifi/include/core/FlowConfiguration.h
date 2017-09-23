@@ -119,8 +119,8 @@ class FlowConfiguration : public CoreComponent {
 
  protected:
 
-  void registerResource(const std::string &resource_location) {
-    core::ClassLoader::getDefaultClassLoader().registerResource(resource_location);
+  void registerResource(const std::string &resource_location, const std::string &resource_function) {
+    core::ClassLoader::getDefaultClassLoader().registerResource(resource_location, resource_function);
   }
 
   // service provider reference.
