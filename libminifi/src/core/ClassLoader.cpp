@@ -38,7 +38,8 @@ ClassLoader &ClassLoader::getDefaultClassLoader() {
   return ret;
 }
 uint16_t ClassLoader::registerResource(const std::string &resource) {
-  void* resource_ptr = dlopen(resource.c_str(), RTLD_LAZY);
+  dlclose(dlopen(resource.c_str(), RTLD_LAZY | RTLD_GLOBAL));
+  void* resource_ptr = dlopen(resource.c_str(), RTLD_NOW | RTLD_LOCAL);
   if (!resource_ptr) {
     logger_->log_error("Cannot load library: %s", dlerror());
     return RESOURCE_FAILURE;
@@ -62,7 +63,11 @@ uint16_t ClassLoader::registerResource(const std::string &resource) {
 
   std::lock_guard<std::mutex> lock(internal_mutex_);
 
-  loaded_factories_[factory->getClassName()] = std::unique_ptr<ObjectFactory>(factory);
+  for (auto class_name : factory->getClassNames()) {
+    loaded_factories_[class_name] = std::unique_ptr<ObjectFactory>(factory->assign(class_name));
+  }
+
+  delete factory;
 
   return RESOURCE_SUCCESS;
 }

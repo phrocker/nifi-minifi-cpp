@@ -80,6 +80,13 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
         CONFIG_YAML_PROCESSORS_KEY);
         procCfg.name = procNode["name"].as<std::string>();
         procCfg.id = getOrGenerateId(&procNode);
+
+        auto lib_location = procNode["Library Location"];
+        if (lib_location){
+          auto lib_location_str = lib_location.as<std::string>();
+          registerResource(lib_location_str);
+        }
+
         uuid_parse(procCfg.id.c_str(), uuid);
         logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
         checkRequiredField(&procNode, "class", CONFIG_YAML_PROCESSORS_KEY);

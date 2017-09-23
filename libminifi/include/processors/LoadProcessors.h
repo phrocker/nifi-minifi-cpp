@@ -27,8 +27,6 @@
 #include "GetFile.h"
 #include "GetTCP.h"
 #include "ListenHTTP.h"
-#include "AccumuloWriter.h"
-#include "BulkImport.h"
 #include "LogAttribute.h"
 #include "PutFile.h"
 #include "TailFile.h"

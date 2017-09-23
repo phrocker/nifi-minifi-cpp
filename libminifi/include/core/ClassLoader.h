@@ -86,11 +86,14 @@ class ObjectFactory {
    */
   virtual std::string getName() = 0;
 
+  virtual std::string getClassName() = 0;
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::string getClassName() = 0;
+  virtual std::vector<std::string> getClassNames() = 0;
+
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) = 0;
 
 };
 
@@ -159,6 +162,16 @@ class DefautObjectFactory : public ObjectFactory {
    */
   virtual std::string getClassName() {
     return className;
+  }
+
+  virtual std::vector<std::string> getClassNames() {
+    std::vector<std::string> container;
+    container.push_back(className);
+    return container;
+  }
+
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
+    return nullptr;
   }
 
  protected:

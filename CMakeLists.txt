@@ -23,6 +23,7 @@ set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
+set(CMAKE_CXX_VISIBILITY_PRESET default)
 option(test "Build all tests." ON)
 
 #### Establish Project Configuration ####
@@ -109,6 +110,7 @@ add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
 add_subdirectory(libminifi)
+add_subdirectory(extensions/accumulo)
 add_subdirectory(main)
 
 

@@ -25,7 +25,6 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 3)
 set(PROJECT_VERSION_PATCH 0)
 
-
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 # https://cmake.org/cmake/help/v3.0/policy/CMP0048.html#policy:CMP0048
@@ -75,10 +74,6 @@ add_dependencies(minifi jsoncpp_project)
 target_link_libraries(minifi ${UUID_LIBRARIES} ${JSONCPP_LIB})
 
 find_package(ZLIB REQUIRED)
-find_package(Thrift REQUIRED)
-find_package(Zookeeper REQUIRED)
-find_package(Sharkbite REQUIRED)
-include_directories("/usr/local/include/thrift")
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi ${ZLIB_LIBRARIES})
 
@@ -87,9 +82,6 @@ if (NOT IOS)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(CURL)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
-target_link_libraries(minifi ${SHARKBITE_LIBRARY})
-target_link_libraries(minifi ${THRIFT_STATIC_LIB})
-target_link_libraries(minifi ${Zookeeper_LIBRARIES})
 target_link_libraries(minifi ${Boost_FILESYSTEM_LIBRARY})
 
 if (SHARKBITE_FOUND)
@@ -121,5 +113,5 @@ endif (OPENSSL_FOUND)
 endif ()
 
 add_subdirectory(src/utils)
-
+target_link_libraries(minifi -static-libstdc++)
 set_property(TARGET minifi PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
