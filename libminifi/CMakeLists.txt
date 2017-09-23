@@ -56,12 +56,13 @@ endif()
 
 include_directories(../thirdparty/spdlog-20170710/include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
+include_directories(../extensions/accumulo)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/jsoncpp/include)
 include_directories(../thirdparty/concurrentqueue/)
 include_directories(include)
 
-file(GLOB SOURCES  "src/core/logging/*.cpp" "src/core/state/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/processors/*.cpp" "src/utils/*.cpp" "src/*.cpp")
+file(GLOB SOURCES  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/processors/*.cpp" "src/utils/*.cpp" "src/*.cpp")
 
 file(GLOB SPD_SOURCES "../thirdparty/spdlog-20170710/include/spdlog/*")
 
@@ -76,6 +77,8 @@ target_link_libraries(minifi ${UUID_LIBRARIES} ${JSONCPP_LIB})
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi ${ZLIB_LIBRARIES})
+SET (MYLIB -Wl,-all_load minifi-accumulo -Wl,-noall_load)
+target_link_libraries (minifi ${MYLIB})
 
 if (NOT IOS)
 # Include Boost System

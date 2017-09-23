@@ -52,7 +52,7 @@ find_package(UUID REQUIRED)
 find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 # yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${SHARKBITE_LIBRARY} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES}
-target_link_libraries(minifi-accumulo ${CMAKE_DL_LIBS} minifi c-library civetweb-cpp yaml-cpp ${JSON_CPP_LIB} ${SHARKBITE_LIBRARY} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifi-accumulo ${CMAKE_DL_LIBS} )#minifi c-library civetweb-cpp yaml-cpp ${JSON_CPP_LIB} ${SHARKBITE_LIBRARY} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
 target_link_libraries(minifi-accumulo ${SHARKBITE_LIBRARY})
 target_link_libraries(minifi-accumulo ${THRIFT_STATIC_LIB})
 target_link_libraries(minifi-accumulo ${Zookeeper_LIBRARIES})

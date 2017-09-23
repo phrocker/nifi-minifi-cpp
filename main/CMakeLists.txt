@@ -47,7 +47,7 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and leveldb
 target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${SHARKBITE_LIBRARY} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
 set_property(TARGET minifiexe PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
-SET (MYLIB -Wl,-all_load minifi-accumulo)
+#SET (MYLIB -Wl,-all_load minifi-accumulo)
 TARGET_LINK_LIBRARIES(minifiexe ${MYLIB} )
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)
