@@ -113,5 +113,4 @@ endif (OPENSSL_FOUND)
 endif ()
 
 add_subdirectory(src/utils)
-target_link_libraries(minifi -static-libstdc++)
 set_property(TARGET minifi PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
