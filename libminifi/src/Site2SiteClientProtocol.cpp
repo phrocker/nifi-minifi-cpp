@@ -790,7 +790,7 @@ void Site2SiteClientProtocol::receiveFlowFiles(core::ProcessContext *context, co
   }
 
   try {
-    while (true) {
+    while (is_enabled_) {
       std::map < std::string, std::string > empty;
       uint64_t startTime = getTimeMillis();
       std::string payload;

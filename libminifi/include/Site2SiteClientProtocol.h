@@ -174,29 +174,13 @@ typedef struct {
 } RespondCodeContext;
 
 // Respond Code Context
-static RespondCodeContext respondCodeContext[] = {
-    { RESERVED, "Reserved for Future Use", false },
-    { PROPERTIES_OK, "Properties OK", false },
-    { UNKNOWN_PROPERTY_NAME, "Unknown Property Name", true },
-    { ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", true },
-    { MISSING_PROPERTY, "Missing Property", true },
-    { CONTINUE_TRANSACTION, "Continue Transaction", false },
-    { FINISH_TRANSACTION, "Finish Transaction", false },
-    { CONFIRM_TRANSACTION, "Confirm Transaction", true },
-    { TRANSACTION_FINISHED, "Transaction Finished", false },
-    { TRANSACTION_FINISHED_BUT_DESTINATION_FULL, "Transaction Finished But Destination is Full", false },
-    { CANCEL_TRANSACTION, "Cancel Transaction", true },
-    { BAD_CHECKSUM, "Bad Checksum", false },
-    { MORE_DATA, "More Data Exists", false },
-    { NO_MORE_DATA, "No More Data Exists", false },
-    { UNKNOWN_PORT, "Unknown Port", false },
-    { PORT_NOT_IN_VALID_STATE, "Port Not in a Valid State", true },
-    { PORTS_DESTINATION_FULL, "Port's Destination is Full", false },
-    { UNAUTHORIZED, "User Not Authorized", true },
-    { ABORT, "Abort", true },
-    { UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", false },
-    { END_OF_STREAM, "End of Stream", false }
-};
+static RespondCodeContext respondCodeContext[] = { { RESERVED, "Reserved for Future Use", false }, { PROPERTIES_OK, "Properties OK", false }, { UNKNOWN_PROPERTY_NAME, "Unknown Property Name", true },
+    { ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", true }, { MISSING_PROPERTY, "Missing Property", true }, { CONTINUE_TRANSACTION, "Continue Transaction", false }, { FINISH_TRANSACTION,
+        "Finish Transaction", false }, { CONFIRM_TRANSACTION, "Confirm Transaction", true }, { TRANSACTION_FINISHED, "Transaction Finished", false }, { TRANSACTION_FINISHED_BUT_DESTINATION_FULL,
+        "Transaction Finished But Destination is Full", false }, { CANCEL_TRANSACTION, "Cancel Transaction", true }, { BAD_CHECKSUM, "Bad Checksum", false }, { MORE_DATA, "More Data Exists", false },
+    { NO_MORE_DATA, "No More Data Exists", false }, { UNKNOWN_PORT, "Unknown Port", false }, { PORT_NOT_IN_VALID_STATE, "Port Not in a Valid State", true }, { PORTS_DESTINATION_FULL,
+        "Port's Destination is Full", false }, { UNAUTHORIZED, "User Not Authorized", true }, { ABORT, "Abort", true }, { UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", false }, {
+        END_OF_STREAM, "End of Stream", false } };
 
 // Respond Code Sequence Pattern
 static const uint8_t CODE_SEQUENCE_VALUE_1 = (uint8_t) 'R';
@@ -246,47 +230,47 @@ typedef enum {
 
 // HandShakeProperty Str
 static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {
-    /**
-     * Boolean value indicating whether or not the contents of a FlowFile should
-     * be GZipped when transferred.
-     */
-    "GZIP",
-    /**
-     * The unique identifier of the port to communicate with
-     */
-    "PORT_IDENTIFIER",
-    /**
-     * Indicates the number of milliseconds after the request was made that the
-     * client will wait for a response. If no response has been received by the
-     * time this value expires, the server can move on without attempting to
-     * service the request because the client will have already disconnected.
-     */
-    "REQUEST_EXPIRATION_MILLIS",
-    /**
-     * The preferred number of FlowFiles that the server should send to the
-     * client when pulling data. This property was introduced in version 5 of
-     * the protocol.
-     */
-    "BATCH_COUNT",
-    /**
-     * The preferred number of bytes that the server should send to the client
-     * when pulling data. This property was introduced in version 5 of the
-     * protocol.
-     */
-    "BATCH_SIZE",
-    /**
-     * The preferred amount of time that the server should send data to the
-     * client when pulling data. This property was introduced in version 5 of
-     * the protocol. Value is in milliseconds.
-     */
-    "BATCH_DURATION" };
+/**
+ * Boolean value indicating whether or not the contents of a FlowFile should
+ * be GZipped when transferred.
+ */
+"GZIP",
+/**
+ * The unique identifier of the port to communicate with
+ */
+"PORT_IDENTIFIER",
+/**
+ * Indicates the number of milliseconds after the request was made that the
+ * client will wait for a response. If no response has been received by the
+ * time this value expires, the server can move on without attempting to
+ * service the request because the client will have already disconnected.
+ */
+"REQUEST_EXPIRATION_MILLIS",
+/**
+ * The preferred number of FlowFiles that the server should send to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol.
+ */
+"BATCH_COUNT",
+/**
+ * The preferred number of bytes that the server should send to the client
+ * when pulling data. This property was introduced in version 5 of the
+ * protocol.
+ */
+"BATCH_SIZE",
+/**
+ * The preferred amount of time that the server should send data to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol. Value is in milliseconds.
+ */
+"BATCH_DURATION" };
 
 class Site2SiteClientProtocol;
 
 // Transaction Class
 class Transaction {
   friend class Site2SiteClientProtocol;
-   public:
+ public:
   // Constructor
   /*!
    * Create a new transaction
@@ -389,13 +373,12 @@ class DataPacket {
 };
 
 /**
-  * Site2Site Peer
-  */
- typedef struct Site2SitePeerStatus {
-   std::string host_;
-   int port_;
-   bool isSecure_;
- } Site2SitePeerStatus;
+ * Site2Site Peer
+ */
+typedef struct Site2SitePeerStatus {
+  std::string host_;
+  int port_;bool isSecure_;
+} Site2SitePeerStatus;
 
 // Site2SiteClientProtocol Class
 class Site2SiteClientProtocol {
@@ -405,7 +388,8 @@ class Site2SiteClientProtocol {
    * Create a new control protocol
    */
   Site2SiteClientProtocol(std::unique_ptr<Site2SitePeer> peer)
-      : logger_(logging::LoggerFactory<Site2SiteClientProtocol>::getLogger()) {
+      : logger_(logging::LoggerFactory<Site2SiteClientProtocol>::getLogger()),
+        is_enabled_(true) {
     peer_ = std::move(peer);
     _batchSize = 0;
     _batchCount = 0;
@@ -542,6 +526,13 @@ class Site2SiteClientProtocol {
   void transferString(core::ProcessContext *context, core::ProcessSession *session, std::string &payload, std::map<std::string, std::string> attributes);
   // deleteTransaction
   void deleteTransaction(std::string transactionID);
+  /**
+   * Sets the enabled flag status
+   * @param is_enabled.
+   */
+  void setEnabled(bool is_enabled){
+    is_enabled_ = is_enabled;
+  }
   // Nest Callback Class for write stream
   class WriteCallback : public OutputStreamCallback {
    public:
@@ -635,6 +626,8 @@ class Site2SiteClientProtocol {
   std::string _commsIdentifier;
   // transaction map
   std::map<std::string, Transaction *> _transactionMap;
+  // determines if this protocol is enabled.
+  std::atomic<bool> is_enabled_;
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
