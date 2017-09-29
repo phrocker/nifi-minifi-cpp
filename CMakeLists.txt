@@ -54,6 +54,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
 # Search for threads
 find_package(Threads REQUIRED)
+find_package(Sharkbite)
+find_package(CURL)
 
 # Set the right openssl root path
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -75,7 +77,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)
-find_package(CURL REQUIRED)
 if (LEVELDB_FOUND)
     include_directories(${LEVELDB_INCLUDE_DIRS})
 else ()
@@ -109,8 +110,18 @@ set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
+if (SHARKBITE_ROOT_DIR)
+	message("-- Including Sharkbite's Accumulo extension")
+	add_subdirectory(extensions/accumulo)
+endif(SHARKBITE_ROOT_DIR)
+
+if (CURL_FOUND)
+    message("-- Including HTTP-CURL extension")
+	add_subdirectory(extensions/http-curl)
+	message("HTTP Curl is ${HTTP-CURL}")
+	mark_as_advanced(HTTP-CURL)
+endif(CURL_FOUND)
 add_subdirectory(libminifi)
-add_subdirectory(extensions/accumulo)
 add_subdirectory(main)
 
 

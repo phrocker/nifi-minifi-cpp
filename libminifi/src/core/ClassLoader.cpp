@@ -38,8 +38,14 @@ ClassLoader &ClassLoader::getDefaultClassLoader() {
   return ret;
 }
 uint16_t ClassLoader::registerResource(const std::string &resource, const std::string &resourceFunction) {
-  dlclose(dlopen(0, RTLD_LAZY | RTLD_GLOBAL));
-  void* resource_ptr = dlopen(0, RTLD_NOW | RTLD_GLOBAL);
+  void *resource_ptr = nullptr;
+  if (resource.empty()) {
+    dlclose(dlopen(0, RTLD_LAZY | RTLD_GLOBAL));
+    resource_ptr = dlopen(0, RTLD_NOW | RTLD_GLOBAL);
+  } else {
+    dlclose(dlopen(resource.c_str(), RTLD_LAZY | RTLD_GLOBAL));
+    resource_ptr = dlopen(resource.c_str(), RTLD_NOW | RTLD_GLOBAL);
+  }
   if (!resource_ptr) {
     logger_->log_error("Cannot load library: %s", dlerror());
     return RESOURCE_FAILURE;

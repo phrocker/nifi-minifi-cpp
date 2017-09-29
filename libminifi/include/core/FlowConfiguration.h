@@ -30,7 +30,6 @@
 #include "processors/TailFile.h"
 #include "processors/ListenSyslog.h"
 #include "processors/GenerateFlowFile.h"
-#include "processors/InvokeHTTP.h"
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "processors/ExecuteProcess.h"
@@ -118,6 +117,10 @@ class FlowConfiguration : public CoreComponent {
   }
 
  protected:
+
+  void registerResource(const std::string &resource_function) {
+    core::ClassLoader::getDefaultClassLoader().registerResource("", resource_function);
+  }
 
   void registerResource(const std::string &resource_location, const std::string &resource_function) {
     core::ClassLoader::getDefaultClassLoader().registerResource(resource_location, resource_function);

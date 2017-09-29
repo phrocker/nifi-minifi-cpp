@@ -43,6 +43,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYA
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLEVELDB_SUPPORT -DOPENSSL_SUPPORT -DYAML_SUPPORT")
 ENDIF()
 
+find_package(CURL)
+find_package(Sharkbite)
+
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
@@ -56,7 +59,10 @@ endif()
 
 include_directories(../thirdparty/spdlog-20170710/include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
-include_directories(../extensions/accumulo)
+
+if (CURL_FOUND)
+include_directories(../extensions/http-curl)
+endif(CURL_FOUND)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/jsoncpp/include)
 include_directories(../thirdparty/concurrentqueue/)
@@ -76,25 +82,27 @@ target_link_libraries(minifi ${UUID_LIBRARIES} ${JSONCPP_LIB})
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
+
 target_link_libraries (minifi ${ZLIB_LIBRARIES})
-SET (MYLIB -Wl,-all_load minifi-accumulo -Wl,-noall_load)
-target_link_libraries (minifi ${MYLIB})
+
+message("**** HTTP Curl is from libminifi ${HTTP-CURL}")
+
+if (APPLE AND HTTP-CURL)    
+    #SET (HTTP-CURL "-Wl,-all_load minifi-http-curl -Wl,-noall_load" PARENT_SCOPE)
+    target_link_libraries (minifi -Wl,-all_load ${HTTP-CURL} -Wl,-noall_load)
+else ()
+	#ET (HTTP-CURL "-Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive" PARENT_SCOPE)    
+endif ()
+
+#target_link_libraries (minifi ${SHARKBITE-ACCUMULO-LIB} ${HTTP-CURL})
+
+
 
 if (NOT IOS)
 # Include Boost System
 find_package(Boost COMPONENTS system filesystem REQUIRED)
-find_package(CURL)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
 target_link_libraries(minifi ${Boost_FILESYSTEM_LIBRARY})
-
-if (SHARKBITE_FOUND)
-  message("Found Sharkbite")
-endif(SHARKBITE_FOUND)
-
-if (CURL_FOUND)
-        include_directories(${CURL_INCLUDE_DIRS})
-        target_link_libraries (minifi ${CURL_LIBRARIES})
-endif(CURL_FOUND)
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)
@@ -115,5 +123,5 @@ else ()
 endif (OPENSSL_FOUND)
 endif ()
 
-add_subdirectory(src/utils)
+
 set_property(TARGET minifi PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
