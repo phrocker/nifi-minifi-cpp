@@ -48,6 +48,8 @@ target
 thirdparty/**/*.o
 thirdparty/**/*.a
 libminifi/test/**/*.a
+!thirdparty/PcapPlusPlus
+thirdparty/PcapPlusPlus/Dist/*
 docs/generated
 thirdparty/apache-rat/apache-rat*
 
