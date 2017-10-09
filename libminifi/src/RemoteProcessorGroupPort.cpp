@@ -33,6 +33,8 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+
+#include "../include/sitetosite/SiteToSitePeer.h"
 #include "json/json.h"
 #include "json/writer.h"
 
@@ -42,7 +44,6 @@
 #include "core/ProcessorNode.h"
 #include "core/Property.h"
 #include "core/Relationship.h"
-#include "Site2SitePeer.h"
 #include "utils/HTTPClient.h"
 
 namespace org {
@@ -59,19 +60,19 @@ core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
 core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
 core::Relationship RemoteProcessorGroupPort::relation;
 
-std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
-  std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
+std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
+  std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
   if (!available_protocols_.try_dequeue(nextProtocol)) {
     if (create) {
       // create
       if (url_.empty()) {
-        nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
+        nextProtocol = std::unique_ptr<sitetosite::SiteToSiteClient>(new sitetosite::SiteToSiteClient(nullptr));
         nextProtocol->setPortId(protocol_uuid_);
         std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(host_, port_));
-        std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), host_, port_));
+        std::unique_ptr<SiteToSitePeer> peer_ = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), host_, port_));
         nextProtocol->setPeer(std::move(peer_));
       } else if (site2site_peer_index_ >= 0) {
-        nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
+        nextProtocol = std::unique_ptr<sitetosite::SiteToSiteClient>(new sitetosite::SiteToSiteClient(nullptr));
         minifi::Site2SitePeerStatus peer;
         nextProtocol->setPortId(protocol_uuid_);
         {
@@ -84,7 +85,7 @@ std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtoc
         }
         logger_->log_info("creating new protocol with %s and %d", peer.host_, peer.port_);
         std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(peer.host_, peer.port_));
-        std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), peer.host_, peer.port_));
+        std::unique_ptr<SiteToSitePeer> peer_ = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), peer.host_, peer.port_));
         nextProtocol->setPeer(std::move(peer_));
       } else {
         logger_->log_info("Refreshing the peer list since there are none configured.");
@@ -95,7 +96,7 @@ std::unique_ptr<Site2SiteClientProtocol> RemoteProcessorGroupPort::getNextProtoc
   return std::move(nextProtocol);
 }
 
-void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<Site2SiteClientProtocol> return_protocol) {
+void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteToSiteClient> return_protocol) {
   int count = site2site_peer_status_list_.size();
   if (max_concurrent_tasks_ > count)
     count = max_concurrent_tasks_;
@@ -130,8 +131,8 @@ void RemoteProcessorGroupPort::initialize() {
     if (max_concurrent_tasks_ > count)
       count = max_concurrent_tasks_;
     for (int i = 0; i < count; i++) {
-      std::unique_ptr<Site2SiteClientProtocol> nextProtocol = nullptr;
-      nextProtocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
+      std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
+      nextProtocol = std::unique_ptr<sitetosite::SiteToSiteClient>(new sitetosite::SiteToSiteClient(nullptr));
       nextProtocol->setPortId(protocol_uuid_);
       minifi::Site2SitePeerStatus peer = site2site_peer_status_list_[this->site2site_peer_index_];
       site2site_peer_index_++;
@@ -139,7 +140,7 @@ void RemoteProcessorGroupPort::initialize() {
         site2site_peer_index_ = 0;
       }
       std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(peer.host_, peer.port_));
-      std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), peer.host_, peer.port_));
+      std::unique_ptr<SiteToSitePeer> peer_ = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), peer.host_, peer.port_));
       nextProtocol->setPeer(std::move(peer_));
       returnProtocol(std::move(nextProtocol));
     }
@@ -183,7 +184,7 @@ void RemoteProcessorGroupPort::onTrigger(core::ProcessContext *context, core::Pr
     uuid_parse(value.c_str(), protocol_uuid_);
   }
 
-  std::unique_ptr<Site2SiteClientProtocol> protocol_ = nullptr;
+  std::unique_ptr<sitetosite::SiteToSiteClient> protocol_ = nullptr;
   try {
     protocol_ = getNextProtocol();
 
@@ -296,11 +297,11 @@ void RemoteProcessorGroupPort::refreshPeerList() {
 
   this->site2site_peer_status_list_.clear();
 
-  std::unique_ptr<Site2SiteClientProtocol> protocol;
-  protocol = std::unique_ptr<Site2SiteClientProtocol>(new Site2SiteClientProtocol(nullptr));
+  std::unique_ptr<sitetosite::SiteToSiteClient> protocol;
+  protocol = std::unique_ptr<sitetosite::SiteToSiteClient>(new sitetosite::SiteToSiteClient(nullptr));
   protocol->setPortId(protocol_uuid_);
   std::unique_ptr<org::apache::nifi::minifi::io::DataStream> str = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(stream_factory_->createSocket(host_, site2site_port_));
-  std::unique_ptr<Site2SitePeer> peer_ = std::unique_ptr<Site2SitePeer>(new Site2SitePeer(std::move(str), host_, site2site_port_));
+  std::unique_ptr<SiteToSitePeer> peer_ = std::unique_ptr<SiteToSitePeer>(new SiteToSitePeer(std::move(str), host_, site2site_port_));
   protocol->setPeer(std::move(peer_));
   protocol->getPeerList(site2site_peer_status_list_);
 

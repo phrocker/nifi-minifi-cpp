@@ -41,34 +41,36 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace sitetosite {
 
+}
 static const char MAGIC_BYTES[] = { 'N', 'i', 'F', 'i' };
 
 // Site2SitePeer Class
-class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
+class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
  public:
 
-  Site2SitePeer()
+  SiteToSitePeer()
       : stream_(nullptr),
         host_(""),
         port_(-1),
-        logger_(logging::LoggerFactory<Site2SitePeer>::getLogger()) {
+        logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
 
   }
   /*
    * Create a new site2site peer
    */
-  explicit Site2SitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host_, uint16_t port_)
+  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::DataStream> injected_socket, const std::string host_, uint16_t port_)
       : host_(host_),
         port_(port_),
         stream_(injected_socket.release()),
-        logger_(logging::LoggerFactory<Site2SitePeer>::getLogger()) {
+        logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
     _yieldExpiration = 0;
     _timeOut = 30000;  // 30 seconds
     _url = "nifi://" + host_ + ":" + std::to_string(port_);
   }
 
-  explicit Site2SitePeer(Site2SitePeer &&ss)
+  explicit SiteToSitePeer(SiteToSitePeer &&ss)
       : stream_(ss.stream_.release()),
         host_(std::move(ss.host_)),
         port_(std::move(ss.port_)),
@@ -78,7 +80,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
     _url = std::move(ss._url);
   }
   // Destructor
-  ~Site2SitePeer() {
+  ~SiteToSitePeer() {
     Close();
   }
   // Set Processor yield period in MilliSecond
@@ -225,7 +227,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
   /**
    * Move assignment operator.
    */
-  Site2SitePeer& operator=(Site2SitePeer&& other) {
+  SiteToSitePeer& operator=(SiteToSitePeer&& other) {
     stream_ = std::unique_ptr<org::apache::nifi::minifi::io::DataStream>(other.stream_.release());
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
@@ -236,8 +238,8 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return *this;
   }
 
-  Site2SitePeer(const Site2SitePeer &parent) = delete;
-  Site2SitePeer &operator=(const Site2SitePeer &parent) = delete;
+  SiteToSitePeer(const SiteToSitePeer &parent) = delete;
+  SiteToSitePeer &operator=(const SiteToSitePeer &parent) = delete;
 
  protected:
 
@@ -268,6 +270,7 @@ class Site2SitePeer : public org::apache::nifi::minifi::io::BaseStream {
 
 };
 
+} /* namespace sitetosite */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */

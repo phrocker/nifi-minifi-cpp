@@ -28,14 +28,16 @@
 #include <random>
 #include <iostream>
 #include <vector>
+
+#include "../../include/sitetosite/SiteToSiteClientProtocol.h"
 #include "io/CRCStream.h"
-#include "Site2SitePeer.h"
-#include "Site2SiteClientProtocol.h"
+#include "../../include/sitetosite/SiteToSitePeer.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+namespace sitetosite {
 
 std::shared_ptr<utils::IdGenerator> Site2SiteClientProtocol::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<utils::IdGenerator> Transaction::id_generator_ = utils::IdGenerator::getIdGenerator();
@@ -297,7 +299,7 @@ void Site2SiteClientProtocol::tearDown() {
   _peerState = IDLE;
 }
 
-bool Site2SiteClientProtocol::getPeerList(std::vector<minifi::Site2SitePeerStatus> &peer) {
+bool Site2SiteClientProtocol::getPeerList(std::vector<Site2SitePeerStatus> &peer) {
   if (establish() && handShake()) {
     int status = this->writeRequestType(REQUEST_PEER_LIST);
 
@@ -339,7 +341,7 @@ bool Site2SiteClientProtocol::getPeerList(std::vector<minifi::Site2SitePeerStatu
         tearDown();
         return false;
       }
-      minifi::Site2SitePeerStatus status;
+      Site2SitePeerStatus status;
       status.host_ = host;
       status.isSecure_ = secure;
       status.port_ = port;
@@ -521,7 +523,7 @@ Transaction* Site2SiteClientProtocol::createTransaction(std::string &transaction
       return NULL;
     }
 
-    org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
+    org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
     switch (code) {
       case MORE_DATA:
         dataAvailable = true;
@@ -551,7 +553,7 @@ Transaction* Site2SiteClientProtocol::createTransaction(std::string &transaction
     if (ret <= 0) {
       return NULL;
     } else {
-      org::apache::nifi::minifi::io::CRCStream<Site2SitePeer> crcstream(peer_.get());
+      org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(peer_.get());
       transaction = new Transaction(direction, crcstream);
       _transactionMap[transaction->getUUIDStr()] = transaction;
       transactionID = transaction->getUUIDStr();
@@ -1255,6 +1257,7 @@ void Site2SiteClientProtocol::transferString(core::ProcessContext *context, core
   return;
 }
 
+} /* namespace sitetosite */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
