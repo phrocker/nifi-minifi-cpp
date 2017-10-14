@@ -18,7 +18,9 @@
  * limitations under the License.
  */
 #include "HttpCurlLoader.h"
+#include "core/FlowConfiguration.h"
 
+bool HttpCurlObjectFactory::added = core::FlowConfiguration::add_static_func("createHttpCurlFactory");
 extern "C" {
 
 void *createHttpCurlFactory(void) {

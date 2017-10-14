@@ -85,14 +85,6 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries (minifi ${ZLIB_LIBRARIES})
 
-message("**** HTTP Curl is from libminifi ${HTTP-CURL}")
-
-if (APPLE AND HTTP-CURL)    
-    #SET (HTTP-CURL "-Wl,-all_load minifi-http-curl -Wl,-noall_load" PARENT_SCOPE)
-    target_link_libraries (minifi -Wl,-all_load ${HTTP-CURL} -Wl,-noall_load)
-else ()
-	#ET (HTTP-CURL "-Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive" PARENT_SCOPE)    
-endif ()
 
 #target_link_libraries (minifi ${SHARKBITE-ACCUMULO-LIB} ${HTTP-CURL})
 

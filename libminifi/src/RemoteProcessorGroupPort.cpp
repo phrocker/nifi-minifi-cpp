@@ -250,6 +250,9 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
 
   auto client_ptr = core::ClassLoader::getDefaultClassLoader().instantiateRaw("HTTPClient", "HTTPClient");
   client = std::unique_ptr<utils::BaseHTTPClient>( dynamic_cast<utils::BaseHTTPClient*>(client_ptr) );
+  if (client == nullptr){
+    std::cout << "null ? " << std::endl;
+  }
   client->initialize("GET",fullUrl.c_str(),ssl_service);
 
   if (!token.empty()) {

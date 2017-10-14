@@ -72,6 +72,9 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
     }
   }
 
+
+  static bool added;
+
 };
 
 extern "C" {

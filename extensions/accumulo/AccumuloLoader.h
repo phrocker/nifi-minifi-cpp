@@ -21,6 +21,7 @@
 #define EXTENSIONS_ACCUMULO_ACCUMULOLOADER_H_
 
 #include "AccumuloWriter.h"
+#include "AccumuloScanner.h"
 #include "BulkImport.h"
 #include "core/ClassLoader.h"
 
@@ -49,6 +50,7 @@ class __attribute__((visibility("default"))) AccumuloObjectFactory : public core
     std::vector<std::string> class_names;
     class_names.push_back("AccumuloWriter");
     class_names.push_back("BulkImport");
+    class_names.push_back("AccumuloScanner");
     return class_names;
   }
 
@@ -57,11 +59,14 @@ class __attribute__((visibility("default"))) AccumuloObjectFactory : public core
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::AccumuloWriter>());
     } else if (class_name == "BulkImport") {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::BulkImport>());
+    } else if (class_name == "AccumuloScanner") {
+          return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::AccumuloScanner>());
     } else {
       return nullptr;
     }
   }
 
+  static bool added;
 };
 
 

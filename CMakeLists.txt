@@ -52,9 +52,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Enable asan in DEBUG for compatibility with civet
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # Search for threads
 find_package(Threads REQUIRED)
-find_package(Sharkbite)
+find_package(Sharkbite REQUIRED)
 find_package(CURL)
 
 # Set the right openssl root path
@@ -73,7 +74,6 @@ else ()
 endif (OPENSSL_FOUND)
 
 # Provide custom modules for the project
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)
@@ -110,10 +110,11 @@ set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 add_subdirectory(thirdparty/civetweb-1.9.1 EXCLUDE_FROM_ALL)
 include_directories(thirdparty/concurrentqueue)
-if (SHARKBITE_ROOT_DIR)
+add_subdirectory(libminifi)
+if (SHARKBITE_LIBRARIES)
 	message("-- Including Sharkbite's Accumulo extension")
 	add_subdirectory(extensions/accumulo)
-endif(SHARKBITE_ROOT_DIR)
+endif(SHARKBITE_LIBRARIES)
 
 if (CURL_FOUND)
     message("-- Including HTTP-CURL extension")
@@ -121,7 +122,7 @@ if (CURL_FOUND)
 	message("HTTP Curl is ${HTTP-CURL}")
 	mark_as_advanced(HTTP-CURL)
 endif(CURL_FOUND)
-add_subdirectory(libminifi)
+
 add_subdirectory(main)
 
 

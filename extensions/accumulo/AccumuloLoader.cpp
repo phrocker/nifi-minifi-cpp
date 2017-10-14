@@ -18,6 +18,8 @@
  * limitations under the License.
  */
 #include "AccumuloLoader.h"
+#include "core/FlowConfiguration.h"
+bool AccumuloObjectFactory::added = core::FlowConfiguration::add_static_func("createAccumuloFactory");
 
 extern "C" {
 

@@ -45,8 +45,29 @@ find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and leveldb
-target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB} ${SHARKBITE_LIBRARY} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifiexe minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB}  ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES})
 set_property(TARGET minifiexe PROPERTY INTERPROCEDURAL_OPTIMIZATION True)
+
+message("**** HTTP Curl is from libminifi ${HTTP-CURL}")
+
+if (APPLE AND HTTP-CURL)    
+    #SET (HTTP-CURL "-Wl,-all_load minifi-http-curl -Wl,-noall_load" PARENT_SCOPE)
+    target_link_libraries (minifiexe -Wl,-all_load ${HTTP-CURL} -Wl,-noall_load)
+else ()
+	#ET (HTTP-CURL "-Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive" PARENT_SCOPE)    
+endif ()
+
+
+message("**** HTTP Curl is from libminifi ${SHARKBITE-ACCUMULO-LIB}")
+
+if (APPLE AND HTTP-CURL)    
+    #SET (HTTP-CURL "-Wl,-all_load minifi-http-curl -Wl,-noall_load" PARENT_SCOPE)
+    target_link_libraries (minifiexe -Wl,-all_load ${SHARKBITE-ACCUMULO-LIB} -Wl,-noall_load)
+else ()
+	#ET (HTTP-CURL "-Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive" PARENT_SCOPE)    
+endif ()
+
+
 #SET (MYLIB -Wl,-all_load minifi-accumulo)
 TARGET_LINK_LIBRARIES(minifiexe ${MYLIB} )
 set_target_properties(minifiexe

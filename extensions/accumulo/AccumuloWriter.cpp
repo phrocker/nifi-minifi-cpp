@@ -177,7 +177,7 @@ void AccumuloWriter::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
     key_count_++;
     current_count_++;
-    memset(cf, 0x00, 13);
+    memset(cf, 0x00, 8);
     sprintf(cf, "%08d", key_count_.load());
 
     k->setColFamily((const char*) cf, 8);

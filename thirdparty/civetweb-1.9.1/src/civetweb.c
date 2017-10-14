@@ -138,8 +138,6 @@ mg_static_assert(sizeof(void *) >= sizeof(int), "data type size check");
 
 #ifdef __clang__
 /* Avoid warnings for Xopen 7.00 and higher */
-#pragma clang diagnostic ignored "-Wno-reserved-id-macro"
-#pragma clang diagnostic ignored "-Wno-keyword-macro"
 #endif
 
 #define CLOCK_MONOTONIC (1)

@@ -39,7 +39,9 @@ ClassLoader &ClassLoader::getDefaultClassLoader() {
 }
 uint16_t ClassLoader::registerResource(const std::string &resource, const std::string &resourceFunction) {
   void *resource_ptr = nullptr;
+  std::cout << "registering " << resourceFunction << std::endl;
   if (resource.empty()) {
+    std::cout << "? registering " << resourceFunction << std::endl;
     dlclose(dlopen(0, RTLD_LAZY | RTLD_GLOBAL));
     resource_ptr = dlopen(0, RTLD_NOW | RTLD_GLOBAL);
   } else {

@@ -27,7 +27,7 @@ set (CMAKE_FIND_FRAMEWORK NEVER)
 set (CMAKE_FIND_APPBUNDLE NEVER)
 
 find_path(SHARKBITE_INCLUDE_DIR
-    NAMES sharkbite/ClientExample.h
+    NAMES interconnect/Connector.h
     PATHS /usr/local/include /usr/include
     DOC "Sharkbite include header"
 )

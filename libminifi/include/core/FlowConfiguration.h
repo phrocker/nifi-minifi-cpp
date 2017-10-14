@@ -68,6 +68,11 @@ class FlowConfiguration : public CoreComponent {
         logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
     controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
     service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
+    std::cout << "initiating ?  " << statics_sl_funcs_.size() << std::endl;
+    for(auto sl_func : statics_sl_funcs_){
+      std::cout << "initiating " << sl_func << std::endl;
+      registerResource("",sl_func);
+    }
   }
 
   virtual ~FlowConfiguration();
@@ -116,6 +121,11 @@ class FlowConfiguration : public CoreComponent {
     return service_provider_;
   }
 
+  static bool add_static_func(std::string functor){
+    statics_sl_funcs_.push_back(functor);
+    return true;
+  }
+
  protected:
 
   void registerResource(const std::string &resource_function) {
@@ -142,6 +152,7 @@ class FlowConfiguration : public CoreComponent {
 
  private:
   std::shared_ptr<logging::Logger> logger_;
+  static std::vector<std::string> statics_sl_funcs_;
 };
 
 } /* namespace core */
@@ -151,4 +162,3 @@ class FlowConfiguration : public CoreComponent {
 } /* namespace org */
 
 #endif /* LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_ */
-
