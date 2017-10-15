@@ -102,7 +102,7 @@ class __attribute__((visibility("default"))) AccumuloWriter : public core::Proce
   std::atomic<int64_t> key_count_;
   std::mutex rfile_mutex_;
   // Logger
-  std::vector<cclient::data::KeyValue*> keyValues;
+  std::vector<std::shared_ptr<cclient::data::KeyValue> > keyValues;
   std::shared_ptr<logging::Logger> logger_;
 };
 

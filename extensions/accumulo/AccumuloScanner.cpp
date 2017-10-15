@@ -131,11 +131,11 @@ void AccumuloScanner::onTrigger(core::ProcessContext *context, core::ProcessSess
   std::cout << "3get rf for " << table_ << std::endl;
   auto scanner = ops->createScanner(&scanAuths, 3);
   std::cout << "3get rf for " << table_ << std::endl;
-  cclient::data::Key startkey;
-  startkey.setRow("a", 1);
-  cclient::data::Key stopKey;
-  stopKey.setRow("c", 1);
-  cclient::data::Range *range = new cclient::data::Range(&startkey,true,&stopKey,false);
+  std::shared_ptr<cclient::data::Key> startkey = std::make_shared<cclient::data::Key>();
+  startkey->setRow("a", 1);
+  std::shared_ptr<cclient::data::Key> stopKey = std::make_shared<cclient::data::Key>();
+  stopKey->setRow("c", 1);
+  cclient::data::Range *range = new cclient::data::Range(startkey,true,stopKey,false);
   std::cout << "4get rf for " << table_ << std::endl;
   scanner->addRange(std::unique_ptr<cclient::data::Range>(range));
   std::cout << "5get rf for " << table_ << std::endl;
@@ -145,7 +145,6 @@ void AccumuloScanner::onTrigger(core::ProcessContext *context, core::ProcessSess
   for (auto keyvalue : *results) {
     auto value = keyvalue->getValue();
 
-    std::cout << keyvalue->getKey() << std::endl;
     auto flow = session->create();
     auto data = value->getValue();
     ValueCallback callback(data.first,data.second);

@@ -46,11 +46,11 @@ core::Property AccumuloWriter::RfileDirectory("Rfile Directory", "Directory to w
 core::Property AccumuloWriter::KeysPerRFile("Rfile Keys", "Maximum number of keys per rfile", "info");
 core::Relationship AccumuloWriter::Success("success", "All files are routed to success");
 core::Relationship AccumuloWriter::Import("import", "Files to bulk import");
-static bool keyCompare(cclient::data::KeyValue* a, cclient::data::KeyValue* b) {
+static bool keyCompare(std::shared_ptr<cclient::data::KeyValue>  a, std::shared_ptr<cclient::data::KeyValue>  b) {
   return *(a->getKey()) < *(b->getKey());
 }
 
-static void writeRfile(std::string outputFile, bool bigEndian, std::vector<cclient::data::KeyValue*> &keyValues) {
+static void writeRfile(std::string outputFile, bool bigEndian, std::vector<std::shared_ptr<cclient::data::KeyValue> > &keyValues) {
   std::ofstream ofs(outputFile.c_str(), std::ofstream::out);
 
   cclient::data::streams::OutputStream *stream = new cclient::data::streams::OutputStream(&ofs, 0);
@@ -164,9 +164,9 @@ void AccumuloWriter::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
     char rw[13], cf[9], cq[9], cv[9];
 
-    cclient::data::Value *v = new cclient::data::Value(output);
+    std::shared_ptr<cclient::data::Value> v = std::make_shared<cclient::data::Value>(output);
 
-    cclient::data::Key *k = new cclient::data::Key();
+    std::shared_ptr<cclient::data::Key> k = std::make_shared<cclient::data::Key>();
 
     std::string rowSt = "2";
 
@@ -188,7 +188,7 @@ void AccumuloWriter::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
     k->setTimeStamp(1445105294261L);
 
-    cclient::data::KeyValue *kv = new cclient::data::KeyValue();
+    std::shared_ptr<cclient::data::KeyValue> kv = std::make_shared<cclient::data::KeyValue>();
 
     kv->setKey(k);
     kv->setValue(v);
@@ -217,11 +217,6 @@ void AccumuloWriter::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
       logger_->log_info("Writing %d to %s", keyValues.size(), rfile);
       writeRfile(rfile, true, keyValues);
-
-      for (std::vector<cclient::data::KeyValue*>::iterator it = keyValues.begin(); it != keyValues.end(); ++it) {
-        delete (*it)->getKey();
-        delete (*it);
-      }
       keyValues.clear();
 
       current_count_ = 0;

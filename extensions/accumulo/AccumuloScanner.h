@@ -107,7 +107,7 @@ class __attribute__((visibility("default"))) AccumuloScanner : public core::Proc
 
     std::unique_ptr<interconnect::AccumuloTableOperations> ops;
   // Logger
-  std::vector<cclient::data::KeyValue*> keyValues;
+  std::vector<std::shared_ptr<cclient::data::KeyValue> > keyValues;
   std::shared_ptr<logging::Logger> logger_;
 };
 
