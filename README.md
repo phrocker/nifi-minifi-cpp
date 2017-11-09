@@ -159,7 +159,7 @@ $ apt-get install docker.io
 $ # (Optional) for system integration tests
 $ apt-get install docker.io python-virtualenv
 $ # (Optional) for PacketCapture Processor
-$ sudp apt-get install libpcap-dev
+$ apt-get install libpcap-dev
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)

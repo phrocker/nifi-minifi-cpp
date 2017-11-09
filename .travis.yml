@@ -42,6 +42,7 @@ matrix:
           - liblua5.1-0-dev
           - libusb-1.0-0-dev
           - libpng12-dev
+          - libpcap-dev
       before_install:
         # Establish updated toolchain as default
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
@@ -64,6 +65,7 @@ matrix:
         - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='libusb'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='libpng'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='libpcap'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
     - os: osx
       osx_image: xcode8.3
       env:
@@ -82,6 +84,7 @@ matrix:
         - package='lua'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='libusb'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
         - package='libpng'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
+        - package='libpcap'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
-  - mkdir ./build && cd ./build && cmake .. ${CMAKE_BUILD_OPTIONS} && make -j2 VERBOSE=1 && make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat && make docs
+  - mkdir ./build && cd ./build && cmake -DENABLE_PCAP=TRUE .. ${CMAKE_BUILD_OPTIONS} && make -j2 VERBOSE=1 && make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat && make docs
