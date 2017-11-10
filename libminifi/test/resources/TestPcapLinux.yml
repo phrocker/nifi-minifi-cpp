@@ -25,9 +25,9 @@ Processors:
       class: org.apache.nifi.processors.standard.CapturePacket
       max concurrent tasks: 1
       scheduling strategy: TIMER_DRIVEN
-      scheduling period: 1 sec
-      penalization period: 1 sec
-      yield period: 1 sec
+      scheduling period: 10 msec
+      penalization period: 10 msec
+      yield period: 10 msec
       run duration nanos: 0
       auto-terminated relationships list:
       Properties:
