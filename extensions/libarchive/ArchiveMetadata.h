@@ -20,12 +20,10 @@
 #ifndef EXTENSIONS_LIBARCHIVE_ARCHIVEMETADATA_H_
 #define EXTENSIONS_LIBARCHIVE_ARCHIVEMETADATA_H_
 
-#include "json/json.h"
-#include "json/writer.h"
-
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
+#include "rapidjson/error/en.h"
 
 #include <list>
 #include <vector>
@@ -49,11 +47,11 @@ public:
     std::string tmpFileName;
     std::string stashKey;
 
-    inline Json::Value toJson() const;
-    static inline ArchiveEntryMetadata fromJson(const Json::Value&);
+    inline rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;
+    static inline ArchiveEntryMetadata fromJson(const rapidjson::Value&);
 
 private:
-    inline void loadJson(const Json::Value&);
+    inline void loadJson(const rapidjson::Value&);
 };
 
 using ArchiveEntryIterator = typename std::list<ArchiveEntryMetadata>::iterator;
@@ -73,24 +71,24 @@ public:
 
     void seedTempPaths(fileutils::FileManager* file_man, bool keep);
 
-    Json::Value toJson() const;
-    static ArchiveMetadata fromJson(const Json::Value&);
+    rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;
+    static ArchiveMetadata fromJson(const rapidjson::Value&);
 
 private:
-    void loadJson(const Json::Value&);
+    void loadJson(const rapidjson::Value&);
 };
 
 class ArchiveStack {
 public:
     static ArchiveStack fromJsonString(const std::string& input);
-    static ArchiveStack fromJson(const Json::Value& input);
+    static ArchiveStack fromJson(const rapidjson::Value& input);
     void push(const ArchiveMetadata& metadata) { stack_.push_back(metadata); }
     ArchiveMetadata pop() { auto x = top(); stack_.pop_back(); return x; }
     ArchiveMetadata top() const { return stack_.back(); }
-    void loadJson(const Json::Value& input);
+    void loadJson(const rapidjson::Value& input);
     void loadJsonString(const std::string& input);
     std::string toJsonString() const;
-    Json::Value toJson() const;
+    rapidjson::Document toJson() const;
 
 private:
     std::vector<ArchiveMetadata> stack_;
