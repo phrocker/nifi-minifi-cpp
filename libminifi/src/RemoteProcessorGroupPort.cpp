@@ -36,8 +36,8 @@
 
 #include "sitetosite/Peer.h"
 #include "sitetosite/SiteToSiteFactory.h"
-#include "json/json.h"
-#include "json/writer.h"
+
+#include "rapidjson/document.h"
 
 #include "Exception.h"
 #include "core/logging/Logger.h"
@@ -322,9 +322,10 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
             this->site2site_port_ = port.asInt();
           else
             this->site2site_port_ = port_;
-          Json::Value secure = controllerValue["siteToSiteSecure"];
-          if (!secure.empty())
-            this->site2site_secure_ = secure.asBool();
+
+
+          if (secure_itr != end_itr && secure_itr->value.IsBool())
+            this->site2site_secure_ = secure_itr->value.GetBool();
         }
         logger_->log_debug("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
       }
