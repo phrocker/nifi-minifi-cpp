@@ -12,7 +12,13 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-# Apache MiNiFi Extensions HowTo
+# Apache MiNiFi Extensions Guide
+
+To get a list of current extensions, please visit [the Extension How-To on our wiki](https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=74685143)
+
+To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE
+
+# Extensions by example
 
 Extensions consist of modules that are conditionally built into your client. Reasons why you may wish to do this with your modules/processors
 
