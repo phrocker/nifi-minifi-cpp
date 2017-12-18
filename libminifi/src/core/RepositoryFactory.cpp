@@ -24,6 +24,7 @@
 #include "core/Repository.h"
 #include "core/ClassLoader.h"
 #include "core/repository/FileSystemRepository.h"
+#include "core/repository/MemoryMappedRepository.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "core/repository/VolatileProvenanceRepository.h"
 
@@ -91,6 +92,8 @@ std::shared_ptr<core::ContentRepository> createContentRepository(const std::stri
       return std::make_shared<core::repository::VolatileContentRepository>(repo_name);
     } else if (class_name_lc == "filesystemrepository") {
       return std::make_shared<core::repository::FileSystemRepository>(repo_name);
+    } else if (class_name_lc == "memorymappedrepository") {
+      return std::make_shared<core::repository::MemoryMappedRepository>(repo_name);
     }
     if (fail_safe) {
       return std::make_shared<core::repository::VolatileContentRepository>("fail_safe");
