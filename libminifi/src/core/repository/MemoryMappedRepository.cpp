@@ -18,7 +18,6 @@
 
 #include "core/repository/MemoryMappedRepository.h"
 #include <memory>
-#include "io/MmapStream.h"
 
 namespace org {
 namespace apache {
@@ -43,11 +42,25 @@ bool MemoryMappedRepository::exists(const std::shared_ptr<minifi::ResourceClaim>
 }
 
 std::shared_ptr<io::BaseStream> MemoryMappedRepository::read(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  return std::make_shared<io::MmapStream>(claim->getContentFullPath(), 0, false);
+  /*
+  std::lock_guard<std::mutex> lock(read_stream_mutex_);
+
+  auto ptr = read_streams_.find(claim->getContentFullPath());
+
+  if (ptr != read_streams_.end()) {
+    return ptr->second;
+  } else {
+  */
+    auto mmap_ptr = std::make_shared<io::MmapStream>(claim->getContentFullPath(), 0, false);
+    read_streams_[claim->getContentFullPath()] = mmap_ptr;
+    return mmap_ptr;
+  //}
 }
 
 bool MemoryMappedRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
   std::remove(claim->getContentFullPath().c_str());
+  //std::lock_guard<std::mutex> lock(read_stream_mutex_);
+  //read_streams_.erase(claim->getContentFullPath());
   return true;
 }
 

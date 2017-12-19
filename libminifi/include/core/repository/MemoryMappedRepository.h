@@ -18,7 +18,9 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_REPOSITORY_MMAPCONTENTREPOSITORY_H
 #define LIBMINIFI_INCLUDE_CORE_REPOSITORY_MMAPCONTENTREPOSITORY_H
 
+#include <map>
 #include "core/Core.h"
+#include "io/MmapStream.h"
 #include "../ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -60,6 +62,10 @@ class MemoryMappedRepository : public core::ContentRepository, public core::Core
   virtual bool remove(const std::shared_ptr<minifi::ResourceClaim> &claim);
 
  private:
+
+  std::mutex read_stream_mutex_;
+
+  std::map<std::string, std::shared_ptr<io::MmapStream>> read_streams_;
 
   std::shared_ptr<logging::Logger> logger_;
 };

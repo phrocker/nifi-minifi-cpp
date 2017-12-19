@@ -25,6 +25,7 @@
 #include "BaseStream.h"
 #include "Serializable.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "FileStream.h"
 
 namespace org {
 namespace apache {
@@ -39,7 +40,7 @@ namespace io {
  * Design: Simply extends BaseStream and overrides readData/writeData to allow a sink to the
  * fstream object.
  */
-class MmapStream : public io::BaseStream {
+class MmapStream : public io::FileStream {
  public:
   /**
    * File Stream constructor that accepts an fstream shared pointer.
@@ -83,21 +84,6 @@ class MmapStream : public io::BaseStream {
   virtual int readData(uint8_t *buf, int buflen);
 
   /**
-   * Write value to the stream using std::vector
-   * @param buf incoming buffer
-   * @param buflen buffer to write
-   *
-   */
-  virtual int writeData(std::vector<uint8_t> &buf, int buflen);
-
-  /**
-   * writes value to stream
-   * @param value value to write
-   * @param size size of value
-   */
-  virtual int writeData(uint8_t *value, int size);
-
-  /**
    * Returns the underlying buffer
    * @return vector's array
    **/
@@ -109,21 +95,8 @@ class MmapStream : public io::BaseStream {
 
   void open_stream(std::string path, bool write);
 
-  /**
-   * Creates a vector and returns the vector using the provided
-   * type name.
-   * @param t incoming object
-   * @returns vector.
-   */
-  template<typename T>
-  std::vector<uint8_t> readBuffer(const T&);
-  std::recursive_mutex file_lock_;
 
   char *data_ptr_;
-
-  size_t offset_;
-  std::string path_;
-  size_t length_;
 
   int fd;
  private:

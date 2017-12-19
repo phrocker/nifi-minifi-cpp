@@ -31,18 +31,15 @@ namespace minifi {
 namespace io {
 
 MmapStream::MmapStream(const std::string &path)
-    : logger_(logging::LoggerFactory<MmapStream>::getLogger()),
-      path_(path),
-      offset_(0) {
+    : FileStream(path), logger_(logging::LoggerFactory<MmapStream>::getLogger()) {
   open_stream(path, false);
 }
 
 MmapStream::MmapStream(const std::string &path, uint32_t offset, bool write_enable)
-    : logger_(logging::LoggerFactory<MmapStream>::getLogger()),
-      path_(path),
-      offset_(offset) {
+    : FileStream(path,offset,write_enable), logger_(logging::LoggerFactory<MmapStream>::getLogger()) {
 
-  open_stream(path, write_enable);
+  if (!write_enable)
+    open_stream(path, write_enable);
   seek(offset);
 }
 
@@ -57,54 +54,13 @@ void MmapStream::open_stream(const std::string path, bool write_enable) {
 
   fd = open(path.c_str(), write_enable ? O_RDWR | O_CREAT | O_TRUNC : O_RDONLY, 0);
 
-  // get file size
-  length_ = lseek(fd, 0, SEEK_END);
-  // seek to the beginning
-  lseek(fd, 0, SEEK_SET);
-  if (write_enable) {
-    data_ptr_ = static_cast<char*>(mmap(NULL, length_, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
-  } else {
-    data_ptr_ = static_cast<char*>(mmap(NULL, length_, PROT_READ, MAP_PRIVATE, fd, 0));
-  }
+  data_ptr_ = static_cast<char*>(mmap(NULL, length_, PROT_READ, MAP_PRIVATE, fd, 0));
 }
 
 void MmapStream::seek(uint64_t offset) {
   std::lock_guard<std::recursive_mutex> lock(file_lock_);
 
   offset_ = offset;
-}
-
-int MmapStream::writeData(std::vector<uint8_t> &buf, int buflen) {
-  if (static_cast<int>(buf.capacity()) < buflen) {
-    return -1;
-  }
-  return writeData(reinterpret_cast<uint8_t *>(&buf[0]), buflen);
-}
-
-// data stream overrides
-
-int MmapStream::writeData(uint8_t *value, int size) {
-  if (!IsNullOrEmpty(value)) {
-    std::lock_guard<std::recursive_mutex> lock(file_lock_);
-    memcpy(data_ptr_ + offset_, value, size);
-    offset_ += size;
-    if (offset_ > length_) {
-      length_ = offset_;
-    }
-    msync(data_ptr_, length_, MS_SYNC);
-    return size;
-
-  } else {
-    return -1;
-  }
-}
-
-template<typename T>
-inline std::vector<uint8_t> MmapStream::readBuffer(const T& t) {
-  std::vector<uint8_t> buf;
-  buf.resize(sizeof t);
-  readData(reinterpret_cast<uint8_t *>(&buf[0]), sizeof(t));
-  return buf;
 }
 
 int MmapStream::readData(std::vector<uint8_t> &buf, int buflen) {
