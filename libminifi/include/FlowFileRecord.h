@@ -145,6 +145,8 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
     snapshot_ = snapshot;
   }
 
+  static std::shared_ptr<ResourceClaim> parseClaim(const uint8_t *buffer, const int bufferSize);
+
   /**
    * gets the UUID connection.
    * @return uuidConnection

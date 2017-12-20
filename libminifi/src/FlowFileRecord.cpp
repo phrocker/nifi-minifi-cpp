@@ -275,6 +275,66 @@ bool FlowFileRecord::Serialize() {
   return true;
 }
 
+std::shared_ptr<ResourceClaim> FlowFileRecord::parseClaim(const uint8_t *buffer, const int bufferSize) {
+
+  int ret;
+
+  io::DataStream outStream(buffer, bufferSize);
+  // skip event time, entry date, lineage start date,
+  outStream.seek(24);
+  uint16_t length_to_skip = 0;
+  /**
+   * skip uuid str
+   */
+  ret = outStream.read(length_to_skip);
+  if (ret != 4) {
+    return nullptr;
+  }
+  outStream.seek(length_to_skip);
+
+  /**
+   * skip uuid connection
+   */
+  ret = outStream.read(length_to_skip);
+  if (ret != 4) {
+    return nullptr;
+  }
+  outStream.seek(length_to_skip);
+
+  // skip attributes
+
+  uint32_t numAttributes = 0;
+  ret = outStream.read(length_to_skip);
+  if (ret != 4) {
+    return nullptr;
+  }
+
+  for (uint32_t i = 0; i < numAttributes; i++) {
+    /**
+     * skip uuid str
+     */
+    ret = outStream.read(length_to_skip);
+    if (ret != 4) {
+      return nullptr;
+    }
+    outStream.seek(length_to_skip);
+  }
+
+  ret = outStream.read(length_to_skip);
+  if (ret != 4) {
+    return nullptr;
+  }
+  std::vector<uint8_t> buf;
+  ret = outStream.readData(buf, length_to_skip);
+
+  // The number of chars produced may be less than utflen
+  std::string content_full_path = std::string((const char*) &buf[0], length_to_skip);
+
+  auto claim = std::make_shared<ResourceClaim>(content_full_path, nullptr, true);
+
+  return claim;
+}
+
 bool FlowFileRecord::DeSerialize(const uint8_t *buffer, const int bufferSize) {
   int ret;
 

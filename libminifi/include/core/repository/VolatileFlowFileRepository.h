@@ -59,9 +59,16 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string> {
         for (auto purgeItem : copy_purge_list_) {
           if (!running_)
             break;
-          std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
+          // don't need to parse. can get away with simply parsing the claim from the string
+          // std::shared_ptr<minifi::ResourceClaim> newClaim = FlowFileRecord::parseClaim(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size());
+          /*std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
           if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size())) {
             std::shared_ptr<minifi::ResourceClaim> newClaim = eventRead->getResourceClaim();
+            content_repo_->remove(newClaim);
+          }
+          */
+          std::shared_ptr<minifi::ResourceClaim> newClaim = FlowFileRecord::parseClaim(reinterpret_cast<const uint8_t *>(purgeItem.data()), purgeItem.size());
+          if (nullptr != newClaim){
             content_repo_->remove(newClaim);
           }
         }
