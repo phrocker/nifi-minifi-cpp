@@ -173,11 +173,6 @@ typedef enum {
   MAX_REQUEST_TYPE
 } RequestType;
 
-// Request Type Str
-class SiteToSiteRequest {
-public:
-  static const char *RequestTypeStr[MAX_REQUEST_TYPE];
-};
 
 // Respond Code
 typedef enum {
@@ -218,14 +213,15 @@ typedef struct {
   const char *description;bool hasDescription;
 } RespondCodeContext;
 
-// Respond Code Context
-static RespondCodeContext respondCodeContext[] = { { RESERVED, "Reserved for Future Use", false }, { PROPERTIES_OK, "Properties OK", false }, { UNKNOWN_PROPERTY_NAME, "Unknown Property Name", true },
-    { ILLEGAL_PROPERTY_VALUE, "Illegal Property Value", true }, { MISSING_PROPERTY, "Missing Property", true }, { CONTINUE_TRANSACTION, "Continue Transaction", false }, { FINISH_TRANSACTION,
-        "Finish Transaction", false }, { CONFIRM_TRANSACTION, "Confirm Transaction", true }, { TRANSACTION_FINISHED, "Transaction Finished", false }, { TRANSACTION_FINISHED_BUT_DESTINATION_FULL,
-        "Transaction Finished But Destination is Full", false }, { CANCEL_TRANSACTION, "Cancel Transaction", true }, { BAD_CHECKSUM, "Bad Checksum", false }, { MORE_DATA, "More Data Exists", false },
-    { NO_MORE_DATA, "No More Data Exists", false }, { UNKNOWN_PORT, "Unknown Port", false }, { PORT_NOT_IN_VALID_STATE, "Port Not in a Valid State", true }, { PORTS_DESTINATION_FULL,
-        "Port's Destination is Full", false }, { UNAUTHORIZED, "User Not Authorized", true }, { ABORT, "Abort", true }, { UNRECOGNIZED_RESPONSE_CODE, "Unrecognized Response Code", false }, {
-        END_OF_STREAM, "End of Stream", false } };
+
+
+// Request Type Str
+class SiteToSiteRequest {
+public:
+  static const char *RequestTypeStr[MAX_REQUEST_TYPE];
+  static RespondCodeContext respondCodeContext[21];
+};
+
 
 // Transaction Class
 class Transaction {

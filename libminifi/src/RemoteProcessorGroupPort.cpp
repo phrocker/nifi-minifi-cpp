@@ -280,7 +280,7 @@ void RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo() {
           if (!secure.empty())
             this->site2site_secure_ = secure.asBool();
         }
-        logger_->log_info("process group remote site2site port %ll, is secure %ll", site2site_port_, site2site_secure_);
+        logger_->log_info("process group remote site2site port %d, is secure %d", site2site_port_, site2site_secure_);
       }
     } else {
       logger_->log_error("Cannot output body to content for ProcessGroup::refreshRemoteSite2SiteInfo: received HTTP code %ll from %s", client->getResponseCode(), fullUrl);
@@ -303,7 +303,8 @@ void RemoteProcessorGroupPort::refreshPeerList() {
 
   protocol->getPeerList(peers_);
 
-  logger_->log_info("Have %ll peers", peers_.size());
+  logging::LOG_INFO(logger_) << "Have " << peers_.size() << " peers";
+
   if (peers_.size() > 0)
     peer_index_ = 0;
 }

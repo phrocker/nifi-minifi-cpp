@@ -62,7 +62,7 @@ uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int num
   }
   deviceSegment <<= 64 - (4 * (str.length() + 1));
   deviceSegment >>= 64 - numBits;
-  logging::LOG_DEBUG(logger_) << "Using user defined device segment:" << deviceSegment;
+  logging::LOG_DEBUG(logger_) << "Using user defined device segment: " << std::hex << deviceSegment;
   deviceSegment <<= 64 - numBits;
   return deviceSegment;
 }

@@ -45,7 +45,7 @@ uint16_t ClassLoader::registerResource(const std::string &resource, const std::s
     resource_ptr = dlopen(resource.c_str(), RTLD_NOW | RTLD_GLOBAL);
   }
   if (!resource_ptr) {
-   return RESOURCE_FAILURE;
+    return RESOURCE_FAILURE;
   } else {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     dl_handles_.push_back(resource_ptr);

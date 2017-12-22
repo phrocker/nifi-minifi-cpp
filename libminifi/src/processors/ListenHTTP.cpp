@@ -139,7 +139,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   auto numThreads = getMaxConcurrentTasks();
 
-  logger_->log_info("ListenHTTP starting HTTP server on port %s and path %s with %ll threads", listeningPort.c_str(), basePath.c_str(), numThreads);
+  logger_->log_info("ListenHTTP starting HTTP server on port %s and path %s with %d threads", listeningPort.c_str(), basePath.c_str(), numThreads);
 
   // Initialize web server
   std::vector<std::string> options;

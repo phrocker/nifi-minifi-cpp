@@ -260,7 +260,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
       logger_->log_info("%ll flowfiles were received from TailFile input", flowFiles.size());
 
       for (auto ffr : flowFiles) {
-        logger_->log_info("TailFile %s for %ll bytes", _currentTailFileName, ffr->getSize());
+        logger_->log_info("TailFile %s for %llu bytes", _currentTailFileName, ffr->getSize());
         std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + ffr->getSize()) + "." + extension;
         ffr->updateKeyedAttribute(PATH, fileLocation);
         ffr->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
@@ -278,7 +278,7 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
       flowFile->addKeyedAttribute(ABSOLUTE_PATH, fullPath);
       session->import(fullPath, flowFile, true, this->_currentTailFilePosition);
       session->transfer(flowFile, Success);
-      logger_->log_info("TailFile %s for %ll bytes", _currentTailFileName, flowFile->getSize());
+      logger_->log_info("TailFile %s for %llu bytes", _currentTailFileName, flowFile->getSize());
       std::string logName = baseName + "." + std::to_string(_currentTailFilePosition) + "-" + std::to_string(_currentTailFilePosition + flowFile->getSize()) + "." + extension;
       flowFile->updateKeyedAttribute(FILENAME, logName);
       this->_currentTailFilePosition += flowFile->getSize();

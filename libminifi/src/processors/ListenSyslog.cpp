@@ -121,7 +121,7 @@ void ListenSyslog::runThread() {
       if (_protocol == "TCP")
         listen(sockfd, 5);
       _serverSocket = sockfd;
-      logger_->log_error("ListenSysLog Server socket %ll bind OK to port %ll", _serverSocket, portno);
+      logger_->log_error("ListenSysLog Server socket %d bind OK to port %d", _serverSocket, portno);
     }
     FD_ZERO(&_readfds);
     FD_SET(_serverSocket, &_readfds);
@@ -155,7 +155,7 @@ void ListenSyslog::runThread() {
         if (newsockfd > 0) {
           if (_clientSockets.size() < (uint64_t)_maxConnections) {
             _clientSockets.push_back(newsockfd);
-            logger_->log_info("ListenSysLog new client socket %ll connection", newsockfd);
+            logger_->log_info("ListenSysLog new client socket %d connection", newsockfd);
             continue;
           } else {
             close(newsockfd);
@@ -180,7 +180,7 @@ void ListenSyslog::runThread() {
         int recvlen = readline(clientSocket, _buffer, sizeof(_buffer));
         if (recvlen <= 0) {
           close(clientSocket);
-          logger_->log_info("ListenSysLog client socket %ll close", clientSocket);
+          logger_->log_info("ListenSysLog client socket %d close", clientSocket);
           it = _clientSockets.erase(it);
         } else {
           if ((uint64_t)(recvlen + getEventQueueByteSize()) <= _recvBufSize) {

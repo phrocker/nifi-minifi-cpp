@@ -139,7 +139,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::clone(const std::shared_ptr<core
   std::shared_ptr<core::FlowFile> record = this->create(parent);
   if (record) {
     if (parent->getResourceClaim()) {
-      if ((uint64_t)(offset + size) > parent->getSize()) {
+      if ((uint64_t) (offset + size) > parent->getSize()) {
         // Set offset and size
         logger_->log_error("clone offset %ll and size %ll exceed parent size %llu", offset, size, parent->getSize());
         // Remove the Add FlowFile for the session
@@ -526,10 +526,8 @@ void ProcessSession::import(std::string source, std::vector<std::shared_ptr<Flow
           }
           flowFile->setResourceClaim(claim);
           claim->increaseFlowFileRecordOwnedCount();
-
-          logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flowFile->getOffset(), flowFile->getSize(), flowFile->getResourceClaim()->getContentFullPath().c_str(),
-                             flowFile->getUUIDStr().c_str());
-
+          logger_->log_debug("Import offset %llu length %llu into content %s for FlowFile UUID %s", flowFile->getOffset(), flowFile->getSize(),
+                             flowFile->getResourceClaim()->getContentFullPath().c_str(), flowFile->getUUIDStr().c_str());
           stream->closeStream();
           std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
           uint64_t endTime = getTimeMillis();

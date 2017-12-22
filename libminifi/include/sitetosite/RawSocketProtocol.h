@@ -158,9 +158,9 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   virtual int writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
   // getRespondCodeContext
   virtual RespondCodeContext *getRespondCodeContext(RespondCode code) {
-    for (unsigned int i = 0; i < sizeof(respondCodeContext) / sizeof(RespondCodeContext); i++) {
-      if (respondCodeContext[i].code == code) {
-        return &respondCodeContext[i];
+    for (unsigned int i = 0; i < sizeof(SiteToSiteRequest::respondCodeContext) / sizeof(RespondCodeContext); i++) {
+      if (SiteToSiteRequest::respondCodeContext[i].code == code) {
+        return &SiteToSiteRequest::respondCodeContext[i];
       }
     }
     return NULL;

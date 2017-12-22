@@ -112,7 +112,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
     return false;
   }
 
-  logger_->log_info("Negotiate protocol version with destination port %s current version %ll", port_id_str_, _currentVersion);
+  logger_->log_info("Negotiate protocol version with destination port %s current version %d", port_id_str_, _currentVersion);
 
   int ret = peer_->writeUTF(getResourceName());
 
@@ -165,7 +165,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
       ret = -1;
       return false;
     default:
-      logger_->log_info("Negotiate protocol response unknown code %ll", statusCode);
+      logger_->log_info("Negotiate protocol response unknown code %d", statusCode);
       return true;
   }
 
@@ -179,7 +179,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
     return false;
   }
 
-  logger_->log_info("Negotiate Codec version with destination port %s current version %ll", port_id_str_, _currentCodecVersion);
+  logger_->log_info("Negotiate Codec version with destination port %s current version %d", port_id_str_, _currentCodecVersion);
 
   int ret = peer_->writeUTF(getCodecResourceName());
 
@@ -228,7 +228,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
       ret = -1;
       return false;
     default:
-      logger_->log_info("Negotiate Codec response unknown code %ll", statusCode);
+      logger_->log_info("Negotiate Codec response unknown code %d", statusCode);
       return true;
   }
 
@@ -314,7 +314,7 @@ bool RawSiteToSiteClient::handShake() {
       ret = -1;
       return false;
     default:
-      logger_->log_info("HandShake Failed because of unknown respond code %ll", code);
+      logger_->log_info("HandShake Failed because of unknown respond code %d", code);
       ret = -1;
       return false;
   }
@@ -578,7 +578,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(std::string 
         logger_->log_info("Site2Site create transaction %s", transaction->getUUIDStr().c_str());
         return transaction;
       default:
-        logger_->log_info("Site2Site got unexpected response %ll when asking for data", code);
+        logger_->log_info("Site2Site got unexpected response %d when asking for data", code);
         return NULL;
     }
   } else {
@@ -633,7 +633,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     if (resp == -1) {
       throw Exception(SITE2SITE_EXCEPTION, "Send Failed");
     }
-    logger_->log_info("Site2Site transaction %s send bytes length %ll", transactionID.c_str(), payload.length());
+    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " sent bytes length" << payload.length();
 
     if (!confirm(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed");
@@ -641,7 +641,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     if (!complete(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed");
     }
-    logger_->log_info("Site2Site transaction %s successfully send flow record %ll, content bytes %ll", transactionID.c_str(), transaction->current_transfers_, transaction->_bytes);
+    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
   } catch (std::exception &exception) {
     if (transaction)
       deleteTransaction(transactionID);

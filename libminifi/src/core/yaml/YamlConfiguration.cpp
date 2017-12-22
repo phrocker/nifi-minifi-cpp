@@ -368,7 +368,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
   if (node["port"]) {
     auto portStr = node["port"].as<std::string>();
     if (core::Property::StringToInt(portStr, lvalue)) {
-      logger_->log_debug("ProvenanceReportingTask port %ll", (uint16_t) lvalue);
+      logger_->log_debug("ProvenanceReportingTask port %ll", lvalue);
       reportTask->setPort((uint16_t) lvalue);
     }
   }
