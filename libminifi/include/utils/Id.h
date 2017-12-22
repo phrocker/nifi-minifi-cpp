@@ -51,7 +51,6 @@ class IdGenerator {
   uint64_t getRandomDeviceSegment(int numBits);
  private:
   IdGenerator();
-  std::shared_ptr<minifi::core::logging::Logger> logger_;
   int implementation_;
   unsigned char deterministic_prefix_[8];
   std::atomic<uint64_t> incrementor_;
