@@ -53,6 +53,7 @@ namespace nifi {
 namespace minifi {
 namespace sitetosite {
 
+
 /**
  * Site2Site Peer
  */
@@ -64,6 +65,10 @@ typedef struct Site2SitePeerStatus {
 // RawSiteToSiteClient Class
 class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
  public:
+
+  // HandShakeProperty Str
+  static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY];
+
   // Constructor
   /*!
    * Create a new control protocol

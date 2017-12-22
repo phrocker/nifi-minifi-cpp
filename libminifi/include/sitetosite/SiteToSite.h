@@ -89,9 +89,6 @@ typedef enum {
   MAX_HANDSHAKE_PROPERTY
 } HandshakeProperty;
 
-// HandShakeProperty Str
-static const char *HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY];
-
 typedef enum {
   RAW,
   HTTP
@@ -177,7 +174,10 @@ typedef enum {
 } RequestType;
 
 // Request Type Str
-static const char *RequestTypeStr[MAX_REQUEST_TYPE];
+class SiteToSiteRequest {
+public:
+  static const char *RequestTypeStr[MAX_REQUEST_TYPE];
+};
 
 // Respond Code
 typedef enum {
@@ -192,7 +192,7 @@ typedef enum {
   // transaction indicators
   CONTINUE_TRANSACTION = 10,
   FINISH_TRANSACTION = 11,
-  CONFIRM_TRANSACTION = 12,  // "Explanation" of this code is the checksum
+  CONFIRM_TRANSACTION = 12,// "Explanation" of this code is the checksum
   TRANSACTION_FINISHED = 13,
   TRANSACTION_FINISHED_BUT_DESTINATION_FULL = 14,
   CANCEL_TRANSACTION = 15,
@@ -210,13 +210,12 @@ typedef enum {
   ABORT = 250,
   UNRECOGNIZED_RESPONSE_CODE = 254,
   END_OF_STREAM = 255
-} RespondCode;
+}RespondCode;
 
 // Respond Code Class
 typedef struct {
   RespondCode code;
-  const char *description;
-  bool hasDescription;
+  const char *description;bool hasDescription;
 } RespondCodeContext;
 
 // Respond Code Context

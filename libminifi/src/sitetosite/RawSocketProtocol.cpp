@@ -42,6 +42,43 @@ namespace sitetosite {
 std::shared_ptr<utils::IdGenerator> RawSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<utils::IdGenerator> Transaction::id_generator_ = utils::IdGenerator::getIdGenerator();
 
+
+const char *RawSiteToSiteClient::HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {
+/**
+ * Boolean value indicating whether or not the contents of a FlowFile should
+ * be GZipped when transferred.
+ */
+"GZIP",
+/**
+ * The unique identifier of the port to communicate with
+ */
+"PORT_IDENTIFIER",
+/**
+ * Indicates the number of milliseconds after the request was made that the
+ * client will wait for a response. If no response has been received by the
+ * time this value expires, the server can move on without attempting to
+ * service the request because the client will have already disconnected.
+ */
+"REQUEST_EXPIRATION_MILLIS",
+/**
+ * The preferred number of FlowFiles that the server should send to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol.
+ */
+"BATCH_COUNT",
+/**
+ * The preferred number of bytes that the server should send to the client
+ * when pulling data. This property was introduced in version 5 of the
+ * protocol.
+ */
+"BATCH_SIZE",
+/**
+ * The preferred amount of time that the server should send data to the
+ * client when pulling data. This property was introduced in version 5 of
+ * the protocol. Value is in milliseconds.
+ */
+"BATCH_DURATION" };
+
 bool RawSiteToSiteClient::establish() {
   if (peer_state_ != IDLE) {
     logger_->log_error("Site2Site peer state is not idle while try to establish");
@@ -354,7 +391,7 @@ int RawSiteToSiteClient::writeRequestType(RequestType type) {
   if (type >= MAX_REQUEST_TYPE)
     return -1;
 
-  return peer_->writeUTF(RequestTypeStr[type]);
+  return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
 }
 
 int RawSiteToSiteClient::readRequestType(RequestType &type) {
@@ -366,7 +403,7 @@ int RawSiteToSiteClient::readRequestType(RequestType &type) {
     return ret;
 
   for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
-    if (RequestTypeStr[i] == requestTypeStr) {
+    if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
       type = (RequestType) i;
       return ret;
     }

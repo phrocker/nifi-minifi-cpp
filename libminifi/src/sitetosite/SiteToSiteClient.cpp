@@ -29,7 +29,7 @@ int SiteToSiteClient::writeRequestType(RequestType type) {
   if (type >= MAX_REQUEST_TYPE)
     return -1;
 
-  return peer_->writeUTF(RequestTypeStr[type]);
+  return peer_->writeUTF(SiteToSiteRequest::RequestTypeStr[type]);
 }
 
 int SiteToSiteClient::readRequestType(RequestType &type) {
@@ -41,7 +41,7 @@ int SiteToSiteClient::readRequestType(RequestType &type) {
     return ret;
 
   for (int i = NEGOTIATE_FLOWFILE_CODEC; i <= SHUTDOWN; i++) {
-    if (RequestTypeStr[i] == requestTypeStr) {
+    if (SiteToSiteRequest::RequestTypeStr[i] == requestTypeStr) {
       type = (RequestType) i;
       return ret;
     }
