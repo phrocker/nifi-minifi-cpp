@@ -40,6 +40,14 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-compare"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -287,3 +295,9 @@ void TailFile::onTrigger(core::ProcessContext *context, core::ProcessSession *se
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__) || defined(__GNUG__)
+#pragma GCC diagnostic pop
+#endif
