@@ -18,6 +18,7 @@
 
 #include "core/yaml/YamlConfiguration.h"
 #include <memory>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <set>
@@ -34,7 +35,7 @@ std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::Id
 
 core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
   uuid_t uuid;
-  int64_t version = 0;
+  int32_t version = 0;
 
   checkRequiredField(&rootFlowNode, "name",
   CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
@@ -203,7 +204,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
           logger_->log_debug("setting scheduling strategy as %s", procCfg.schedulingStrategy);
         }
 
-        int64_t maxConcurrentTasks;
+        int32_t maxConcurrentTasks;
         if (core::Property::StringToInt(procCfg.maxConcurrentTasks, maxConcurrentTasks)) {
           logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
           processor->setMaxConcurrentTasks((uint8_t) maxConcurrentTasks);
@@ -474,7 +475,8 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 
         if (connectionNode["max work queue size"]) {
           auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
-          int64_t max_work_queue_size = 0;
+          auto max_work_queue_size = INTPTR_MAX;
+          max_work_queue_size = 0;
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
             connection->setMaxQueueSize(max_work_queue_size);
           }
@@ -483,7 +485,8 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 
         if (connectionNode["max work queue data size"]) {
           auto max_work_queue_str = connectionNode["max work queue data size"].as<std::string>();
-          int64_t max_work_queue_data_size = 0;
+          auto max_work_queue_data_size = INTPTR_MAX;
+          max_work_queue_data_size = 0;
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
             connection->setMaxQueueDataSize(max_work_queue_data_size);
           }
@@ -618,7 +621,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
 
   if (inputPortsObj["max concurrent tasks"]) {
     auto rawMaxConcurrentTasks = inputPortsObj["max concurrent tasks"].as<std::string>();
-    int64_t maxConcurrentTasks;
+    int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
       processor->setMaxConcurrentTasks(maxConcurrentTasks);
     }
