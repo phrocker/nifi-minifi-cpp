@@ -54,7 +54,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
   if (rootFlowNode["version"]) {
     std::string value = rootFlowNode["version"].as<std::string>();
     if (core::Property::StringToInt(value, version)) {
-      logger_->log_debug("parseRootProcessorGroup: version => [%ll]", version);
+      logger_->log_debug("parseRootProcessorGroup: version => [%d]", version);
     }
   }
 
@@ -206,12 +206,12 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
 
         int32_t maxConcurrentTasks;
         if (core::Property::StringToInt(procCfg.maxConcurrentTasks, maxConcurrentTasks)) {
-          logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%ll]", maxConcurrentTasks);
+          logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
           processor->setMaxConcurrentTasks((uint8_t) maxConcurrentTasks);
         }
 
         if (core::Property::StringToInt(procCfg.runDurationNanos, runDurationNanos)) {
-          logger_->log_debug("parseProcessorNode: runDurationNanos => [%ll]", runDurationNanos);
+          logger_->log_debug("parseProcessorNode: runDurationNanos => [%d]", runDurationNanos);
           processor->setRunDurationNano((uint64_t) runDurationNanos);
         }
 
@@ -480,7 +480,9 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
             connection->setMaxQueueSize(max_work_queue_size);
           }
-          logger_->log_debug("Setting %ll as the max queue size for %s", max_work_queue_size, name);
+          std::stringstream str;
+          str << "Setting " << max_work_queue_size << " as the max queue size for " << name;
+          logger_->log_debug(str.str().c_str());
         }
 
         if (connectionNode["max work queue data size"]) {
@@ -490,7 +492,9 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
             connection->setMaxQueueDataSize(max_work_queue_data_size);
           }
-          logger_->log_debug("Setting %ll as the max queue data size for %s", max_work_queue_data_size, name);
+          std::stringstream str;
+                    str << "Setting " << max_work_queue_data_size << " as the max queue data size for " << name;
+                    logger_->log_debug(str.str().c_str());
         }
 
         if (connectionNode["source id"]) {
@@ -625,7 +629,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
       processor->setMaxConcurrentTasks(maxConcurrentTasks);
     }
-    logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%ll]", maxConcurrentTasks);
+    logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
     processor->setMaxConcurrentTasks(maxConcurrentTasks);
   }
 }
