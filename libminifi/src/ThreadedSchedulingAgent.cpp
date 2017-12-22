@@ -93,7 +93,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     std::future<uint64_t> future;
     thread_pool_.execute(std::move(functor), future);
   }
-  logger_->log_info("Scheduled thread %ll concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName().c_str());
+  logger_->log_info("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName().c_str());
   return;
 }
 
