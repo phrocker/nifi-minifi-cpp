@@ -52,6 +52,7 @@ class IdGenerator {
  private:
   IdGenerator();
   int implementation_;
+  std::shared_ptr<minifi::core::logging::Logger> logger_;
   unsigned char deterministic_prefix_[8];
   std::atomic<uint64_t> incrementor_;
 };

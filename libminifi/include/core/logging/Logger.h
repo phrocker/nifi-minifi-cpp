@@ -77,6 +77,10 @@ class BaseLogger {
 
 };
 
+/**
+ * LogBuilder is a class to facilitate using the LOG macros below and an associated put-to operator.
+ *
+ */
 class LogBuilder {
  public:
   LogBuilder(BaseLogger *l, LOG_LEVEL level)
@@ -93,14 +97,6 @@ class LogBuilder {
       log_string(level);
   }
 
-  /*
-   LogBuilder(const LogBuilder &other)
-   : ignore(other.ignore),
-   ptr(other.ptr),
-   str(other.str) {
-   str.set
-   }
-   */
   void setIgnore() {
     ignore = true;
   }
@@ -258,6 +254,10 @@ class Logger : public BaseLogger {
 #define LOG_INFO(x) LogBuilder(x.get(),logging::LOG_LEVEL::info)
 
 #define LOG_TRACE(x) LogBuilder(x.get(),logging::LOG_LEVEL::trace)
+
+#define LOG_ERROR(x) LogBuilder(x.get(),logging::LOG_LEVEL::err)
+
+#define LOG_WARN(x) LogBuilder(x.get(),logging::LOG_LEVEL::warn)
 
 } /* namespace logging */
 } /* namespace core */
