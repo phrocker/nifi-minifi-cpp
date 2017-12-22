@@ -42,7 +42,6 @@ namespace sitetosite {
 std::shared_ptr<utils::IdGenerator> RawSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<utils::IdGenerator> Transaction::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-
 const char *RawSiteToSiteClient::HandShakePropertyStr[MAX_HANDSHAKE_PROPERTY] = {
 /**
  * Boolean value indicating whether or not the contents of a FlowFile should
@@ -149,7 +148,9 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
       if (ret <= 0) {
         return false;
       }
-      logger_->log_info("Site2Site Server Response asked for a different protocol version %ll", serverVersion);
+
+      logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
+
       for (unsigned int i = (_currentVersionIndex + 1); i < sizeof(_supportedVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedVersion[i]) {
           _currentVersion = _supportedVersion[i];
@@ -211,7 +212,8 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
       if (ret <= 0) {
         return false;
       }
-      logger_->log_info("Site2Site Server Response asked for a different codec version %ll", serverVersion);
+      logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
+
       for (unsigned int i = (_currentCodecVersionIndex + 1); i < sizeof(_supportedCodecVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedCodecVersion[i]) {
           _currentCodecVersion = _supportedCodecVersion[i];
@@ -376,7 +378,9 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
       }
       PeerStatus status(std::make_shared<Peer>(port_id_, host, port, secure), count, true);
       peers.push_back(std::move(status));
-      logger_->log_info("Site2Site Peer host %s, port %ll, Secure %ll", host, port, secure);
+      std::stringstream str;
+      str << "Site2Site Peer host " << host << " port " << port << " Secure " << secure;
+      logger_->log_info(str.str().c_str());
     }
 
     tearDown();
