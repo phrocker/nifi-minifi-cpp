@@ -475,26 +475,20 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 
         if (connectionNode["max work queue size"]) {
           auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
-          auto max_work_queue_size = INTPTR_MAX;
-          max_work_queue_size = 0;
+          uint64_t max_work_queue_size = 0;
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_size)) {
             connection->setMaxQueueSize(max_work_queue_size);
           }
-          std::stringstream str;
-          str << "Setting " << max_work_queue_size << " as the max queue size for " << name;
-          logger_->log_debug(str.str().c_str());
+          logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_size << " as the max queue size for " << name;
         }
 
         if (connectionNode["max work queue data size"]) {
           auto max_work_queue_str = connectionNode["max work queue data size"].as<std::string>();
-          auto max_work_queue_data_size = INTPTR_MAX;
-          max_work_queue_data_size = 0;
+          uint64_t max_work_queue_data_size = 0;
           if (core::Property::StringToInt(max_work_queue_str, max_work_queue_data_size)) {
             connection->setMaxQueueDataSize(max_work_queue_data_size);
           }
-          std::stringstream str;
-                    str << "Setting " << max_work_queue_data_size << " as the max queue data size for " << name;
-                    logger_->log_debug(str.str().c_str());
+          logging::LOG_DEBUG(logger_) << "Setting " << max_work_queue_data_size << " as the max queue data size for " << name;
         }
 
         if (connectionNode["source id"]) {
