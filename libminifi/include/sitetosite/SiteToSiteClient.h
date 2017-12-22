@@ -281,14 +281,14 @@ class WriteCallback : public OutputStreamCallback {
       int size = std::min(len, 16384);
       int ret = _packet->transaction_->getStream().readData(buffer, size);
       if (ret != size) {
-        _packet->logger_reference_->log_error("Site2Site Receive Flow Size %d Failed %d, should have received %d", size, ret, len);
+        _packet->logger_reference_->log_error("Site2Site Receive Flow Size %ll Failed %ll, should have received %ll", size, ret, len);
         return -1;
       }
       stream->write(buffer, size);
       len -= size;
       total += size;
     }
-    _packet->logger_reference_->log_info("Received %d from stream",len);
+    _packet->logger_reference_->log_info("Received %ll from stream",len);
     return len;
   }
 };
@@ -315,7 +315,7 @@ class ReadCallback : public InputStreamCallback {
       }
       int ret = _packet->transaction_->getStream().writeData(buffer, readSize);
       if (ret != readSize) {
-        _packet->logger_reference_->log_error("Site2Site Send Flow Size %d Failed %d", readSize, ret);
+        _packet->logger_reference_->log_error("Site2Site Send Flow Size %ll Failed %ll", readSize, ret);
         return -1;
       }
       size += readSize;

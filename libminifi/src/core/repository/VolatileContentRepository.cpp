@@ -125,7 +125,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
       }
     }
   }
-  logger_->log_debug("Cannot write %s %d, returning nullptr to roll back session. Repo is either full or locked", claim->getContentFullPath(), size);
+  logger_->log_debug("Cannot write %s %ll, returning nullptr to roll back session. Repo is either full or locked", claim->getContentFullPath(), size);
   return nullptr;
 }
 
@@ -167,13 +167,13 @@ bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceCla
       // decrement the reference count and free it
       master_list_.erase(claim->getContentFullPath());
       if (ptr->freeValue(claim)) {
-        logger_->log_debug("Remove for %s, reduced to %d", claim->getContentFullPath(), current_size_.load());
+        logger_->log_debug("Remove for %s, reduced to %ll", claim->getContentFullPath(), current_size_.load());
         return true;
       } else {
         logger_->log_debug("free failed for %s", claim->getContentFullPath());
       }
     } else {
-      logger_->log_debug("Could not remove for %s, size is %d", claim->getContentFullPath(), current_size_.load());
+      logger_->log_debug("Could not remove for %s, size is %ll", claim->getContentFullPath(), current_size_.load());
     }
   } else {
     std::lock_guard<std::mutex> lock(map_mutex_);

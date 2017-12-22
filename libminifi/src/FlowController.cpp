@@ -181,7 +181,7 @@ bool FlowController::applyConfiguration(const std::string &configurePayload) {
   if (newRoot == nullptr)
     return false;
 
-  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName().c_str(), newRoot->getVersion());
+  logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %ll", newRoot->getName().c_str(), newRoot->getVersion());
 
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
@@ -310,7 +310,7 @@ void FlowController::loadFlowRepo() {
     if (this->root_ != nullptr) {
       this->root_->getConnections(connectionMap);
     }
-    logger_->log_debug("Number of connections from connectionMap %d", connectionMap.size());
+    logger_->log_debug("Number of connections from connectionMap %ll", connectionMap.size());
     flow_file_repo_->setConnectionMap(connectionMap);
     flow_file_repo_->loadComponent(content_repo_);
   } else {

@@ -109,18 +109,18 @@ void SiteToSiteProvenanceReportingTask::onSchedule(const std::shared_ptr<core::P
 void SiteToSiteProvenanceReportingTask::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   logger_->log_debug("SiteToSiteProvenanceReportingTask -- onTrigger");
   std::vector<std::shared_ptr<core::SerializableComponent>> records;
-  logger_->log_debug("batch size %d records", batch_size_);
+  logger_->log_debug("batch size %ll records", batch_size_);
   size_t deserialized = batch_size_;
   std::shared_ptr<core::Repository> repo = context->getProvenanceRepository();
   std::function<std::shared_ptr<core::SerializableComponent>()> constructor = []() {return std::make_shared<provenance::ProvenanceEventRecord>();};
   if (!repo->DeSerialize(records, deserialized, constructor) && deserialized == 0) {
-    logger_->log_debug("Not sending because deserialized is %d", deserialized);
+    logger_->log_debug("Not sending because deserialized is %ll", deserialized);
     return;
   }
 
-  logger_->log_debug("batch size %d records", batch_size_, deserialized);
+  logger_->log_debug("batch size %ll records", batch_size_, deserialized);
 
-  logger_->log_debug("Captured %d records", deserialized);
+  logger_->log_debug("Captured %ll records", deserialized);
   std::string jsonStr;
   this->getJsonReport(context, session, records, jsonStr);
   if (jsonStr.length() <= 0) {

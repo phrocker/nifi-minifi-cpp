@@ -159,13 +159,13 @@ int16_t TLSSocket::initialize() {
     ssl = SSL_new(context_->getContext());
     SSL_set_fd(ssl, socket_file_descriptor_);
     if (SSL_connect(ssl) == -1) {
-      logger_->log_error("SSL socket connect failed to %s %d", requested_hostname_.c_str(), port_);
+      logger_->log_error("SSL socket connect failed to %s %ll", requested_hostname_.c_str(), port_);
       SSL_free(ssl);
       ssl = NULL;
       close(socket_file_descriptor_);
       return -1;
     } else {
-      logger_->log_info("SSL socket connect success to %s %d", requested_hostname_.c_str(), port_);
+      logger_->log_info("SSL socket connect success to %s %ll", requested_hostname_.c_str(), port_);
       return 0;
     }
   }
@@ -192,7 +192,7 @@ int TLSSocket::writeData(uint8_t *value, int size) {
     sent = SSL_write(ssl, value + bytes, size - bytes);
     // check for errors
     if (sent < 0) {
-      logger_->log_error("Site2Site Peer socket %d send failed %s", socket_file_descriptor_, strerror(errno));
+      logger_->log_error("Site2Site Peer socket %ll send failed %s", socket_file_descriptor_, strerror(errno));
       return sent;
     }
     bytes += sent;

@@ -146,7 +146,7 @@ int AtomicEntryStream<T>::writeData(uint8_t *value, int size) {
       }
       return size;
     } else {
-      logger_->log_debug("Cannot insert %d bytes due to insufficient space in atomic entry", size);
+      logger_->log_debug("Cannot insert %ll bytes due to insufficient space in atomic entry", size);
     }
 
   }

@@ -143,7 +143,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
             int numRead = read(_pipefd[0], buffer, sizeof(buffer));
             if (numRead <= 0)
               break;
-            logger_->log_info("Execute Command Respond %d", numRead);
+            logger_->log_info("Execute Command Respond %ll", numRead);
             ExecuteProcess::WriteCallback callback(buffer, numRead);
             std::shared_ptr<FlowFileRecord> flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
             if (!flowFile)
@@ -163,7 +163,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
             int numRead = read(_pipefd[0], bufPtr, (sizeof(buffer) - totalRead));
             if (numRead <= 0) {
               if (totalRead > 0) {
-                logger_->log_info("Execute Command Respond %d", totalRead);
+                logger_->log_info("Execute Command Respond %ll", totalRead);
                 // child exits and close the pipe
                 ExecuteProcess::WriteCallback callback(buffer, totalRead);
                 if (!flowFile) {
@@ -182,7 +182,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
             } else {
               if (numRead == static_cast<int>((sizeof(buffer) - totalRead))) {
                 // we reach the max buffer size
-                logger_->log_info("Execute Command Max Respond %d", sizeof(buffer));
+                logger_->log_info("Execute Command Max Respond %ll", sizeof(buffer));
                 ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
                 if (!flowFile) {
                   flowFile = std::static_pointer_cast<FlowFileRecord>(session->create());
@@ -207,9 +207,9 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
 
         wait(&status);
         if (WIFEXITED(status)) {
-          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WEXITSTATUS(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %ll pid %ll", _fullCommand.c_str(), WEXITSTATUS(status), _pid);
         } else {
-          logger_->log_info("Execute Command Complete %s status %d pid %d", _fullCommand.c_str(), WTERMSIG(status), _pid);
+          logger_->log_info("Execute Command Complete %s status %ll pid %ll", _fullCommand.c_str(), WTERMSIG(status), _pid);
         }
 
         close(_pipefd[0]);

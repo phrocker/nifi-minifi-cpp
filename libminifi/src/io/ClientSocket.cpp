@@ -79,7 +79,7 @@ void Socket::closeStream() {
     addr_info_ = 0;
   }
   if (socket_file_descriptor_ >= 0) {
-    logger_->log_debug("Closing %d", socket_file_descriptor_);
+    logger_->log_debug("Closing %ll", socket_file_descriptor_);
     close(socket_file_descriptor_);
     socket_file_descriptor_ = -1;
   }
@@ -144,7 +144,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
   // add the listener to the total set
   FD_SET(socket_file_descriptor_, &total_list_);
   socket_max_ = socket_file_descriptor_;
-  logger_->log_debug("Created connection with file descriptor %d", socket_file_descriptor_);
+  logger_->log_debug("Created connection with file descriptor %ll", socket_file_descriptor_);
   return 0;
 }
 
@@ -312,14 +312,14 @@ int Socket::writeData(uint8_t *value, int size) {
     // check for errors
     if (ret <= 0) {
       close(fd);
-      logger_->log_error("Could not send to %d, error: %s", fd, strerror(errno));
+      logger_->log_error("Could not send to %ll, error: %s", fd, strerror(errno));
       return ret;
     }
     bytes += ret;
   }
 
   if (ret)
-    logger_->log_trace("Send data size %d over socket %d", size, fd);
+    logger_->log_trace("Send data size %ll over socket %ll", size, fd);
   return bytes;
 }
 
@@ -390,21 +390,21 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
   while (buflen) {
     int16_t fd = select_descriptor(1000);
     if (fd < 0) {
-      logger_->log_debug("fd %d close %i", fd, buflen);
+      logger_->log_debug("fd %ll close %i", fd, buflen);
       close(socket_file_descriptor_);
       return -1;
     }
     int bytes_read = recv(fd, buf, buflen, 0);
-    logger_->log_trace("Recv call %d", bytes_read);
+    logger_->log_trace("Recv call %ll", bytes_read);
     if (bytes_read <= 0) {
       if (bytes_read == 0) {
-        logger_->log_debug("Other side hung up on %d", fd);
+        logger_->log_debug("Other side hung up on %ll", fd);
       } else {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
           // continue
           return -2;
         }
-        logger_->log_error("Could not recv on %d, error: %s", fd, strerror(errno));
+        logger_->log_error("Could not recv on %ll, error: %s", fd, strerror(errno));
       }
       return -1;
     }

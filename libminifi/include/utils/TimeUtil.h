@@ -26,7 +26,7 @@
 #include <sstream>
 #include <chrono>
 
-#define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
+#define TIME_FORMAT "%Y-%m-%ll %H:%M:%S"
 
 /**
  * Gets the current time in milliseconds

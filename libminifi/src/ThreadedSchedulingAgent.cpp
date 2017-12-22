@@ -45,7 +45,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   if (configure_->get(Configure::nifi_administrative_yield_duration, yieldValue)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(yieldValue, admin_yield_duration_, unit) && core::Property::ConvertTimeUnitToMS(admin_yield_duration_, unit, admin_yield_duration_)) {
-      logger_->log_debug("nifi_administrative_yield_duration: [%d] ms", admin_yield_duration_);
+      logger_->log_debug("nifi_administrative_yield_duration: [%ll] ms", admin_yield_duration_);
     }
   }
 
@@ -53,7 +53,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(yieldValue, bored_yield_duration_, unit) && core::Property::ConvertTimeUnitToMS(bored_yield_duration_, unit, bored_yield_duration_)) {
-      logger_->log_debug("nifi_bored_yield_duration: [%d] ms", bored_yield_duration_);
+      logger_->log_debug("nifi_bored_yield_duration: [%ll] ms", bored_yield_duration_);
     }
   }
 
@@ -93,7 +93,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     std::future<uint64_t> future;
     thread_pool_.execute(std::move(functor), future);
   }
-  logger_->log_info("Scheduled thread %d concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName().c_str());
+  logger_->log_info("Scheduled thread %ll concurrent workers for for process %s", processor->getMaxConcurrentTasks(), processor->getName().c_str());
   return;
 }
 
