@@ -206,6 +206,13 @@ if (ENABLE_BUSTACHE)
     createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests" "TRUE" "thirdparty/bustache")
 endif()
 
+## I2CLib
+option(ENABLE_I2C "Enables support for I2C Capabilities example." OFF)
+if (ENABLE_I2C)
+	include_directories(thirdparty/RTIMULib/RTIMULib)
+    createExtension(I2C-EXTENSIONS "I2C-EXTENSIONS" "This Enables I2C Capabilities for the Raspberry pi" "extensions/i2clib" )
+endif()
+
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)

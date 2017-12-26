@@ -257,6 +257,8 @@ add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
+add_disabled_option PI_CAR_ENABLED ${FALSE} "ENABLE_PI_CAR"
+
 #add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
 #add_dependency BUSTACHE_ENABLED "boost"
 

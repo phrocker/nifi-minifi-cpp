@@ -98,6 +98,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
 }
 
 void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconfigure) {
+  logger_->log_debug("configuring");
   std::string clazz, heartbeat_period, device;
 
   if (!reconfigure) {
