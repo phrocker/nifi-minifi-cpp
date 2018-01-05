@@ -448,7 +448,7 @@ build_cmake_command(){
 
   add_os_flags
 
-  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} .."
+  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_SYSROOT=${SYSROOT} .."
   continue_with_plan="Y"
   if [ ! "$NO_PROMPT" = "true" ]; then
     read -p "Command will be '${CMAKE_BUILD_COMMAND}', run this? [ Y/N ] " continue_with_plan
