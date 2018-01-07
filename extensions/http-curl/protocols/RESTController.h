@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_RESTRCVR_H_
-#define LIBMINIFI_INCLUDE_C2_RESTRCVR_H_
+#ifndef LIBMINIFI_INCLUDE_C2_RESTCONTROLLER_H
+#define LIBMINIFI_INCLUDE_C2_RESTCONTROLLER_H
 
 #include "RESTSender.h"
 #include "json/json.h"
@@ -47,9 +47,9 @@ int ssl_protocol_en(void *ssl_context, void *user_data);
  * will encompass other protocols the context of its meaning here simply translates into POST and GET respectively.
  *
  */
-class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
+class RESTController : public RESTProtocol, public HeartBeatReporter {
  public:
-  RESTReceiver(std::string name, uuid_t uuid = nullptr);
+  RESTController(std::string name, uuid_t uuid = nullptr);
 
   virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                           const std::shared_ptr<Configure> &configure) override;
@@ -57,10 +57,10 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
 
  protected:
 
-  class ListeningProtocol : public CivetHandler {
+  class ControllerProtocol : public CivetHandler {
 
    public:
-    ListeningProtocol() {
+    ControllerProtocol() {
 
     }
 
@@ -70,6 +70,27 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
         std::lock_guard<std::mutex> lock(reponse_mutex_);
         currentvalue = resp_;
       }
+
+      auto *req_info = mg_get_request_info(conn);
+
+      auto paths_split = utils::StringUtils::split(req_info->request_uri, "/");
+
+      std::cout << req_info->request_uri << std::endl;
+      if (paths_split.size() == 2) {
+        if (utils::StringUtils::equalsIgnoreCase(paths_split.at(0), "stop")) {
+          auto components = update_sink_->getComponents(paths_split.at(1));
+          for (auto component : components) {
+            component->stop(true, 30000);
+          }
+        }
+        else if (utils::StringUtils::equalsIgnoreCase(paths_split.at(0), "clear")) {
+
+          update_sink_->clearConnection( paths_split.at(1) );
+        }
+
+      }
+
+      // base url / operation / command
 
       std::stringstream output;
       output << "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " << currentvalue.length() << "\r\nConnection: close\r\n\r\n";
@@ -95,13 +116,13 @@ class RESTReceiver : public RESTProtocol, public HeartBeatReporter {
   std::unique_ptr<CivetServer> start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler);
 
   std::unique_ptr<CivetServer> listener;
-  std::unique_ptr<ListeningProtocol> handler;
+  std::unique_ptr<ControllerProtocol> handler;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(RESTReceiver);
+REGISTER_RESOURCE(RESTController);
 
 } /* namesapce c2 */
 } /* namespace minifi */
@@ -109,4 +130,4 @@ REGISTER_RESOURCE(RESTReceiver);
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_C2_RESTRCVR_H_ */
+#endif /* LIBMINIFI_INCLUDE_C2_RESTCONTROLLER_H */

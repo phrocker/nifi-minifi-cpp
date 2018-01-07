@@ -143,6 +143,11 @@ if (NOT DISABLE_CURL)
 	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "${TEST_DIR}/curl-tests")
 endif()
 
+if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
+	add_subdirectory(thirdparty/cxxopts)
+	add_subdirectory(controller)
+endif()
+
 ## Add the rocks DB extension
 if (NOT ROCKSDB_FOUND OR BUILD_ROCKSDB)
 	set(BUILD_RD "TRUE")

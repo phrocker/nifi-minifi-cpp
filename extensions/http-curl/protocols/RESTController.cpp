@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-#include "RESTReceiver.h"
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <map>
 #include <string>
 #include <vector>
+#include "RESTController.h"
 
 namespace org {
 namespace apache {
@@ -39,20 +39,20 @@ int ssl_protocol_en(void *ssl_context, void *user_data) {
   return 0;
 }
 
-RESTReceiver::RESTReceiver(std::string name, uuid_t uuid)
+RESTController::RESTController(std::string name, uuid_t uuid)
     : HeartBeatReporter(name, uuid),
-      logger_(logging::LoggerFactory<RESTReceiver>::getLogger()) {
+      logger_(logging::LoggerFactory<RESTController>::getLogger()) {
 }
 
-void RESTReceiver::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+void RESTController::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink,
                               const std::shared_ptr<Configure> &configure) {
   HeartBeatReporter::initialize(controller, updateSink, configure);
   logger_->log_debug("Initializing rest receiveer");
   if (nullptr != configuration_) {
     std::string listeningPort, rootUri, caCert;
-    configuration_->get("c2.rest.listener.port", listeningPort);
-    configuration_->get("c2.rest.listener.heartbeat.rooturi", rootUri);
-    configuration_->get("c2.rest.listener.cacert", caCert);
+    configuration_->get("c2.controller.listener.port", listeningPort);
+    configuration_->get("c2.controller.listener.rooturi", rootUri);
+    configuration_->get("c2.controller.listener.cacert", caCert);
 
     if (!listeningPort.empty() && !rootUri.empty()) {
       handler = std::unique_ptr<ListeningProtocol>(new ListeningProtocol());
@@ -64,7 +64,7 @@ void RESTReceiver::initialize(const std::shared_ptr<core::controller::Controller
     }
   }
 }
-int16_t RESTReceiver::heartbeat(const C2Payload &payload) {
+int16_t RESTController::heartbeat(const C2Payload &payload) {
   std::string operation_request_str = getOperation(payload);
   std::string outputConfig;
   Json::Value json_payload;
@@ -95,6 +95,8 @@ int16_t RESTReceiver::heartbeat(const C2Payload &payload) {
     json_payload[nested_payload.getLabel()] = serializeJsonPayload(json_payload, nested_payload);
   }
 
+  // parse the payload
+
   Json::StyledWriter writer;
   outputConfig = writer.write(json_payload);
   if (handler != nullptr) {
@@ -105,7 +107,7 @@ int16_t RESTReceiver::heartbeat(const C2Payload &payload) {
   return 0;
 }
 
-std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler, std::string &ca_cert) {
+std::unique_ptr<CivetServer> RESTController::start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler, std::string &ca_cert) {
   struct mg_callbacks callback;
 
   memset(&callback, 0, sizeof(callback));
@@ -126,7 +128,7 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
   return server;
 }
 
-std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler) {
+std::unique_ptr<CivetServer> RESTController::start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler) {
   const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "num_threads", "1", 0 };
 
   std::vector<std::string> cpp_options;
