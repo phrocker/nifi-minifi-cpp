@@ -495,54 +495,72 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
       yield_backoff = 10;
     }
     Worker<T> task;
-    if (!worker_queue_.try_dequeue(task)) {
+
+    bool prioritized_task = false;
+
+    auto now = std::chrono::system_clock::now().time_since_epoch();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+    {
       std::unique_lock<std::mutex> lock(worker_queue_mutex_);
       if (worker_priority_queue_.size() > 0) {
         // this is safe as we are going to immediately pop the queue
-        while (!worker_priority_queue_.empty()) {
-          task = std::move(const_cast<Worker<T>&>(worker_priority_queue_.top()));
-          worker_priority_queue_.pop();
-          worker_queue_.enqueue(std::move(task));
-          continue;
+        task = std::move(const_cast<Worker<T>&>(worker_priority_queue_.top()));
+        worker_priority_queue_.pop();
+        if ((double)task.getTimeSlice() > ms) {
+          worker_priority_queue_.push(std::move(task));
+        } else {
+          prioritized_task = true;
         }
-
       }
-      tasks_available_.wait_for(lock, waitperiod);
-      continue;
-    } else {
-      std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-      if (!task_status_[task.getIdentifier()]) {
+    }
+
+    if (!prioritized_task) {
+      if (!worker_queue_.try_dequeue(task)) {
+        std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+        if (worker_priority_queue_.size() > 0) {
+          // this is safe as we are going to immediately pop the queue
+          while (!worker_priority_queue_.empty()) {
+            task = std::move(const_cast<Worker<T>&>(worker_priority_queue_.top()));
+            worker_priority_queue_.pop();
+            worker_queue_.enqueue(std::move(task));
+            continue;
+          }
+
+        }
+        tasks_available_.wait_for(lock, waitperiod);
         continue;
-      }
-    }
-
-    bool wait_to_run = false;
-    if (task.getTimeSlice() > 1) {
-      double wt = (double) task.getWaitTime();
-      auto now = std::chrono::system_clock::now().time_since_epoch();
-      auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
-      // if our differential is < 10% of the wait time we will not put the task into a wait state
-      // since requeuing will break the time slice contract.
-      if ((double) task.getTimeSlice() > ms && ((double) (task.getTimeSlice() - ms)) > (wt * .10)) {
-        wait_to_run = true;
-      }
-    }
-    // if we have to wait we re-queue the worker.
-    if (wait_to_run) {
-      {
+      } else {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
         if (!task_status_[task.getIdentifier()]) {
           continue;
         }
-        // put it on the priority queue
-        worker_priority_queue_.push(std::move(task));
       }
-      //worker_queue_.enqueue(std::move(task));
 
-      wait_decay_ += 25;
-      continue;
+      bool wait_to_run = false;
+      if (task.getTimeSlice() > 1) {
+        double wt = (double) task.getWaitTime();
+        // if our differential is < 10% of the wait time we will not put the task into a wait state
+        // since requeuing will break the time slice contract.
+        if ((double) task.getTimeSlice() > ms && ((double) (task.getTimeSlice() - ms)) > (wt * .10)) {
+          wait_to_run = true;
+        }
+      }
+      // if we have to wait we re-queue the worker.
+      if (wait_to_run) {
+        {
+          std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+          if (!task_status_[task.getIdentifier()]) {
+            continue;
+          }
+          // put it on the priority queue
+          worker_priority_queue_.push(std::move(task));
+        }
+        //worker_queue_.enqueue(std::move(task));
+
+        wait_decay_ += 25;
+        continue;
+      }
     }
-
     const bool task_renew = task.run();
     wait_decay_ = 0;
     if (task_renew) {
@@ -555,18 +573,6 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         }
       }
       worker_queue_.enqueue(std::move(task));
-    }
-
-    std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-    if (worker_priority_queue_.size() > 0) {
-      // this is safe as we are going to immediately pop the queue
-      while (!worker_priority_queue_.empty()) {
-        task = std::move(const_cast<Worker<T>&>(worker_priority_queue_.top()));
-        worker_priority_queue_.pop();
-        worker_queue_.enqueue(std::move(task));
-        continue;
-      }
-
     }
   }
   current_workers_--;
