@@ -504,8 +504,6 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
 
     bool prioritized_task = false;
 
-    auto now = std::chrono::system_clock::now().time_since_epoch();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
     if (!prioritized_task) {
       if (!worker_queue_.try_dequeue(task)) {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
@@ -531,7 +529,10 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
       bool wait_to_run = false;
       if (task.getTimeSlice() > 1) {
         double wt = (double) task.getWaitTime();
-        // if our differential is < 10% of the wait time we will not put the task into a wait state
+        auto now = std::chrono::system_clock::now().time_since_epoch();
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+
+    	// if our differential is < 10% of the wait time we will not put the task into a wait state
         // since requeuing will break the time slice contract.
         if ((double) task.getTimeSlice() > ms && ((double) (task.getTimeSlice() - ms)) > (wt * .10)) {
           wait_to_run = true;
@@ -556,17 +557,17 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
     wait_decay_ = 0;
     if (task_renew) {
 
-      {
+      if (UNLIKELY(task_count_ > current_workers_)){
         // even if we have more work to do we will not
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
         if (!task_status_[task.getIdentifier()]) {
           continue;
         }
-        if (task_count_ > current_workers_)
-          worker_priority_queue_.push(std::move(task));
-      }
-      if (task_count_ <= current_workers_)
+        
+	worker_priority_queue_.push(std::move(task));
+      }else{
         worker_queue_.enqueue(std::move(task));
+      }
     }
   }
   current_workers_--;
