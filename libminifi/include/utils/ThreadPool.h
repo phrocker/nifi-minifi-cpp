@@ -500,20 +500,6 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
 
     auto now = std::chrono::system_clock::now().time_since_epoch();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
-    {
-      std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-      if (worker_priority_queue_.size() > 0) {
-        // this is safe as we are going to immediately pop the queue
-        task = std::move(const_cast<Worker<T>&>(worker_priority_queue_.top()));
-        worker_priority_queue_.pop();
-        if ((double)task.getTimeSlice() > ms) {
-          worker_priority_queue_.push(std::move(task));
-        } else {
-          prioritized_task = true;
-        }
-      }
-    }
-
     if (!prioritized_task) {
       if (!worker_queue_.try_dequeue(task)) {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
@@ -555,7 +541,6 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
           // put it on the priority queue
           worker_priority_queue_.push(std::move(task));
         }
-        //worker_queue_.enqueue(std::move(task));
 
         wait_decay_ += 25;
         continue;
@@ -571,8 +556,8 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         if (!task_status_[task.getIdentifier()]) {
           continue;
         }
+        worker_priority_queue_.push(std::move(task));
       }
-      worker_queue_.enqueue(std::move(task));
     }
   }
   current_workers_--;
