@@ -220,6 +220,7 @@ class ThreadPool {
         running_(false),
         controller_service_provider_(controller_service_provider) {
     current_workers_ = 0;
+    task_count_ = 0;
     thread_manager_ = nullptr;
   }
 
@@ -232,6 +233,7 @@ class ThreadPool {
         controller_service_provider_(std::move(other.controller_service_provider_)),
         thread_manager_(std::move(other.thread_manager_)) {
     current_workers_ = 0;
+    task_count_ = 0;
   }
 
   ~ThreadPool() {
@@ -339,6 +341,7 @@ class ThreadPool {
   int max_worker_threads_;
 // current worker tasks.
   std::atomic<int> current_workers_;
+  std::atomic<int> task_count_;
 // thread queue
   std::vector<std::shared_ptr<WorkerThread>> thread_queue_;
 // manager thread
@@ -393,6 +396,9 @@ bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
   if (running_) {
     tasks_available_.notify_one();
   }
+
+  task_count_++;
+
   return enqueued;
 }
 
@@ -556,8 +562,11 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
         if (!task_status_[task.getIdentifier()]) {
           continue;
         }
-        worker_priority_queue_.push(std::move(task));
+        if (task_count_ > current_workers_)
+          worker_priority_queue_.push(std::move(task));
       }
+      if (task_count_ <= current_workers_)
+        worker_queue_.enqueue(std::move(task));
     }
   }
   current_workers_--;
