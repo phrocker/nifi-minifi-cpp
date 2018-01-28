@@ -21,7 +21,7 @@ cmake_minimum_required(VERSION 3.0)
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 4)
+set(PROJECT_VERSION_MINOR 5)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
@@ -292,6 +292,32 @@ if (NOT DISABLE_CURL)
 endif()
 
 
+get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
+
+#if (BUILD_IDENTIFIER STREQUAL "" or !BUILD_IDENTIFIER)
+if (NOT BUILD_IDENTIFIER)
+   message("empty identifier ${BUILD_IDENTIFIER}")
+   if (NOT BUILD_IDENTIFIER)
+   message("empty identifier ${BUILD_IDENTIFIER}")
+     string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
+     set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier")
+   endif()
+endif()
+
+message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")
+
+
+execute_process(COMMAND 
+		"${CMAKE_CURRENT_SOURCE_DIR}/generateVersion.sh" 
+		"${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}" 
+		${CMAKE_CURRENT_SOURCE_DIR} 
+		${CMAKE_CURRENT_SOURCE_DIR}/libminifi/include/agent/ 
+		"${CMAKE_CXX_COMPILER}"
+		"${CMAKE_CXX_COMPILER_VERSION}" 
+		"${CMAKE_CXX_FLAGS}" 
+		"${selected_extensions}" 
+		"${BUILD_IDENTIFIER}")
+
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 set(CPACK_SOURCE_GENERATOR "TGZ")
@@ -299,7 +325,7 @@ set(CPACK_SOURCE_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}-source")
 set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${CPACK_SOURCE_IGNORE_FILES};${CMAKE_SOURCE_DIR}/.git/;${CMAKE_SOURCE_DIR}/.idea/;${CMAKE_SOURCE_DIR}/cmake-build-debug/;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.h;${CMAKE_SOURCE_DIR}/extensions/expression-language/Scanner.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.cpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/Parser.hpp;${CMAKE_SOURCE_DIR}/extensions/expression-language/scanner.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/position.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/location.hh;${CMAKE_SOURCE_DIR}/extensions/expression-language/stack.hh")
 
 # Generate binary assembly
-install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
+install(FILES conf/minifi.properties conf/minifi-log.properties con/minifi-uid.properties conf/config.yml
         DESTINATION conf
         COMPONENT bin)
 

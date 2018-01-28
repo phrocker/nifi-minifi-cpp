@@ -45,8 +45,8 @@
 #include "EventDrivenSchedulingAgent.h"
 #include "FlowControlProtocol.h"
 #include "core/Property.h"
+#include "core/state/nodes/MetricsBase.h"
 #include "utils/Id.h"
-#include "core/state/metrics/MetricsBase.h"
 #include "core/state/StateManager.h"
 
 namespace org {
@@ -117,7 +117,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   // Whether the Flow Controller is start running
   virtual bool isRunning() {
-    return running_.load();
+    return running_.load() || updating_.load();
   }
 
   // Whether the Flow Controller has already been initialized (loaded flow XML)
@@ -187,11 +187,11 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
 
   // get version
-  int getVersion() {
+  virtual std::string getVersion() {
     if (root_ != nullptr)
-      return root_->getVersion();
+      return std::to_string( root_->getVersion() );
     else
-      return 0;
+      return "0";
   }
 
   /**
@@ -299,6 +299,15 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   virtual void enableAllControllerServices();
 
   /**
+   * Retrieves all root response nodes from this source.
+   * @param metric_vector -- metrics will be placed in this vector.
+   * @return result of the get operation.
+   *  0 Success
+   *  1 No error condition, but cannot obtain lock in timely manner.
+   *  -1 failure
+   */
+  virtual int16_t getResponseNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass);
+  /**
    * Retrieves all metrics from this source.
    * @param metric_vector -- metrics will be placed in this vector.
    * @return result of the get operation.
@@ -306,16 +315,20 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
    *  1 No error condition, but cannot obtain lock in timely manner.
    *  -1 failure
    */
-  virtual int16_t getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint16_t metricsClass);
+  virtual int16_t getMetricsNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass);
 
   virtual uint64_t getUptime();
 
+  void initializeC2();
+
  protected:
+
+  void loadC2ResponseConfiguration();
+
+  void loadC2ResponseConfiguration(const std::string &prefix);
 
   // function to load the flow file repo.
   void loadFlowRepo();
-
-  void initializeC2();
 
   /**
    * Initializes flow controller paths.
@@ -338,6 +351,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   // FlowFile Repo
   // Whether it is running
   std::atomic<bool> running_;
+  std::atomic<bool> updating_;
 
   // conifiguration filename
   std::string configuration_filename_;
@@ -379,13 +393,15 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::chrono::steady_clock::time_point start_time_;
 
   std::mutex metrics_mutex_;
+  // root_nodes cache
+    std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
   // metrics cache
-  std::map<std::string, std::shared_ptr<state::metrics::Metrics>> metrics_;
+  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> device_information_;
 
   // metrics cache
-  std::map<std::string, std::shared_ptr<state::metrics::Metrics>> component_metrics_;
+  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
 
-  std::map<uint8_t, std::vector<std::shared_ptr<state::metrics::Metrics>>>component_metrics_by_id_;
+  std::map<uint8_t, std::vector<std::shared_ptr<state::response::ResponseNode>>>component_metrics_by_id_;
   // metrics last run
   std::chrono::steady_clock::time_point last_metrics_capture_;
 

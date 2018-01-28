@@ -33,11 +33,15 @@
 #include <utility>
 #include <memory>
 #include <string>
-#include "core/state/metrics/QueueMetrics.h"
-#include "core/state/metrics/DeviceInformation.h"
-#include "core/state/metrics/SystemMetrics.h"
-#include "core/state/metrics/ProcessMetrics.h"
-#include "core/state/metrics/RepositoryMetrics.h"
+
+#include "core/state/nodes/AgentInformation.h"
+#include "core/state/nodes/BuildInformation.h"
+#include "core/state/nodes/DeviceInformation.h"
+#include "core/state/nodes/FlowInformation.h"
+#include "core/state/nodes/ProcessMetrics.h"
+#include "core/state/nodes/QueueMetrics.h"
+#include "core/state/nodes/RepositoryMetrics.h"
+#include "core/state/nodes/SystemMetrics.h"
 #include "core/state/ProcessorController.h"
 #include "yaml-cpp/yaml.h"
 #include "c2/C2Agent.h"
@@ -67,6 +71,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       max_timer_driven_threads_(0),
       max_event_driven_threads_(0),
       running_(false),
+      updating_(false),
       c2_enabled_(true),
       initialized_(false),
       provenance_repo_(provenance_repo),
@@ -166,13 +171,19 @@ bool FlowController::applyConfiguration(const std::string &configurePayload) {
 
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
+  updating_ = true;
+
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   stop(true);
   waitUnload(30000);
   this->root_ = std::move(newRoot);
   loadFlowRepo();
   initialized_ = true;
-  return start();
+  bool started = start();
+
+  updating_ = false;
+
+  return started;
 }
 
 int16_t FlowController::stop(bool force, uint64_t timeToWait) {
@@ -332,53 +343,92 @@ void FlowController::initializeC2() {
   if (!c2_enabled_) {
     return;
   }
-  if (!c2_initialized_) {
-    std::string c2_enable_str;
-
-    if (configuration_->get(Configure::nifi_c2_enable, c2_enable_str)) {
-      bool enable_c2 = true;
-      utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
-      c2_enabled_ = enable_c2;
-      if (!c2_enabled_) {
-        return;
-      }
-    } else {
-      c2_enabled_ = true;
-    }
-    state::StateManager::initialize();
-
-    std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
-                                                                       configuration_);
-    registerUpdateListener(agent, agent->getHeartBeatDelay());
-
-    state::StateManager::startMetrics(agent->getHeartBeatDelay());
-  }
-  if (!c2_enabled_) {
+  if (c2_initialized_)
     return;
+
+  std::string c2_enable_str;
+
+  if (configuration_->get(Configure::nifi_c2_enable, c2_enable_str)) {
+    bool enable_c2 = true;
+    utils::StringUtils::StringToBool(c2_enable_str, enable_c2);
+    c2_enabled_ = enable_c2;
+    if (!c2_enabled_) {
+      return;
+    }
+  } else {
+    c2_enabled_ = true;
   }
+  state::StateManager::initialize();
+
+  std::shared_ptr<c2::C2Agent> agent = std::make_shared<c2::C2Agent>(std::dynamic_pointer_cast<FlowController>(shared_from_this()), std::dynamic_pointer_cast<FlowController>(shared_from_this()),
+                                                                     configuration_);
+  registerUpdateListener(agent, agent->getHeartBeatDelay());
+
+  state::StateManager::startMetrics(agent->getHeartBeatDelay());
+
 
   c2_initialized_ = true;
-  metrics_.clear();
+  device_information_.clear();
   component_metrics_.clear();
   component_metrics_by_id_.clear();
   std::string class_csv;
 
   if (root_ != nullptr) {
-    std::shared_ptr<state::metrics::QueueMetrics> queueMetrics = std::make_shared<state::metrics::QueueMetrics>();
+    std::shared_ptr<state::response::QueueMetrics> queueMetrics = std::make_shared<state::response::QueueMetrics>();
 
     std::map<std::string, std::shared_ptr<Connection>> connections;
     root_->getConnections(connections);
     for (auto con : connections) {
       queueMetrics->addConnection(con.second);
     }
-    metrics_[queueMetrics->getName()] = queueMetrics;
+    device_information_[queueMetrics->getName()] = queueMetrics;
 
-    std::shared_ptr<state::metrics::RepositoryMetrics> repoMetrics = std::make_shared<state::metrics::RepositoryMetrics>();
+    std::shared_ptr<state::response::RepositoryMetrics> repoMetrics = std::make_shared<state::response::RepositoryMetrics>();
 
     repoMetrics->addRepository(provenance_repo_);
     repoMetrics->addRepository(flow_file_repo_);
 
-    metrics_[repoMetrics->getName()] = repoMetrics;
+    device_information_[repoMetrics->getName()] = repoMetrics;
+  }
+
+  if (configuration_->get("nifi.c2.root.classes", class_csv)) {
+    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
+
+    for (std::string clazz : classes) {
+      auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+
+      if (nullptr == ptr) {
+        logger_->log_error("No metric defined for %s", clazz);
+        continue;
+      }
+
+      std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
+
+      auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
+      if (monitor != nullptr) {
+        monitor->addRepository(provenance_repo_);
+        monitor->addRepository(flow_file_repo_);
+        monitor->setStateMonitor(shared_from_this());
+      }
+
+      auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(processor);
+      std::map<std::string, std::shared_ptr<Connection>> connections;
+      root_->getConnections(connections);
+      if (flowMonitor != nullptr) {
+        for (auto con : connections) {
+          flowMonitor->addConnection(con.second);
+        }
+        flowMonitor->setStateMonitor(shared_from_this());
+
+        state::response::FlowVersion version("", "default", "");
+
+        flowMonitor->setFlowVersion(std::move(version));
+      }
+
+      std::lock_guard<std::mutex> lock(metrics_mutex_);
+
+      root_response_nodes_[processor->getName()] = processor;
+    }
   }
 
   if (configuration_->get("nifi.flow.metrics.classes", class_csv)) {
@@ -392,11 +442,11 @@ void FlowController::initializeC2() {
         continue;
       }
 
-      std::shared_ptr<state::metrics::Metrics> processor = std::static_pointer_cast<state::metrics::Metrics>(ptr);
+      std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
 
       std::lock_guard<std::mutex> lock(metrics_mutex_);
 
-      metrics_[processor->getName()] = processor;
+      device_information_[processor->getName()] = processor;
     }
   }
 
@@ -406,11 +456,11 @@ void FlowController::initializeC2() {
   if (root_ != nullptr) {
     root_->getAllProcessors(processors);
     for (const auto &processor : processors) {
-      auto rep = std::dynamic_pointer_cast<state::metrics::MetricsSource>(processor);
+      auto rep = std::dynamic_pointer_cast<state::response::ResponseNodeSource>(processor);
       // we have a metrics source.
       if (nullptr != rep) {
-        std::vector<std::shared_ptr<state::metrics::Metrics>> metric_vector;
-        rep->getMetrics(metric_vector);
+        std::vector<std::shared_ptr<state::response::ResponseNode>> metric_vector;
+        rep->getResponseNodes(metric_vector);
         for (auto metric : metric_vector) {
           component_metrics_[metric->getName()] = metric;
         }
@@ -434,7 +484,7 @@ void FlowController::initializeC2() {
             std::lock_guard<std::mutex> lock(metrics_mutex_);
             auto ret = component_metrics_[clazz];
             if (nullptr == ret) {
-              ret = metrics_[clazz];
+              ret = device_information_[clazz];
             }
             if (nullptr == ret) {
               logger_->log_error("No metric defined for %s", clazz);
@@ -448,7 +498,65 @@ void FlowController::initializeC2() {
       }
     }
   }
+
+  loadC2ResponseConfiguration();
 }
+
+void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
+  std::string class_definitions;
+
+  if (configuration_->get(prefix, class_definitions)) {
+    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+
+    std::cout << "classes " << class_definitions << std::endl;
+    for (std::string metricsClass : classes) {
+      try {
+        std::stringstream option;
+        option << prefix << "." << metricsClass;
+
+        std::stringstream classOption;
+        classOption << option.str() << ".classes";
+
+        std::stringstream nameOption;
+        nameOption << option.str() << ".name";
+        std::string name;
+
+        if (configuration_->get(nameOption.str(), name)) {
+          std::cout << "classes " << class_definitions << " " << name << std::endl;
+          std::shared_ptr<state::response::ObjectNode> new_node = std::make_shared<state::response::ObjectNode>(name, nullptr);
+
+          if (configuration_->get(classOption.str(), class_definitions)) {
+            std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+
+            for (std::string clazz : classes) {
+              std::lock_guard<std::mutex> lock(metrics_mutex_);
+
+              // instantiate the object
+              auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+
+              auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
+
+              if (nullptr == ptr) {
+                logger_->log_error("No metric defined for %s", clazz);
+                continue;
+              }
+              new_node->add_node(node);
+            }
+
+            root_response_nodes_[name] = new_node;
+          }
+        }
+      } catch (...) {
+        logger_->log_error("Could not create metrics class %s", metricsClass);
+      }
+    }
+  }
+}
+
+void FlowController::loadC2ResponseConfiguration() {
+  loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
+}
+
 /**
  * Controller Service functions
  *
@@ -596,8 +704,11 @@ void FlowController::enableAllControllerServices() {
 }
 
 int16_t FlowController::applyUpdate(const std::string &configuration) {
-  applyConfiguration(configuration);
-  return 0;
+  if (applyConfiguration(configuration)) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 int16_t FlowController::clearConnection(const std::string &connection) {
@@ -614,10 +725,20 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-int16_t FlowController::getMetrics(std::vector<std::shared_ptr<state::metrics::Metrics>> &metric_vector, uint16_t metricsClass) {
+int16_t FlowController::getResponseNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass) {
+  std::lock_guard<std::mutex> lock(metrics_mutex_);
+
+  for (auto metric : root_response_nodes_) {
+    metric_vector.push_back(metric.second);
+  }
+
+  return 0;
+}
+
+int16_t FlowController::getMetricsNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector, uint16_t metricsClass) {
   std::lock_guard<std::mutex> lock(metrics_mutex_);
   if (metricsClass == 0) {
-    for (auto metric : metrics_) {
+    for (auto metric : device_information_) {
       metric_vector.push_back(metric.second);
     }
   } else {

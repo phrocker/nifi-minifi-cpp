@@ -63,6 +63,10 @@ build_deps(){
             INSTALLED+=("liblua5.1-0-dev")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("libgps-dev")
+	  elif [ "$FOUND_VALUE" = "tensorflow"]; then
+	    sudo apt-get install bazel
+            source tensorflow_install.sh
+           install_tensorflow_cc
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("liblzma-dev")
           fi

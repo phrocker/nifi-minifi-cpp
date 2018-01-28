@@ -27,6 +27,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
   - [Cleaning](#cleaning)
   - [Configuring](#configuring)
   - [Running](#running)
+  - [Deploying](#deploying)
 - [Documentation](#documentation)
 - [License](#license)
 
@@ -715,6 +716,14 @@ MiNiFi can then be stopped by issuing:
 MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
 
     $ ./bin/minifi.sh install [service name]
+    
+### Deploying
+MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
+created within the build directory that contains a manifest of build artifacts.
+
+    $ deploy.sh <build identifier> 
+
+The build identifier will be carried with the deployed binary for the configuration you specify. By default all extensions will be built.
     
 ### Managing MiNFI C++ through the MiNiFi Controller
 

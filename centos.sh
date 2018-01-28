@@ -24,6 +24,8 @@ verify_enable() {
       echo "false"
     elif [ "$feature" = "USB_ENABLED" ]; then
       echo "false"
+    elif [ "$feature" = "TENSORFLOW_ENABLED" ]; then
+      echo "false"
     else
       echo "true"
     fi
@@ -141,6 +143,9 @@ build_deps(){
             INSTALLED+=("lua-devel")
           elif [ "$FOUND_VALUE" = "gpsd" ]; then
             INSTALLED+=("gpsd-devel")
+          elif [ "$FOUND_VALUE" = "tensorflow" ]; then
+            install_bazel
+            source tensorflow_install.sh
           elif [ "$FOUND_VALUE" = "libarchive" ]; then
             INSTALLED+=("xz-devel")
             INSTALLED+=("bzip2-devel")

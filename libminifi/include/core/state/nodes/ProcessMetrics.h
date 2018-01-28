@@ -23,30 +23,31 @@
 #include <map>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include "MetricsBase.h"
+
+#include "../nodes/DeviceInformation.h"
+#include "../nodes/MetricsBase.h"
 #include "Connection.h"
-#include "DeviceInformation.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace state {
-namespace metrics {
+namespace response {
 
 /**
  * Justification and Purpose: Provides Connection queue metrics. Provides critical information to the
  * C2 server.
  *
  */
-class ProcessMetrics : public Metrics {
+class ProcessMetrics : public ResponseNode {
  public:
 
   ProcessMetrics(const std::string &name, uuid_t uuid)
-      : Metrics(name, uuid) {
+      : ResponseNode(name, uuid) {
   }
 
   ProcessMetrics(const std::string &name)
-      : Metrics(name, 0) {
+      : ResponseNode(name, 0) {
   }
 
   ProcessMetrics() {
@@ -56,16 +57,16 @@ class ProcessMetrics : public Metrics {
     return "ProcessMetrics";
   }
 
-  std::vector<MetricResponse> serialize() {
-    std::vector<MetricResponse> serialized;
+  std::vector<SerializedResponseNode> serialize() {
+    std::vector<SerializedResponseNode> serialized;
 
     struct rusage my_usage;
     getrusage(RUSAGE_SELF, &my_usage);
 
-    MetricResponse memory;
+    SerializedResponseNode memory;
     memory.name = "MemoryMetrics";
 
-    MetricResponse maxrss;
+    SerializedResponseNode maxrss;
     maxrss.name = "maxrss";
 
     maxrss.value = std::to_string(my_usage.ru_maxrss);
@@ -73,9 +74,9 @@ class ProcessMetrics : public Metrics {
     memory.children.push_back(maxrss);
     serialized.push_back(memory);
 
-    MetricResponse cpu;
+    SerializedResponseNode cpu;
     cpu.name = "CpuMetrics";
-    MetricResponse ics;
+    SerializedResponseNode ics;
     ics.name = "involcs";
 
     ics.value = std::to_string(my_usage.ru_nivcsw);

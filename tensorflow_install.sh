@@ -14,48 +14,30 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
+#!/bin/bash
 
-# Standard ignores
-.DS_Store
+install_tensorflow_cc() {
+   INSTALL_DIR=tensorflow_install_dir
 
-# Ignore JetBrains project files
-.idea
+   mkdir ${INSTALL_DIR}
+   pushd ${INSTALL_DIR}
 
-# Ignore JetBrains cLion project files.
-.project
+   git clone https://github.com/FloopCZ/tensorflow_cc.git
 
-# Ignore kdevelop metadata
-nifi-minifi-cpp.kdev4
-.kdev4
+   pushd tensorflow_cc/tensorflow_cc/
 
-# Filter out generated files from the included libuuid
-thirdparty/uuid/tst_uuid*
-assemblies
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-cmake_install.cmake
-install_manifest.txt
-CTestTestfile.cmake
-cmake-build-debug
+   mkdir build && pushd build
 
-# Generated files
-build
-bin
-target
-thirdparty/**/*.o
-thirdparty/**/*.a
-libminifi/test/**/*.a
-libminifi/include/agent/agent_version.h
-docs/generated
-thirdparty/apache-rat/apache-rat*
+   ${CMAKE_COMMAND} -DTENSORFLOW_STATIC=OFF -DTENSORFLOW_SHARED=ON ..
 
-# Ignore source files that have been placed in the docker directory during build
-docker/minificppsource
-*.swp
-.cache
-.cproject
-.settings
-*.pyc
-/cmake-build-*
+   make
+
+   sudo make install
+
+   popd
+   popd
+   
+   popd
+
+   rm -rf ${INSTALL_DIR}
+}
