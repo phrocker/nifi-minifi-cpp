@@ -23,7 +23,7 @@ NO_COLOR='\033[0;0;39m'
 CORES=1
 BUILD="false"
 PACKAGE="false"
-
+BUILD_IDENTIFIER=""
 TRUE="Enabled"
 FALSE="Disabled"
 FEATURES_SELECTED="false"
@@ -68,10 +68,30 @@ add_dependency(){
 
 ### parse the command line arguments
 
+
+EnableAllFeatures(){
+  for option in "${OPTIONS[@]}" ; do
+    feature_status=${!option}
+    if [ "$feature_status" = "${FALSE}" ]; then
+      ToggleFeature $option
+    fi
+    #	eval "$option=${TRUE}"
+  done
+}
+
 while :; do
   case $1 in
     -n|--noprompt)
       NO_PROMPT="true"
+      ;;
+    -e|--enableall)
+      NO_PROMPT="true"
+      FEATURES_SELECTED="true"
+      EnableAllFeatures
+      ;;
+    -t|--travis)
+      NO_PROMPT="true"
+      FEATURES_SELECTED="true"
       ;;
     -p|--package)
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
@@ -81,6 +101,9 @@ while :; do
     -b|--build)
       CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
       BUILD="true"
+      ;;
+    "--build_identifier="* )
+      BUILD_IDENTIFIER="${1#*=}"
       ;;
     *) break
   esac
@@ -106,14 +129,7 @@ if [ "$NO_PROMPT" = "true" ]; then
   agree="N"
   echo "****************************************"
   echo "Welcome, this boostrap script will update your system to install MiNIFi C++"
-  echo "You have opted to skip prompts. Do you agree to this script installing"
-  echo "System packages without prompting you?"
-  read -p "Enter Y to continue, N to exit  [ Y/N ] " agree
-  if [ "$agree" = "Y" ] || [ "$agree" = "y" ]; then
-    echo "Continuing..."
-  else
-    exit
-  fi
+  echo "You have opted to skip prompts. "
 fi
 
 
@@ -286,15 +302,6 @@ ToggleFeature(){
   fi
 }
 
-EnableAllFeatures(){
-  for option in "${OPTIONS[@]}" ; do
-    feature_status=${!option}
-    if [ "$feature_status" = "${FALSE}" ]; then
-      ToggleFeature $option
-    fi
-    #	eval "$option=${TRUE}"
-  done
-}
 
 print_feature_status(){
   feature="$1"
@@ -336,24 +343,6 @@ print_feature_status(){
 }
 
 
-### parse the command line arguments
-
-while :; do
-  case $1 in
-    -e|--enableall)
-      NO_PROMPT="true"
-      FEATURES_SELECTED="true"
-      EnableAllFeatures
-      ;;
-    -t|--travis)
-      NO_PROMPT="true"
-      FEATURES_SELECTED="true"
-      ;;
-    *) break
-  esac
-  shift
-done
-
 if [ ! -d "build" ]; then
   mkdir build/
 else
@@ -373,7 +362,7 @@ fi
 
 ## change to the directory
 
-cd build
+pushd build
 
 
 show_supported_features() {
@@ -498,6 +487,8 @@ build_cmake_command(){
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DPORTABLE=OFF "
   fi
 
+  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_IDENTIFIER=${BUILD_IDENTIFIER}"
+
   add_os_flags
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} .."
@@ -527,4 +518,4 @@ if [ "$PACKAGE" = "true" ]; then
   make package
 fi
 
-
+popd

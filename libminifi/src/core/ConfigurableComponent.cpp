@@ -178,15 +178,13 @@ bool ConfigurableComponent::getDynamicProperty(const std::string name, std::stri
 bool ConfigurableComponent::createDynamicProperty(const std::string &name, const std::string &value) {
   if (!supportsDynamicProperties()) {
     logger_->log_debug("Attempted to create dynamic property %s, but this component does not support creation."
-                           "of dynamic properties.", name);
+                       "of dynamic properties.",
+                       name);
     return false;
   }
 
   Property dyn(name, DEFAULT_DYNAMIC_PROPERTY_DESC, value);
-  logger_->log_info("Processor %s dynamic property '%s' value '%s'",
-                    name.c_str(),
-                    dyn.getName().c_str(),
-                    value.c_str());
+  logger_->log_info("Processor %s dynamic property '%s' value '%s'", name.c_str(), dyn.getName().c_str(), value.c_str());
   dynamic_properties_[dyn.getName()] = dyn;
   return true;
 }
@@ -221,13 +219,29 @@ bool ConfigurableComponent::updateDynamicProperty(const std::string &name, const
   }
 }
 
-std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys()  {
+std::vector<std::string> ConfigurableComponent::getDynamicPropertyKeys() {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   std::vector<std::string> result;
 
   for (const auto &pair : dynamic_properties_) {
     result.emplace_back(pair.first);
+  }
+
+  return result;
+}
+
+std::vector<std::string> ConfigurableComponent::getProperties() {
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
+  std::vector<std::string> result;
+
+  for (const auto &pair : properties_) {
+    result.push_back(pair.first);
+  }
+
+  for (const auto &pair : dynamic_properties_) {
+    result.push_back(pair.first);
   }
 
   return result;

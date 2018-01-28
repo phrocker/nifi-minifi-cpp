@@ -49,11 +49,11 @@ struct MetricResponse {
 class Metrics : public core::Connectable {
  public:
   Metrics()
-      : core::Connectable("metric", 0) {
+      : core::Connectable("metric", 0), is_array_(false) {
   }
 
   Metrics(std::string name, uuid_t uuid)
-      : core::Connectable(name, uuid) {
+      : core::Connectable(name, uuid),  is_array_(false){
   }
   virtual ~Metrics() {
 
@@ -70,6 +70,19 @@ class Metrics : public core::Connectable {
   virtual bool isWorkAvailable() {
     return true;
   }
+
+  bool isArray(){
+    return is_array_;
+  }
+
+ protected:
+
+  bool is_array_;
+
+  void setArray(bool array){
+    is_array_ = array;
+  }
+
 
 };
 

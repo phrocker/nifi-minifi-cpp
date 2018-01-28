@@ -84,6 +84,10 @@ class StateManager : public metrics::MetricsReporter, public metrics::MetricsSin
    */
   virtual int16_t getMetrics(std::vector<std::shared_ptr<metrics::Metrics>> &metric_vector, uint16_t metricsClass);
 
+  virtual std::string getVersion(){
+    return "";
+  }
+
  protected:
 
   /**

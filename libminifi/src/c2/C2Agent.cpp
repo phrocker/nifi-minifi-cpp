@@ -28,7 +28,8 @@
 #include "core/state/UpdateController.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-
+#include "utils/file/FileUtils.h"
+#include "utils/file/FileManager.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -43,6 +44,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
       heart_beat_period_(3000),
       max_c2_responses(5),
       logger_(logging::LoggerFactory<C2Agent>::getLogger()) {
+  allow_updates_ = true;
 
   running_configuration = std::make_shared<Configure>();
 
@@ -107,6 +109,10 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
 
     if (protocol == nullptr) {
       protocol = core::ClassLoader::getDefaultClassLoader().instantiateRaw("RESTSender", "RESTSender");
+
+      if (!protocol) {
+        return;
+      }
       logger_->log_info("Class is RESTSender");
     }
     C2Protocol *old_protocol = protocol_.exchange(dynamic_cast<C2Protocol*>(protocol));
@@ -131,6 +137,31 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       heart_beat_period_ = 3000;
   }
 
+  std::string update_settings;
+  if (configure->get("c2.agent.update.allow", update_settings) && utils::StringUtils::StringToBool(update_settings, allow_updates_)) {
+    // allow the agent to be updated. we then need to get an update command to execute after
+  }
+
+  if (allow_updates_) {
+    if (!configure->get("c2.agent.update.command", update_command_)) {
+      char cwd[1024];
+      getcwd(cwd, sizeof(cwd));
+
+      std::stringstream command;
+      command << cwd << "/minifi.sh update";
+      update_command_ = command.str();
+    }
+
+    if (!configure->get("c2.agent.update.temp.location", update_location_)) {
+      char cwd[1024];
+      getcwd(cwd, sizeof(cwd));
+
+      std::stringstream copy_path;
+      std::stringstream command;
+
+      copy_path << cwd << "/minifi.update";
+    }
+  }
   std::string heartbeat_reporters;
   if (configure->get("c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::StringUtils::split(heartbeat_reporters, ",");
@@ -180,7 +211,7 @@ void C2Agent::performHeartBeat() {
         continue;
       C2Payload child_metric_payload(Operation::HEARTBEAT);
       child_metric_payload.setLabel(metric.first);
-      serializeMetrics(child_metric_payload, metric.first, metric.second->serialize());
+      serializeMetrics(child_metric_payload, metric.first, metric.second->serialize(), metric.second->isArray());
       metrics.addPayload(std::move(child_metric_payload));
     }
     payload.addPayload(std::move(metrics));
@@ -188,12 +219,15 @@ void C2Agent::performHeartBeat() {
 
   if (device_information_.size() > 0) {
     C2Payload deviceInfo(Operation::HEARTBEAT);
-    deviceInfo.setLabel("DeviceInfo");
+    deviceInfo.setLabel("AgentInformation");
 
     for (auto metric : device_information_) {
       C2Payload child_metric_payload(Operation::HEARTBEAT);
       child_metric_payload.setLabel(metric.first);
-      serializeMetrics(child_metric_payload, metric.first, metric.second->serialize());
+      if (metric.second->isArray()) {
+        child_metric_payload.setContainer(true);
+      }
+      serializeMetrics(child_metric_payload, metric.first, metric.second->serialize(), metric.second->isArray());
       deviceInfo.addPayload(std::move(child_metric_payload));
     }
     payload.addPayload(std::move(deviceInfo));
@@ -202,29 +236,33 @@ void C2Agent::performHeartBeat() {
   std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getAllComponents();
 
   if (!components.empty()) {
-    C2ContentResponse component_payload(Operation::HEARTBEAT);
-    component_payload.name = "Components";
+    C2Payload component_payload(Operation::HEARTBEAT);
+    component_payload.setLabel("Components");
 
     for (auto &component : components) {
+      C2ContentResponse component_status(Operation::HEARTBEAT);
       if (component->isRunning()) {
-        component_payload.operation_arguments[component->getComponentName()] = "enabled";
+        component_status.operation_arguments[component->getComponentName()] = "enabled";
       } else {
-        component_payload.operation_arguments[component->getComponentName()] = "disabled";
+        component_status.operation_arguments[component->getComponentName()] = "disabled";
       }
+      component_payload.addContent(std::move(component_status));
     }
-    payload.addContent(std::move(component_payload));
+    payload.addPayload(std::move(component_payload));
   }
 
+  C2Payload state_payload(Operation::HEARTBEAT);
+  state_payload.setLabel("state");
   C2ContentResponse state(Operation::HEARTBEAT);
-  state.name = "state";
   if (update_sink_->isRunning()) {
     state.operation_arguments["running"] = "true";
   } else {
     state.operation_arguments["running"] = "false";
   }
   state.operation_arguments["uptime"] = std::to_string(update_sink_->getUptime());
+  state_payload.addContent(std::move(state));
 
-  payload.addContent(std::move(state));
+  payload.addPayload(std::move(state_payload));
 
   C2Payload && response = protocol_.load()->consumePayload(payload);
 
@@ -237,20 +275,17 @@ void C2Agent::performHeartBeat() {
   }
 }
 
-void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::metrics::MetricResponse> &metrics) {
+void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::metrics::MetricResponse> &metrics, bool is_container) {
   for (auto metric : metrics) {
     if (metric.children.size() > 0) {
       C2Payload child_metric_payload(metric_payload.getOperation());
       child_metric_payload.setLabel(metric.name);
-      serializeMetrics(child_metric_payload, metric.name, metric.children);
-
+      serializeMetrics(child_metric_payload, metric.name, metric.children, is_container);
       metric_payload.addPayload(std::move(child_metric_payload));
     } else {
       C2ContentResponse response(metric_payload.getOperation());
       response.name = name;
-
       response.operation_arguments[metric.name] = metric.value;
-
       metric_payload.addContent(std::move(response));
     }
   }
@@ -435,6 +470,41 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
     response.addPayload(std::move(options));
     enqueue_c2_response(std::move(response));
     return;
+  } else if (resp.name == "manifest") {
+    auto keys = configuration_->getConfiguredKeys();
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    response.setLabel("configuration_options");
+    C2Payload options(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    options.setLabel("configuration_options");
+    std::string value;
+    for (auto key : keys) {
+      C2ContentResponse option(Operation::ACKNOWLEDGE);
+      option.name = key;
+      if (configuration_->get(key, value)) {
+        option.operation_arguments[key] = value;
+        options.addContent(std::move(option));
+      }
+    }
+    response.addPayload(std::move(options));
+
+    if (device_information_.size() > 0) {
+      C2Payload deviceInfo(Operation::HEARTBEAT);
+      deviceInfo.setLabel("AgentInformation");
+
+      for (auto metric : device_information_) {
+        C2Payload child_metric_payload(Operation::HEARTBEAT);
+        child_metric_payload.setLabel(metric.first);
+        if (metric.second->isArray()) {
+          child_metric_payload.setContainer(true);
+        }
+        serializeMetrics(child_metric_payload, metric.first, metric.second->serialize(), metric.second->isArray());
+        deviceInfo.addPayload(std::move(child_metric_payload));
+      }
+      response.addPayload(std::move(deviceInfo));
+    }
+
+    enqueue_c2_response(std::move(response));
+    return;
   }
   C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
   enqueue_c2_response(std::move(response));
@@ -444,13 +514,49 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   // we've been told to update something
   if (resp.name == "configuration") {
     auto url = resp.operation_arguments.find("location");
+
+    auto persist = resp.operation_arguments.find("persist");
+
     if (url != resp.operation_arguments.end()) {
       // just get the raw data.
       C2Payload payload(Operation::UPDATE, false, true);
 
       C2Payload &&response = protocol_.load()->consumePayload(url->second, payload, RECEIVE, false);
 
-      if (update_sink_->applyUpdate(response.getRawData()) == 0) {
+      auto raw_data = response.getRawData();
+      std::string raw_data_str = std::string(raw_data.data(), raw_data.size());
+      // if we can apply the update, we will acknowledge it and then backup the configuration file.
+      if (update_sink_->applyUpdate(raw_data_str) == 0) {
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+        enqueue_c2_response(std::move(response));
+
+        if (persist != resp.operation_arguments.end() && utils::StringUtils::equalsIgnoreCase(persist->second, "true")) {
+          // update nifi.flow.configuration.file=./conf/config.yml
+          std::string config_file;
+          configuration_->get(minifi::Configure::nifi_flow_configuration_file, config_file);
+          std::stringstream config_file_backup;
+          config_file_backup << config_file << ".bak";
+          // we must be able to successfuly copy the file.
+          bool persist_config = true;
+          bool backup_file = false;
+          std::string backup_config;
+
+          if (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update, backup_config) && utils::StringUtils::StringToBool(backup_config, backup_file)) {
+            if (utils::file::FileUtils::copy_file(config_file, config_file_backup.str()) != 0) {
+              persist_config = false;
+            }
+          }
+          if (persist_config) {
+            std::ofstream writer(config_file);
+            if (writer.is_open()) {
+              auto output = response.getRawData();
+              writer.write(output.data(), output.size());
+            }
+            writer.close();
+          }
+        }
+      } else {
+        logger_->log_debug("update failed.");
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
       }
@@ -458,7 +564,35 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     } else {
       auto update_text = resp.operation_arguments.find("configuration_data");
       if (update_text != resp.operation_arguments.end()) {
-        update_sink_->applyUpdate(update_text->second);
+        if (update_sink_->applyUpdate(update_text->second) != 0 && persist != resp.operation_arguments.end() && utils::StringUtils::equalsIgnoreCase(persist->second, "true")) {
+          C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+          enqueue_c2_response(std::move(response));
+          // update nifi.flow.configuration.file=./conf/config.yml
+          std::string config_file;
+          std::stringstream config_file_backup;
+          config_file_backup << config_file << ".bak";
+
+          bool persist_config = true;
+          bool backup_file = false;
+          std::string backup_config;
+
+          if (configuration_->get(minifi::Configure::nifi_flow_configuration_file_backup_update, backup_config) && utils::StringUtils::StringToBool(backup_config, backup_file)) {
+            if (utils::file::FileUtils::copy_file(config_file, config_file_backup.str()) != 0) {
+              persist_config = false;
+            }
+          }
+          if (persist_config) {
+            std::ofstream writer(config_file);
+            if (writer.is_open()) {
+              auto output = update_text->second;
+              writer.write(output.c_str(), output.size());
+            }
+            writer.close();
+          }
+        } else {
+          C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+          enqueue_c2_response(std::move(response));
+        }
       }
     }
   } else if (resp.name == "c2") {
@@ -473,7 +607,48 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 
     if (resp.operation_arguments.size() > 0)
       configure(running_configuration);
+    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
+    enqueue_c2_response(std::move(response));
+  } else if (resp.name == "agent") {
+    // we are upgrading the agent. therefore we must be given a location
+    auto location = resp.operation_arguments.find("location");
+    if (location != resp.operation_arguments.end()) {
+      // we will not have a raw payload
+      C2Payload payload(Operation::TRANSFER, false, true);
+
+      C2Payload &&response = protocol_.load()->consumePayload(location->second, payload, RECEIVE, false);
+
+      auto raw_data = response.getRawData();
+
+      std::string file_path = std::string(raw_data.data(), raw_data.size());
+
+      // acknowledge the transfer. For a transfer, the response identifier should be the checksum of the
+      // file transferred.
+      C2Payload transfer_response(Operation::ACKNOWLEDGE, response.getIdentifier(), false, true);
+
+      protocol_.load()->consumePayload(std::move(transfer_response));
+
+      if (allow_updates_) {
+        utils::file::FileUtils::copy_file(file_path, update_location_);
+        // remove the downloaded file.
+        logger_->log_trace("removing command %s", file_path);
+        unlink(file_path.c_str());
+        update_agent();
+      }
+    }
   }
+}
+
+void C2Agent::restart_agent() {
+  char cwd[1024];
+  getcwd(cwd, sizeof(cwd));
+
+  std::stringstream command;
+  command << cwd << "/minifi.sh restart";
+}
+
+void C2Agent::update_agent() {
+  system(update_command_.c_str());
 }
 
 int16_t C2Agent::setMetrics(const std::shared_ptr<state::metrics::Metrics> &metric) {

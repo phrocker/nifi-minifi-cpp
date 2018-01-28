@@ -38,7 +38,8 @@ enum Operation {
   HEARTBEAT,
   UPDATE,
   VALIDATE,
-  CLEAR
+  CLEAR,
+  TRANSFER
 };
 
 enum Direction {
@@ -147,13 +148,21 @@ class C2Payload : public state::Update {
   /**
    * Returns raw data.
    */
-  std::string getRawData() const;
+  std::vector<char> getRawData() const;
 
   /**
    * Add a nested payload.
    * @param payload payload to move into this object.
    */
   void addPayload(const C2Payload &&payload);
+
+  bool isContainer() const {
+    return is_container_;
+  }
+
+  void setContainer(bool is_container) {
+    is_container_ = is_container;
+  }
   /**
    * Get nested payloads.
    */
@@ -177,9 +186,11 @@ class C2Payload : public state::Update {
 
   bool raw_;
 
-  std::string raw_data_;
+  std::vector<char> raw_data_;
 
   bool isResponse;
+
+  bool is_container_;
 
 };
 

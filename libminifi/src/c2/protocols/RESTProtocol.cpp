@@ -93,7 +93,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
   return std::move(C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true));
 }
 
-void setJsonStr(const std::string& key, const std::string& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) { // NOLINT
+void setJsonStr(const std::string& key, const std::string& value, rapidjson::Value& parent, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
   rapidjson::Value keyVal;
   rapidjson::Value valueVal;
   const char* c_key = key.c_str();
@@ -101,11 +101,10 @@ void setJsonStr(const std::string& key, const std::string& value, rapidjson::Val
 
   keyVal.SetString(c_key, key.length(), alloc);
   valueVal.SetString(c_val, value.length(), alloc);
-
   parent.AddMember(keyVal, valueVal, alloc);
 }
 
-rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc) { // NOLINT
+rapidjson::Value RESTProtocol::getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc) {  // NOLINT
   rapidjson::Value Val;
   Val.SetString(value.c_str(), value.length(), alloc);
   return Val;
@@ -113,30 +112,61 @@ rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::A
 
 void RESTProtocol::mergePayloadContent(rapidjson::Value &target, const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) {
   const std::vector<C2ContentResponse> &content = payload.getContent();
+  bool all_empty = content.size() > 0 ? true : false;
+  bool is_parent_array = target.IsArray();
 
+  for (const auto &payload_content : content) {
+    for (auto content : payload_content.operation_arguments) {
+      if (!content.second.empty()) {
+        all_empty = false;
+        break;
+      }
+    }
+    if (!all_empty)
+      break;
+  }
+
+  if (all_empty) {
+    if (!is_parent_array) {
+      target.SetArray();
+      is_parent_array = true;
+    }
+    rapidjson::Value arr(rapidjson::kArrayType);
+    for (const auto &payload_content : content) {
+      for (auto content : payload_content.operation_arguments) {
+        rapidjson::Value keyVal;
+        keyVal.SetString(content.first.c_str(), content.first.length(), alloc);
+        if (is_parent_array)
+          target.PushBack(keyVal, alloc);
+        else
+          arr.PushBack(keyVal, alloc);
+      }
+    }
+
+    if (!is_parent_array) {
+      rapidjson::Value sub_key = getStringValue(payload.getLabel(), alloc);
+      target.AddMember(sub_key, arr, alloc);
+    }
+    return;
+  }
   for (const auto &payload_content : content) {
     rapidjson::Value payload_content_values(rapidjson::kObjectType);
     bool use_sub_option = true;
-
     if (payload_content.op == payload.getOperation()) {
       for (auto content : payload_content.operation_arguments) {
-        if (payload_content.operation_arguments.size() == 1 && payload_content.name == content.first) {
-          setJsonStr(payload_content.name, content.second, target, alloc);
-          use_sub_option = false;
-        } else {
-          setJsonStr(content.first, content.second, payload_content_values, alloc);
-        }
+        setJsonStr(content.first, content.second, target, alloc);
       }
+    } else {
     }
     if (use_sub_option) {
       rapidjson::Value sub_key = getStringValue(payload_content.name, alloc);
-      target.AddMember(sub_key, payload_content_values, alloc);
+      // target.AddMember(sub_key, payload_content_values, alloc);
     }
   }
 }
 
 std::string RESTProtocol::serializeJsonRootPayload(const C2Payload& payload) {
-  rapidjson::Document json_payload(rapidjson::kObjectType);
+  rapidjson::Document json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
   rapidjson::Document::AllocatorType &alloc = json_payload.GetAllocator();
 
   rapidjson::Value opReqStrVal;
@@ -168,12 +198,13 @@ std::string RESTProtocol::serializeJsonRootPayload(const C2Payload& payload) {
 
 rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) {
   // get the name from the content
-  rapidjson::Value json_payload(rapidjson::kObjectType);
+  rapidjson::Value json_payload(payload.isContainer() ? rapidjson::kArrayType : rapidjson::kObjectType);
 
   std::map<std::string, std::list<rapidjson::Value*>> children;
 
   for (const auto &nested_payload : payload.getNestedPayloads()) {
     rapidjson::Value* child_payload = new rapidjson::Value(serializeJsonPayload(nested_payload, alloc));
+
     children[nested_payload.getLabel()].push_back(child_payload);
   }
 
@@ -181,20 +212,30 @@ rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, ra
   for (auto child_vector : children) {
     rapidjson::Value children_json;
     rapidjson::Value newMemberKey = getStringValue(child_vector.first, alloc);
-
     if (child_vector.second.size() > 1) {
       children_json.SetArray();
-      for (auto child : child_vector.second)
-        children_json.PushBack(child->Move(), alloc);
-
-      json_payload.AddMember(newMemberKey, children_json, alloc);
+      for (auto child : child_vector.second) {
+        if (json_payload.IsArray())
+          json_payload.PushBack(child->Move(), alloc);
+        else
+          children_json.PushBack(child->Move(), alloc);
+      }
+      if (!json_payload.IsArray())
+        json_payload.AddMember(newMemberKey, children_json, alloc);
     } else if (child_vector.second.size() == 1) {
       rapidjson::Value* first = child_vector.second.front();
-
-      if (first->IsObject() && first->HasMember(newMemberKey))
-        json_payload.AddMember(newMemberKey, (*first)[newMemberKey].Move(), alloc);
-      else
-        json_payload.AddMember(newMemberKey, first->Move(), alloc);
+      if (first->IsObject() && first->HasMember(newMemberKey)) {
+        if (json_payload.IsArray())
+          json_payload.PushBack((*first)[newMemberKey].Move(), alloc);
+        else
+          json_payload.AddMember(newMemberKey, (*first)[newMemberKey].Move(), alloc);
+      } else {
+        if (json_payload.IsArray()) {
+          json_payload.PushBack(first->Move(), alloc);
+        } else {
+          json_payload.AddMember(newMemberKey, first->Move(), alloc);
+        }
+      }
     }
 
     for (rapidjson::Value* child : child_vector.second)

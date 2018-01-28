@@ -19,11 +19,15 @@
 #include "RESTSender.h"
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <utility>
 #include <map>
 #include <string>
 #include <vector>
+#include "utils/file/FileUtils.h"
+#include "utils/file/FileManager.h"
+#include "utils/FileOutputCallback.h"
 
 namespace org {
 namespace apache {
@@ -52,7 +56,6 @@ C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &pa
   if (direction == Direction::TRANSMIT) {
     outputConfig = serializeJsonRootPayload(payload);
   }
-
   return sendPayload(url, direction, payload, outputConfig);
 }
 
@@ -89,11 +92,22 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     // since we are not uploading anything on a get
     client.set_request_method("GET");
   }
-  client.appendHeader("Accept: application/json");
-  client.setContentType("application/json");
+
+  std::unique_ptr< utils::FileOutputCallback> file_callback = nullptr;
+  if (payload.getOperation() == TRANSFER) {
+    utils::file::FileManager file_man;
+    auto file = file_man.unique_file(true);
+    file_callback = std::unique_ptr<utils::FileOutputCallback>( new utils::FileOutputCallback(file) );
+    utils::HTTPReadCallback read;
+    read.pos = 0;
+    read.ptr = file_callback.get();
+    client.setReadCallback(&read);
+  } else {
+    client.appendHeader("Accept: application/json");
+    client.setContentType("application/json");
+  }
   bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();
-
   if (isOkay && respCode) {
     if (payload.isRaw()) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);

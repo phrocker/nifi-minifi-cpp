@@ -21,7 +21,7 @@ cmake_minimum_required(VERSION 3.0)
 project(nifi-minifi-cpp)
 set(PROJECT_NAME "nifi-minifi-cpp")
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 4)
+set(PROJECT_VERSION_MINOR 5)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
@@ -73,6 +73,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 else()
     set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
 endif()
+
 
 # Include OpenSSL
 find_package (OpenSSL REQUIRED)
@@ -212,6 +213,26 @@ if (NOT DISABLE_CURL)
   add_subdirectory(LibExample)
 endif()
 
+
+get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
+
+
+if (BUILD_IDENTIFIER STREQUAL "" )
+   string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
+endif()
+
+message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")
+
+
+execute_process(COMMAND 
+		"${CMAKE_CURRENT_SOURCE_DIR}/generateVersion.sh" 
+		"${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}" 
+		${CMAKE_CURRENT_SOURCE_DIR} 
+		${CMAKE_CURRENT_SOURCE_DIR}/libminifi/include/agent/ 
+		"${CMAKE_CXX_COMPILER}" 
+		"${CMAKE_CXX_FLAGS}" 
+		"${selected_extensions}" 
+		"${BUILD_IDENTIFIER}")
 
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")

@@ -34,6 +34,8 @@
 #include <memory>
 #include <string>
 #include "core/state/metrics/QueueMetrics.h"
+#include "core/state/metrics/AgentInformation.h"
+#include "core/state/metrics/BuildInformation.h"
 #include "core/state/metrics/DeviceInformation.h"
 #include "core/state/metrics/SystemMetrics.h"
 #include "core/state/metrics/ProcessMetrics.h"
@@ -596,8 +598,11 @@ void FlowController::enableAllControllerServices() {
 }
 
 int16_t FlowController::applyUpdate(const std::string &configuration) {
-  applyConfiguration(configuration);
-  return 0;
+  if (applyConfiguration(configuration)) {
+    return 0;
+  } else {
+    return -1;
+  }
 }
 
 int16_t FlowController::clearConnection(const std::string &connection) {

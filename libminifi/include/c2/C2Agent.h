@@ -53,7 +53,6 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
   C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure);
 
   virtual ~C2Agent() {
-
   }
 
   /**
@@ -80,6 +79,10 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
 
  protected:
 
+  void restart_agent();
+
+  void update_agent();
+
   /**
    * Configure the C2 agent
    */
@@ -91,7 +94,7 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
    * @param name name of this metric
    * @param metrics metrics to include.
    */
-  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::metrics::MetricResponse> &metrics);
+  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::metrics::MetricResponse> &metrics, bool is_container = false);
 
   /**
    * Extract the payload
@@ -190,6 +193,12 @@ class C2Agent : public state::UpdateController, public state::metrics::MetricsSi
   std::vector<std::shared_ptr<HeartBeatReporter>> heartbeat_protocols_;
 
   std::atomic<C2Protocol*> protocol_;
+
+  bool allow_updates_;
+
+  std::string update_command_;
+
+  std::string update_location_;
 
   std::shared_ptr<logging::Logger> logger_;
 }

@@ -187,11 +187,11 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
 
   // get version
-  int getVersion() {
+  virtual std::string getVersion() {
     if (root_ != nullptr)
-      return root_->getVersion();
+      return std::to_string( root_->getVersion() );
     else
-      return 0;
+      return "0";
   }
 
   /**
@@ -310,12 +310,12 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   virtual uint64_t getUptime();
 
+  void initializeC2();
+
  protected:
 
   // function to load the flow file repo.
   void loadFlowRepo();
-
-  void initializeC2();
 
   /**
    * Initializes flow controller paths.

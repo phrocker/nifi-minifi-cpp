@@ -59,6 +59,8 @@ class RESTProtocol {
 
  protected:
 
+  virtual rapidjson::Value getStringValue(const std::string& value, rapidjson::Document::AllocatorType& alloc);
+
   virtual rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc);
 
   virtual std::string serializeJsonRootPayload(const C2Payload& payload);
