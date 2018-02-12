@@ -84,6 +84,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
   // For each extracted entry, import & stash to key
   std::string targetEntryStashKey;
+  std::string targetEntry;
 
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {

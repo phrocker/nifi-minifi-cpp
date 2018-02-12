@@ -46,7 +46,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
         identifier = root["operationid"].GetString();
       }
 
-      if (root["operation"].GetString() == requested_operation) {
+      if (root.HasMember("operation") && root["operation"].GetString() == requested_operation) {
         if (root["requested_operations"].Size() == 0)
           return std::move(C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true));
 
@@ -99,7 +99,7 @@ void setJsonStr(const std::string& key, const std::string& value, rapidjson::Val
   const char* c_key = key.c_str();
   const char* c_val = value.c_str();
 
-  keyVal.SetString(c_key, key.length()), alloc;
+  keyVal.SetString(c_key, key.length(), alloc);
   valueVal.SetString(c_val, value.length(), alloc);
 
   parent.AddMember(keyVal, valueVal, alloc);
@@ -190,7 +190,6 @@ rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, ra
       json_payload.AddMember(newMemberKey, children_json, alloc);
     } else if (child_vector.second.size() == 1) {
       rapidjson::Value* first = child_vector.second.front();
-      const char* key = child_vector.first.c_str();
 
       if (first->IsObject() && first->HasMember(newMemberKey))
         json_payload.AddMember(newMemberKey, (*first)[newMemberKey].Move(), alloc);

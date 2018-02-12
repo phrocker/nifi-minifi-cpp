@@ -83,11 +83,13 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     callback->pos = 0;
     client.set_request_method("POST");
     client.setUploadCallback(callback.get());
+    client.setPostSize(outputConfig.size());
   } else {
     // we do not need to set the uplaod callback
     // since we are not uploading anything on a get
     client.set_request_method("GET");
   }
+  client.appendHeader("Accept: application/json");
   client.setContentType("application/json");
   bool isOkay = client.submit();
   int64_t respCode = client.getResponseCode();

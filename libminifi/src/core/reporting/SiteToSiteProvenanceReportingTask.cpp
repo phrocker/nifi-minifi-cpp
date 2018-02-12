@@ -62,7 +62,7 @@ void setJsonStr(const std::string& key, const std::string& value, rapidjson::Val
   const char* c_key = key.c_str();
   const char* c_val = value.c_str();
 
-  keyVal.SetString(c_key, key.length()), alloc;
+  keyVal.SetString(c_key, key.length(), alloc);
   valueVal.SetString(c_val, value.length(), alloc);
 
   parent.AddMember(keyVal, valueVal, alloc);
