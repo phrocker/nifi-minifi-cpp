@@ -24,6 +24,5 @@ SCRIPT_DIR=`dirname $SCRIPT`
 fi
 HEADERS=`find ${1} -name '*.h' | tr '\n' ','`
 SOURCES=`find ${2} -name  '*.cpp' | tr '\n' ' '`
-echo ${HEADERS}
-echo ${SOURCES}
+echo python ${SCRIPT_DIR}/cpplint.py --linelength=200 --headers=${HEADERS} ${SOURCES}
 python ${SCRIPT_DIR}/cpplint.py --linelength=200 --headers=${HEADERS} ${SOURCES}
