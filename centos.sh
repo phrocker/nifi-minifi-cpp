@@ -28,11 +28,7 @@ verify_enable() {
       echo "true"
     fi
   else
-    if [ "$feature" = "USB_ENABLED" ]; then
-      echo "false"
-    else
       echo "true"
-    fi
   fi
 }
 
@@ -67,7 +63,6 @@ install_bison() {
 }
 
 install_libusb() {
-  if [ "$OS_MAJOR" = "6" ]; then
     sudo yum -y install libtool libudev-devel
   #	git clone --branch v1.0.18 https://github.com/libusb/libusb.git
     git clone https://github.com/libusb/libusb.git
@@ -79,9 +74,6 @@ install_libusb() {
     sudo make install
     popd
     rm -rf libusb
-  else
-    INSTALLED+=("libusb-devel")
-  fi
 
 }
 

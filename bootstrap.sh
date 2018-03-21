@@ -241,8 +241,8 @@ add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA" "3.4.0"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
-#add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
-#add_dependency BUSTACHE_ENABLED "boost"
+add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE"
+add_dependency BUSTACHE_ENABLED "boost"
 
 ## currently need to limit on certain platforms
 #add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW"
