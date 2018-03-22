@@ -333,6 +333,7 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
 void HTTPClient::configure_secure_connection(CURL *http_session) {
 #ifdef USE_CURL_NSS
   logger_->log_debug("Using NSS and certificate file %s", ssl_context_service_->getCertificateFile());
+  logger_->log_debug("Using NSS and CA certificate file %s", ssl_context_service_->getCACertificate());
   curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
   curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
   curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
