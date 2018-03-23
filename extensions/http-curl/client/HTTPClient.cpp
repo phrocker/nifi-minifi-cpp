@@ -337,14 +337,14 @@ void HTTPClient::configure_secure_connection(CURL *http_session) {
   logger_->log_debug("Using NSS and certificate file %s", ssl_context_service_->getCertificateFile());
   logger_->log_debug("Using NSS and CA certificate file %s", ssl_context_service_->getCACertificate());
   curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
-  if (utils::StringUtils::endsWith(ssl_context_service_->getCertificateFile(),"p12")) {
+  if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getCertificateFile(),"p12")) {
     curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "P12");
   }
   else {
     curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
   }
   curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
-  if (utils::StringUtils::endsWith(ssl_context_service_->getPrivateKeyFile(),"p12")) {
+  if (utils::StringUtils::endsWithIgnoreCase(ssl_context_service_->getPrivateKeyFile(),"p12")) {
     curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "P12");
   }
   else {
