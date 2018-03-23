@@ -196,6 +196,11 @@ class StringUtils {
     return source_string;
   }
 
+  inline static bool endsWith(const std::string &value, const std::string & endString) {
+    if (endString.size() > value.size())
+      return false;
+    return std::equal(endString.rbegin(), endString.rend(), value.rbegin());
+  }
 };
 
 } /* namespace utils */
