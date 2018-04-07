@@ -1,0 +1,90 @@
+MiNiFi Config Version: 3
+Flow Controller:
+  name: GetFile
+  comment: jsjlejgjkelkjgkalsjdgasetg
+Core Properties:
+  flow controller graceful shutdown period: 10 sec
+  flow service write delay interval: 500 ms
+  administrative yield duration: 30 sec
+  bored yield duration: 10 millis
+  max concurrent threads: 1
+  variable registry properties: ''
+FlowFile Repository:
+  partitions: 256
+  checkpoint interval: 2 mins
+  always sync: false
+  Swap:
+    threshold: 20000
+    in period: 5 sec
+    in threads: 1
+    out period: 5 sec
+    out threads: 4
+Content Repository:
+  content claim max appendable size: 10 MB
+  content claim max flow files: 100
+  always sync: false
+Provenance Repository:
+  provenance rollover time: 1 min
+Component Status Repository:
+  buffer size: 1440
+  snapshot frequency: 1 min
+Security Properties:
+  keystore: ''
+  keystore type: ''
+  keystore password: ''
+  key password: ''
+  truststore: ''
+  truststore type: ''
+  truststore password: ''
+  ssl protocol: ''
+  Sensitive Props:
+    key:
+    algorithm: PBEWITHMD5AND256BITAES-CBC-OPENSSL
+    provider: BC
+Processors:
+- id: 92cafd0e-015b-1000-0000-000000000000
+  name: ListenHTTP
+  class: org.apache.nifi.processors.standard.ListenHTTP
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10 msec
+  penalization period: 30 sec
+  yield period: 30 sec
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+    Base Path: picar
+    Listening Port: 8888
+    HTTP Headers to receive as Attributes (Regex): command.*
+- id: 24491a38-015a-1000-0000-000000000000
+  name: ExecuteScript
+  class: org.apache.nifi.processors.standard.ExecuteScript
+  max concurrent tasks: 2
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 0 sec
+  penalization period: 30 sec
+  yield period: 1 sec
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - success
+  Properties:
+    Script Engine: python
+    Script File: /home/pi/deploy/python/controller.py
+    Module Directory: /home/pi/deploy/python/
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections:
+- id: 1d09c015-015d-1000-0000-000000000000
+  name: ListenHTTP/success/ExecuteScript
+  source id: 92cafd0e-015b-1000-0000-000000000000
+  source relationship name: success
+  destination id: 24491a38-015a-1000-0000-000000000000
+  max work queue size: 10000
+  max work queue data size: 1 GB
+  flowfile expiration: 0 sec
+  queue prioritizer class: org.apache.nifi.prioritizer.FirstInFirstOutPrioritizer
+Remote Process Groups: {}
+NiFi Properties Overrides: {}
