@@ -158,7 +158,7 @@ void ControllerSocketProtocol::initialize(const std::shared_ptr<core::controller
               logger_->log_debug("Connection broke");
               break;
             }
-            update_sink_->applyUpdate(configuration);
+            update_sink_->applyUpdate("ControllerSocketProtocol", configuration);
           }
         }
         break;

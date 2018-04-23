@@ -98,9 +98,10 @@ class StateManager : public response::NodeReporter, public response::ResponseNod
 
   /**
    * Function to apply updates for a given  update controller.
+   * @param source  source identifier
    * @param updateController update controller mechanism.
    */
-  virtual int16_t applyUpdate(const std::shared_ptr<Update> &updateController) = 0;
+  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<Update> &updateController) = 0;
 
   /**
    * Registers and update controller

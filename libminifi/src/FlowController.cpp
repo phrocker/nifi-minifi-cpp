@@ -54,6 +54,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
+#include "utils/HTTPClient.h"
 
 namespace org {
 namespace apache {
@@ -72,6 +73,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       max_event_driven_threads_(0),
       running_(false),
       updating_(false),
+      flow_version_(nullptr),
       c2_enabled_(true),
       initialized_(false),
       provenance_repo_(provenance_repo),
@@ -366,8 +368,8 @@ void FlowController::initializeC2() {
 
   state::StateManager::startMetrics(agent->getHeartBeatDelay());
 
-
   c2_initialized_ = true;
+  flow_version_ = std::make_shared<state::response::FlowVersion>("", "default", "");
   device_information_.clear();
   component_metrics_.clear();
   component_metrics_by_id_.clear();
@@ -420,9 +422,9 @@ void FlowController::initializeC2() {
         }
         flowMonitor->setStateMonitor(shared_from_this());
 
-        state::response::FlowVersion version("", "default", "");
 
-        flowMonitor->setFlowVersion(std::move(version));
+
+        flowMonitor->setFlowVersion(flow_version_);
       }
 
       std::lock_guard<std::mutex> lock(metrics_mutex_);
@@ -508,7 +510,6 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
   if (configuration_->get(prefix, class_definitions)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
 
-    std::cout << "classes " << class_definitions << std::endl;
     for (std::string metricsClass : classes) {
       try {
         std::stringstream option;
@@ -522,7 +523,6 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
         std::string name;
 
         if (configuration_->get(nameOption.str(), name)) {
-          std::cout << "classes " << class_definitions << " " << name << std::endl;
           std::shared_ptr<state::response::ObjectNode> new_node = std::make_shared<state::response::ObjectNode>(name, nullptr);
 
           if (configuration_->get(classOption.str(), class_definitions)) {
@@ -703,7 +703,32 @@ void FlowController::enableAllControllerServices() {
   controller_service_provider_->enableAllControllerServices();
 }
 
-int16_t FlowController::applyUpdate(const std::string &configuration) {
+int16_t FlowController::applyUpdate(const std::string &source, const std::string &configuration) {
+  if (!source.empty()) {
+    std::string host, protocol, path, query, url = source;
+    int port;
+    utils::parse_url(&url, &host, &port, &protocol, &path, &query);
+
+    std::string flow_id, bucket_id;
+    auto path_split = utils::StringUtils::split(path, "/");
+    for (size_t i = 0; i < path_split.size(); i++) {
+      const std::string &str = path_split.at(i);
+      if (str == "flows") {
+        if (i + 1 < path_split.size()) {
+          flow_id = path_split.at(i + 1);
+          i++;
+        }
+      }
+
+      if (str == "bucket") {
+        if (i + 1 < path_split.size()) {
+          bucket_id = path_split.at(i + 1);
+          i++;
+        }
+      }
+    }
+    flow_version_->setFlowVersion(url, bucket_id, flow_id);
+  }
   if (applyConfiguration(configuration)) {
     return 1;
   } else {

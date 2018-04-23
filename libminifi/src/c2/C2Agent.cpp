@@ -502,20 +502,16 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       // just get the raw data.
       C2Payload payload(Operation::TRANSFER, false, true);
 
-
       C2Payload &&response = protocol_.load()->consumePayload(url->second.to_string(), payload, RECEIVE, false);
-
 
       auto raw_data = response.getRawData();
       std::string file_path = std::string(raw_data.data(), raw_data.size());
 
       std::ifstream new_conf(file_path);
-      std::string raw_data_str((std::istreambuf_iterator<char>(new_conf)),
-                       std::istreambuf_iterator<char>());
+      std::string raw_data_str((std::istreambuf_iterator<char>(new_conf)), std::istreambuf_iterator<char>());
       unlink(file_path.c_str());
       // if we can apply the update, we will acknowledge it and then backup the configuration file.
-      if (update_sink_->applyUpdate(raw_data_str) == 0) {
-
+      if (update_sink_->applyUpdate(url->second.to_string(), raw_data_str)) {
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
 
@@ -553,7 +549,8 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     } else {
       auto update_text = resp.operation_arguments.find("configuration_data");
       if (update_text != resp.operation_arguments.end()) {
-        if (update_sink_->applyUpdate(update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end() && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
+        if (update_sink_->applyUpdate(url->second.to_string(), update_text->second.to_string()) != 0 && persist != resp.operation_arguments.end()
+            && utils::StringUtils::equalsIgnoreCase(persist->second.to_string(), "true")) {
           C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
           enqueue_c2_response(std::move(response));
           // update nifi.flow.configuration.file=./conf/config.yml

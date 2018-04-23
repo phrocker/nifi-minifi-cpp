@@ -65,6 +65,7 @@ class FlowVersion : public DeviceInformation {
         registry_url_(registry_url),
         bucket_id_(bucket_id),
         flow_id_(flow_id) {
+    setFlowVersion(registry_url_, bucket_id_, flow_id_);
   }
 
   explicit FlowVersion(FlowVersion &&fv)
@@ -72,6 +73,7 @@ class FlowVersion : public DeviceInformation {
         registry_url_(std::move(fv.registry_url_)),
         bucket_id_(std::move(fv.bucket_id_)),
         flow_id_(std::move(fv.flow_id_)) {
+    setFlowVersion(registry_url_, bucket_id_, flow_id_);
   }
 
   std::string getName() const {
@@ -90,7 +92,15 @@ class FlowVersion : public DeviceInformation {
     return flow_id_.empty() ? getUUIDStr() : flow_id_;
   }
 
+  void setFlowVersion(const std::string &url, const std::string &bucket_id, const std::string &flow_id) {
+    registry_url_ = url;
+    bucket_id_ = bucket_id;
+    flow_id_ = flow_id;
+  }
+
   std::vector<SerializedResponseNode> serialize() {
+    std::lock_guard<std::mutex> lock_guard(guard);
+
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode ru;
     ru.name = "registryUrl";
@@ -107,18 +117,20 @@ class FlowVersion : public DeviceInformation {
     serialized.push_back(ru);
     serialized.push_back(bucketid);
     serialized.push_back(flowId);
-
     return serialized;
-
   }
 
   FlowVersion &operator=(const FlowVersion &&fv) {
     registry_url_ = (std::move(fv.registry_url_));
     bucket_id_ = (std::move(fv.bucket_id_));
     flow_id_ = (std::move(fv.flow_id_));
+    setFlowVersion(registry_url_, bucket_id_, flow_id_);
     return *this;
   }
  protected:
+
+  std::mutex guard;
+
   std::string registry_url_;
   std::string bucket_id_;
   std::string flow_id_;
@@ -141,12 +153,12 @@ class FlowMonitor : public StateMonitorNode {
     }
   }
 
-  void setFlowVersion(FlowVersion &&flow_version) {
-    flow_version_ = std::move(flow_version);
+  void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
+    flow_version_ = flow_version;
   }
  protected:
 
-  FlowVersion flow_version_;
+  std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::map<std::string, std::shared_ptr<minifi::Connection>> connections_;
 };
 
@@ -173,11 +185,11 @@ class FlowInformation : public FlowMonitor {
 
     SerializedResponseNode fv;
     fv.name = "flowId";
-    fv.value = flow_version_.getFlowId();
+    fv.value = flow_version_->getFlowId();
 
     SerializedResponseNode uri;
     uri.name = "versionedFlowSnapshotURI";
-    for (auto &entry : flow_version_.serialize()) {
+    for (auto &entry : flow_version_->serialize()) {
       uri.children.push_back(entry);
     }
 

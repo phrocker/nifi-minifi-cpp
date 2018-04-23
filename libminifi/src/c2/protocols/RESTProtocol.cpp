@@ -43,7 +43,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
       std::string identifier;
       if (root.HasMember("operationid")) {
         identifier = root["operationid"].GetString();
-      }else if (root.HasMember("operationId")) {
+      } else if (root.HasMember("operationId")) {
         identifier = root["operationId"].GetString();
       } else if (root.HasMember("identifier")) {
         identifier = root["identifier"].GetString();
@@ -100,7 +100,6 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
         }
 
         if (request.HasMember("content") && request["content"].MemberCount() > 0) {
-
           if (request["content"].IsArray()) {
             for (const auto &member : request["content"].GetArray())
               new_command.operation_arguments[member.GetString()] = member.GetString();

@@ -113,10 +113,8 @@ class ObjectNode : public ResponseNode {
       SerializedResponseNode inner_node;
       inner_node.name = node->getName();
       for (auto &embed : node->serialize()) {
-        std::cout << " for " << getName() << " we are embedding " << node->getName() << " " << embed.name << std::endl;
         inner_node.children.push_back(std::move(embed));
       }
-      std::cout << "pushing " << node->getName() << std::endl;
       outer_node.children.push_back(std::move(inner_node));
     }
     serialized.push_back(std::move(outer_node));

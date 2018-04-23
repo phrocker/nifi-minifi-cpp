@@ -48,7 +48,7 @@
 #include "core/state/nodes/MetricsBase.h"
 #include "utils/Id.h"
 #include "core/state/StateManager.h"
-
+#include "core/state/nodes/FlowInformation.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -131,7 +131,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
   // Unload the current flow YAML, clean the root process group and all its children
   virtual int16_t stop(bool force, uint64_t timeToWait = 0);
-  virtual int16_t applyUpdate(const std::string &configuration);
+  virtual int16_t applyUpdate(const std::string &source, const std::string &configuration);
   virtual int16_t drainRepositories() {
 
     return -1;
@@ -143,7 +143,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   virtual int16_t clearConnection(const std::string &connection);
 
-  virtual int16_t applyUpdate(const std::shared_ptr<state::Update> &updateController) {
+  virtual int16_t applyUpdate(const std::string &source, const std::shared_ptr<state::Update> &updateController) {
     return -1;
   }
   // Asynchronous function trigger unloading and wait for a period of time
@@ -406,6 +406,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::chrono::steady_clock::time_point last_metrics_capture_;
 
 private:
+  std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::shared_ptr<logging::Logger> logger_;
   std::string serial_number_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;

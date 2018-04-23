@@ -50,7 +50,7 @@ int16_t StateManager::update(const std::shared_ptr<Update> &updateController) {
   if (isStateMonitorRunning()) {
     return -1;
   }
-  int16_t ret = applyUpdate(updateController);
+  int16_t ret = applyUpdate("StateManager", updateController);
   switch (ret) {
     case -1:
       return -1;
