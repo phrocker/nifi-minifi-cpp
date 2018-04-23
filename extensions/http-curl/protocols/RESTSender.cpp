@@ -45,11 +45,17 @@ void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerSe
   C2Protocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {
-    std::string update_str;
+    std::string update_str, ssl_context_service_str;
     configure->get("c2.rest.url", rest_uri_);
     configure->get("c2.rest.url.ack", ack_uri_);
+    if (configure->get("c2.rest.ssl.context.service", ssl_context_service_str)) {
+      auto service = controller->getControllerService(ssl_context_service_str);
+      if (nullptr != service) {
+        ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+      }
+    }
     configure->get("c2.rest.heartbeat.minimize.updates", update_str);
-    utils::StringUtils::StringToBool(update_str,minimize_updates_);
+    utils::StringUtils::StringToBool(update_str, minimize_updates_);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
@@ -96,12 +102,12 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     client.set_request_method("GET");
   }
 
-  std::unique_ptr< utils::FileOutputCallback> file_callback = nullptr;
+  std::unique_ptr<utils::FileOutputCallback> file_callback = nullptr;
   utils::HTTPReadCallback read;
   if (payload.getOperation() == TRANSFER) {
     utils::file::FileManager file_man;
     auto file = file_man.unique_file(true);
-    file_callback = std::unique_ptr<utils::FileOutputCallback>( new utils::FileOutputCallback(file) );
+    file_callback = std::unique_ptr<utils::FileOutputCallback>(new utils::FileOutputCallback(file));
     read.pos = 0;
     read.ptr = file_callback.get();
     client.setReadCallback(&read);

@@ -406,6 +406,26 @@ void FlowController::initializeC2() {
 
       std::shared_ptr<state::response::ResponseNode> processor = std::static_pointer_cast<state::response::ResponseNode>(ptr);
 
+      auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(processor);
+
+      if (identifier != nullptr) {
+        std::string identifier_str;
+        if (configuration_->get("nifi.c2.agent.identifier", identifier_str) && !identifier_str.empty()) {
+          identifier->setIdentifier(identifier_str);
+        } else {
+          // set to the flow controller's identifier
+          identifier->setIdentifier(uuidStr_);
+        }
+
+        std::string class_str;
+        if (configuration_->get("nifi.c2.agent.class", class_str) && !class_str.empty()) {
+          identifier->setAgentClass(class_str);
+        } else {
+          // set to the flow controller's identifier
+          identifier->setAgentClass("default");
+        }
+      }
+
       auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(processor);
       if (monitor != nullptr) {
         monitor->addRepository(provenance_repo_);
@@ -421,8 +441,6 @@ void FlowController::initializeC2() {
           flowMonitor->addConnection(con.second);
         }
         flowMonitor->setStateMonitor(shared_from_this());
-
-
 
         flowMonitor->setFlowVersion(flow_version_);
       }

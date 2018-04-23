@@ -556,20 +556,33 @@ https://cwiki.apache.org/confluence/display/MINIFI/C2+Design+Proposal
 
     in minifi.properties
 
-    #Disable/Enable C2
+    # Disable/Enable C2
     nifi.c2.enable=true
 
-	#specify metrics classes
-	nifi.flow.metrics.classes=DeviceInformation,SystemInformation,ProcessMetrics
+	# specify metrics classes
+	nifi.c2.root.classes=DeviceInfoNode,AgentInformation,FlowInformation,RepositoryMetrics
 	
-	#specify C2 protocol
+	# specify C2 protocol -- default is RESTSender if this is not specified
 	c2.agent.protocol.class=RESTSender
 	
-	#control c2 heartbeat interval in millisecocnds
+	# control c2 heartbeat interval in millisecocnds
 	c2.agent.heartbeat.period=3000
 	
 	# enable reporter classes
 	c2.agent.heartbeat.reporter.class=RESTReciver
+	
+	# specify the rest URIs if using RESTSender
+	c2.rest.url=http://localhost:10080/minifi-c2-api/c2-protocol/heartbeat
+	c2.rest.url.ack=http://localhost:10080/minifi-c2-api/c2-protocol/acknowledge
+	
+	# c2 agent identifier
+	nifi.c2.agent.identifier=<your identifier>
+	
+	# c2 agent class
+	nifi.c2.agent.class=<your agent class>
+	
+	# configure SSL Context service for REST Protocol
+	c2.rest.ssl.context.service
 	
 	
 ### Configuring Repository storage locations

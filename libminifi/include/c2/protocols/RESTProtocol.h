@@ -79,7 +79,6 @@ class RESTProtocol {
   std::mutex update_mutex_;
   bool minimize_updates_;
   std::map<std::string, C2Payload> nested_payloads_;
-
 };
 
 } /* namesapce c2 */

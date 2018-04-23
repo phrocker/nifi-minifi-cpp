@@ -189,6 +189,26 @@ class AgentStatus : public StateMonitorNode {
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 };
 
+class AgentIdentifier {
+ public:
+
+  AgentIdentifier(){
+
+  }
+
+  void setIdentifier(const std::string &identifier) {
+    identifier_ = identifier;
+  }
+
+  void setAgentClass(const std::string &agentClass){
+    agent_class_ = agentClass;
+  }
+
+ protected:
+  std::string identifier_;
+  std::string agent_class_;
+};
+
 class AgentMonitor {
  public:
 
@@ -422,7 +442,7 @@ class AgentManifest : public DeviceInformation {
 /**
  * Purpose and Justification: Prints classes along with their properties for the current agent.
  */
-class AgentInformation : public DeviceInformation, public AgentMonitor {
+class AgentInformation : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
 
   AgentInformation(std::string name, uuid_t uuid)
@@ -443,11 +463,11 @@ class AgentInformation : public DeviceInformation, public AgentMonitor {
     SerializedResponseNode ident;
 
     ident.name = "identifier";
-    ident.value = AgentBuild::BUILD_IDENTIFIER;
+    ident.value = identifier_;
 
     SerializedResponseNode agentClass;
     agentClass.name = "agentClass";
-    agentClass.value = "class";
+    agentClass.value = agent_class_;
 
     AgentManifest manifest("manifest", nullptr);
 
