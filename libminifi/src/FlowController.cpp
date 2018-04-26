@@ -541,7 +541,7 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
         std::string name;
 
         if (configuration_->get(nameOption.str(), name)) {
-          std::shared_ptr<state::response::ObjectNode> new_node = std::make_shared<state::response::ObjectNode>(name, nullptr);
+          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name, nullptr);
 
           if (configuration_->get(classOption.str(), class_definitions)) {
             std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
@@ -558,17 +558,80 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
                 logger_->log_error("No metric defined for %s", clazz);
                 continue;
               }
-              new_node->add_node(node);
+              std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
             }
 
-            root_response_nodes_[name] = new_node;
+          } else {
+            std::stringstream optionName;
+            optionName << option.str() << "." << name;
+            std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node( loadC2ResponseConfiguration(optionName.str(), new_node) );
           }
+
+          root_response_nodes_[name] = new_node;
         }
       } catch (...) {
         logger_->log_error("Could not create metrics class %s", metricsClass);
       }
     }
   }
+}
+
+std::shared_ptr<state::response::ResponseNode> FlowController::loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node) {
+  std::string class_definitions;
+
+  std::cout << " looking for " << prefix << std::endl;
+
+  if (configuration_->get(prefix, class_definitions)) {
+    std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+
+    for (std::string metricsClass : classes) {
+      try {
+        std::stringstream option;
+        option << prefix << "." << metricsClass;
+
+        std::stringstream classOption;
+        classOption << option.str() << ".classes";
+
+        std::stringstream nameOption;
+        nameOption << option.str() << ".name";
+        std::string name;
+
+        if (configuration_->get(nameOption.str(), name)) {
+          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name, nullptr);
+
+          if (configuration_->get(classOption.str(), class_definitions)) {
+            std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
+
+            for (std::string clazz : classes) {
+              std::lock_guard<std::mutex> lock(metrics_mutex_);
+
+              // instantiate the object
+              auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+
+              auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
+
+              if (nullptr == ptr) {
+                logger_->log_error("No metric defined for %s", clazz);
+                continue;
+              }
+              std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
+              std::cout << "added node" << std::endl;
+            }
+
+
+          } else {
+            std::stringstream optionName;
+            optionName << option.str() << "." << name;
+            new_node = loadC2ResponseConfiguration(optionName.str(), new_node);
+          }
+          return new_node;
+        }
+      } catch (...) {
+        logger_->log_error("Could not create metrics class %s", metricsClass);
+      }
+    }
+  }
+  return prev_node;
 }
 
 void FlowController::loadC2ResponseConfiguration() {

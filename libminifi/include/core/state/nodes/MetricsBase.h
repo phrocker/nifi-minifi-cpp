@@ -107,17 +107,17 @@ class ObjectNode : public ResponseNode {
 
   virtual std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
-    SerializedResponseNode outer_node;
-    outer_node.name = getName();
+//    SerializedResponseNode outer_node;
+  //  outer_node.name = getName();
     for (auto &node : nodes_) {
       SerializedResponseNode inner_node;
       inner_node.name = node->getName();
       for (auto &embed : node->serialize()) {
         inner_node.children.push_back(std::move(embed));
       }
-      outer_node.children.push_back(std::move(inner_node));
+      serialized.push_back(std::move(inner_node));
     }
-    serialized.push_back(std::move(outer_node));
+   //serialized.push_back(std::move(outer_node));
     return serialized;
   }
 

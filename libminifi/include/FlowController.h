@@ -327,6 +327,8 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
 
   void loadC2ResponseConfiguration(const std::string &prefix);
 
+  std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode>);
+
   // function to load the flow file repo.
   void loadFlowRepo();
 
