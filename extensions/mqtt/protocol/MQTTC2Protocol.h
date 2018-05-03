@@ -37,91 +37,49 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
+/**
+ * Purpose: Implementation of the MQTT C2 protocol. Serializes messages to and from
+ * and mqtt server.
+ */
 class MQTTC2Protocol : public C2Protocol {
  public:
   explicit MQTTC2Protocol(std::string name, uuid_t uuid = nullptr);
 
   virtual ~MQTTC2Protocol();
 
-  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override {
-
-    if (direction == Direction::TRANSMIT) {
-      return serialize(payload);
-//      outputConfig = serializeJsonRootPayload(payload);
-
-    }
-
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
-  }
+  /**
+   * Consume the payload.
+   * @param url to evaluate.
+   * @param payload payload to consume.
+   * @direction direction of operation.
+   */
+  virtual C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async);
 
   virtual C2Payload consumePayload(const C2Payload &payload, Direction direction, bool async) override {
-    if (direction == Direction::TRANSMIT) {
-      std::cout << "oh hi" << std::endl;
-      return serialize(payload);
-//      outputConfig = serializeJsonRootPayload(payload);
-
-    }
-
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+    return serialize(payload);
   }
 
   virtual void update(const std::shared_ptr<Configure> &configure) override {
-
+    // no op.
   }
 
-  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override {
-    if (configure->get("nifi.c2.mqtt.connector.service", controller_service_name_)) {
-      std::cout << "service name is " << controller_service_name_ << std::endl;
-      auto service = controller->getControllerService(controller_service_name_);
-      mqtt_service_ = std::static_pointer_cast<controllers::MQTTContextService>(service);
-    } else
-      mqtt_service_ = nullptr;
-
-    std::string baseTopic = configure->getAgentIdentifier();
-    std::cout << "base topic is " << baseTopic << std::endl;
-
-    std::stringstream outputStream;
-    //outputStream << baseTopic << "/out";
-    out_topic_ = "heartbeats";  // outputStream.str();
-
-    std::stringstream inputStream;
-    inputStream << baseTopic << "/in";
-    in_topic_ = inputStream.str();
-
-    if (mqtt_service_) {
-      mqtt_service_->subscribeToTopic(in_topic_);
-    }
-  }
+  virtual void initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
 
-  C2Payload serialize(const C2Payload &payload) {
+  C2Payload serialize(const C2Payload &payload);
 
-    if (mqtt_service_ == nullptr || !mqtt_service_->isRunning()) {
-      std::cout << "mqtt service not running" << std::endl;
-      return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
-    }
-
-    auto stream = c2::mqtt::PayloadSerializer::serialize(payload);
-
-    std::cout << "oh hi transmit " << out_topic_ << " " << stream->getSize() << std::endl;
-    auto transmit_id = mqtt_service_->send(out_topic_, stream->getBuffer(), stream->getSize());
-
-    std::vector<uint8_t> response;
-    if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {
-
-      std::cout << "response is " << response.size() << std::endl;
-      return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
-    }
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
-  }
-
+  std::mutex input_mutex_;
+  // input topic on which we will listen.
   std::string in_topic_;
-  std::string out_topic_;
+  std::string agent_identifier_;
+  std::string heartbeat_topic_;
+  std::string update_topic_;
 
   std::shared_ptr<controllers::MQTTContextService> mqtt_service_;
   std::shared_ptr<logging::Logger> logger_;
   std::string controller_service_name_;
+
 
 };
 } /* namespace c2 */

@@ -1,6 +1,4 @@
 /**
- * @file ConvertAck.cpp
- * ConvertAck class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -37,28 +35,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ConvertJSONAck::MQTTControllerService("MQTT Controller Service", "Name of controller service that will be used for MQTT interactivity", "");
-core::Relationship ConvertJSONAck::Success("success", "All files are routed to success");
-void ConvertJSONAck::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(MQTTControllerService);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
-}
-
-void ConvertJSONAck::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-
-  std::string controller_service_name = "";
-  if (context->getProperty(MQTTControllerService.getName(), controller_service_name) && !controller_service_name.empty()) {
-    auto service = context->getControllerService(controller_service_name);
-    mqtt_service_ = std::static_pointer_cast<controllers::MQTTContextService>(service);
-  }
-  mqtt_service_->subscribeToTopic("heartbeats");
-}
 
 std::string ConvertJSONAck::parseTopicName(const std::string &json) {
   std::string topic;
@@ -91,6 +67,10 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     return;
   }
 
+  /**
+   * This processor expects a JSON response from InvokeHTTP and thus we expect a heartbeat ack following that.
+   * Since we are trailing InvokeHTTP
+   */
   std::string topic;
   {
     // expect JSON response from InvokeHTTP and thus we expect a heartbeat and then the output from the HTTP
@@ -109,19 +89,20 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     return;
   }
 
-  ReadCallback callback;
-  session->read(flow, &callback);
-
-  c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true, true);
-
-  auto payload = parseJsonResponse(response_payload, callback.buffer_);
   if (!topic.empty()) {
+    ReadCallback callback;
+    session->read(flow, &callback);
+
+    c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true, true);
+
+    std::string str(callback.buffer_.data(),callback.buffer_.size());
+    std::cout << "received " << str << std::endl;
+    auto payload = std::move( parseJsonResponse(response_payload, callback.buffer_));
+
     auto stream = c2::mqtt::PayloadSerializer::serialize(payload);
 
     mqtt_service_->send(topic, stream->getBuffer(), stream->getSize());
 
-  } else {
-    std::cout << "topic name is empty" << std::endl;
   }
 
   session->transfer(flow, Success);

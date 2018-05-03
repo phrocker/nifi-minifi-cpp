@@ -30,21 +30,21 @@
 #include "MQTTClient.h"
 #include "MQTTContextService.h"
 #include "c2/protocols/RESTProtocol.h"
-
+#include "ConvertBase.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ConvertJSONAck : public core::Processor, public minifi::c2::RESTProtocol {
+class ConvertJSONAck : public ConvertBase {
  public:
   // Constructor
   /*!
    * Create a new processor
    */
   explicit ConvertJSONAck(std::string name, uuid_t uuid = NULL)
-      : core::Processor(name, uuid),
+      : ConvertBase(name, uuid),
         logger_(logging::LoggerFactory<ConvertJSONAck>::getLogger()) {
   }
   // Destructor
@@ -52,10 +52,7 @@ class ConvertJSONAck : public core::Processor, public minifi::c2::RESTProtocol {
   }
   // Processor Name
   static constexpr char const* ProcessorName = "ConvertJSONAck";
-  // Supported Properties
-  static core::Property MQTTControllerService;
 
-  static core::Relationship Success;
 
  public:
   /**
@@ -66,8 +63,6 @@ class ConvertJSONAck : public core::Processor, public minifi::c2::RESTProtocol {
    */
 
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  virtual void initialize() override;
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:
 
@@ -87,8 +82,6 @@ class ConvertJSONAck : public core::Processor, public minifi::c2::RESTProtocol {
     }
     std::vector<char> buffer_;
   };
-
-  std::shared_ptr<controllers::MQTTContextService> mqtt_service_;
 
   std::string parseTopicName(const std::string &json);
  private:

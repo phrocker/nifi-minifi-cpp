@@ -25,6 +25,7 @@
 #include "core/ClassLoader.h"
 #include "ConvertHeartBeat.h"
 #include "ConvertJSONAck.h"
+#include "ConvertUpdate.h"
 class __attribute__((visibility("default"))) MQTTFactory : public core::ObjectFactory {
  public:
   MQTTFactory() {
@@ -54,6 +55,7 @@ class __attribute__((visibility("default"))) MQTTFactory : public core::ObjectFa
     class_names.push_back("MQTTC2Protocol");
     class_names.push_back("ConvertHeartBeat");
     class_names.push_back("ConvertJSONAck");
+    class_names.push_back("ConvertUpdate");
     return class_names;
   }
 
@@ -70,6 +72,8 @@ class __attribute__((visibility("default"))) MQTTFactory : public core::ObjectFa
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ConvertHeartBeat>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ConvertJSONAck")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ConvertJSONAck>());
+    } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ConvertUpdate")) {
+          return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ConvertUpdate>());
     } else {
       return nullptr;
     }

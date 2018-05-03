@@ -15,12 +15,9 @@ namespace c2 {
 namespace mqtt {
 
 PayloadSerializer::PayloadSerializer() {
-  // TODO Auto-generated constructor stub
-
 }
 
 PayloadSerializer::~PayloadSerializer() {
-  // TODO Auto-generated destructor stub
 }
 
 } /* namespace mqtt */

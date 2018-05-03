@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONVERT_HEARTBEAT_H__
-#define __CONVERT_HEARTBEAT_H__
+#ifndef EXTENSIONS_MQTT_PROTOCOL_CONVERTBASE_H_
+#define EXTENSIONS_MQTT_PROTOCOL_CONVERTBASE_H_
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -28,7 +28,6 @@
 #include "MQTTClient.h"
 #include "MQTTContextService.h"
 #include "c2/protocols/RESTProtocol.h"
-#include "ConvertBase.h"
 
 namespace org {
 namespace apache {
@@ -36,35 +35,44 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ConvertHeartBeat: public ConvertBase{
-public:
+class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
+ public:
   // Constructor
   /*!
    * Create a new processor
    */
-  explicit ConvertHeartBeat(std::string name, uuid_t uuid = NULL)
-    : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertHeartBeat>::getLogger()) {
+  explicit ConvertBase(std::string name, uuid_t uuid = NULL)
+      : core::Processor(name, uuid) {
   }
   // Destructor
-  virtual ~ConvertHeartBeat() {
+  virtual ~ConvertBase() {
   }
-  // Processor Name
-  static constexpr char const* ProcessorName = "ConvertHeartBeat";
+  // Supported Properties
+  static core::Property MQTTControllerService;
+  static core::Property ListeningTopic;
 
-public:
+  static core::Relationship Success;
+
+ public:
+
   /**
-   * Function that's executed when the processor is triggered.
+   * Initialization of the processor
+   */
+  virtual void initialize() override;
+  /**
+   * Function that's executed when the processor is scheduled.
    * @param context process context.
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
+  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+ protected:
 
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  std::shared_ptr<controllers::MQTTContextService> mqtt_service_;
 
-private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::string listening_topic;
+
 };
-
 
 } /* namespace processors */
 } /* namespace minifi */
@@ -72,4 +80,4 @@ private:
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif /* EXTENSIONS_MQTT_PROTOCOL_CONVERTBASE_H_ */

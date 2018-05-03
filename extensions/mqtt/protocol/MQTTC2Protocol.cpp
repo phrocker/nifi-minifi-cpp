@@ -17,13 +17,11 @@
  */
 #include "MQTTC2Protocol.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace c2 {
-
 
 MQTTC2Protocol::MQTTC2Protocol(std::string name, uuid_t uuid)
     : C2Protocol(name, uuid),
@@ -33,6 +31,73 @@ MQTTC2Protocol::MQTTC2Protocol(std::string name, uuid_t uuid)
 MQTTC2Protocol::~MQTTC2Protocol() {
 }
 
+void MQTTC2Protocol::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
+  if (configure->get("nifi.c2.mqtt.connector.service", controller_service_name_)) {
+    auto service = controller->getControllerService(controller_service_name_);
+    mqtt_service_ = std::static_pointer_cast<controllers::MQTTContextService>(service);
+  } else
+    mqtt_service_ = nullptr;
+
+  agent_identifier_ = configure->getAgentIdentifier();
+
+  std::stringstream outputStream;
+  std::string updateTopicOpt, heartbeatTopicOpt;
+  if (configure->get("nifi.c2.mqtt.heartbeat.topic", heartbeatTopicOpt)) {
+    heartbeat_topic_ = heartbeatTopicOpt;
+  } else {
+    heartbeat_topic_ = "heartbeats";  // outputStream.str();
+  }
+  if (configure->get("nifi.c2.mqtt.update.topic", updateTopicOpt)) {
+    update_topic_ = updateTopicOpt;
+  } else {
+    update_topic_ = "updates";
+  }
+
+  std::stringstream inputStream;
+  inputStream << agent_identifier_ << "/in";
+  in_topic_ = inputStream.str();
+
+  if (mqtt_service_) {
+    mqtt_service_->subscribeToTopic(in_topic_);
+  }
+}
+
+C2Payload MQTTC2Protocol::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) {
+  // we are getting an update.
+  std::lock_guard<std::mutex> lock(input_mutex_);
+  io::BaseStream stream;
+  stream.writeUTF(in_topic_);
+  stream.writeUTF(url);
+  std::vector<uint8_t> response;
+  auto transmit_id = mqtt_service_->send(update_topic_, stream.getBuffer(), stream.getSize());
+  if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {
+    std::cout << "Actually received the update" << std::endl;
+    C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true, true);
+    response_payload.setRawData(response);
+    return response_payload;
+  } else {
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
+  }
+}
+
+C2Payload MQTTC2Protocol::serialize(const C2Payload &payload) {
+  if (mqtt_service_ == nullptr || !mqtt_service_->isRunning()) {
+    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+  }
+
+  std::lock_guard<std::mutex> lock(input_mutex_);
+
+  auto stream = c2::mqtt::PayloadSerializer::serialize(payload);
+
+  auto transmit_id = mqtt_service_->send(heartbeat_topic_, stream->getBuffer(), stream->getSize());
+  std::cout << "sent heartbeat response" << transmit_id << std::endl;
+  std::vector<uint8_t> response;
+  if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {
+    std::cout << "got response" << std::endl;
+    return  c2::mqtt::PayloadSerializer::deserialize(response);
+  }
+  return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
+}
 
 } /* namespace c2 */
 } /* namespace minifi */

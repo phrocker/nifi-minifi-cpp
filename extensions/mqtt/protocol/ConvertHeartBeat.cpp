@@ -1,6 +1,4 @@
 /**
- * @file ConvertHeartBeat.cpp
- * ConvertHeartBeat class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -36,29 +34,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ConvertHeartBeat::MQTTControllerService("MQTT Controller Service", "Name of controller service that will be used for MQTT interactivity", "");
-core::Relationship ConvertHeartBeat::Success("success", "All files are routed to success");
-void ConvertHeartBeat::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(MQTTControllerService);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
-}
-
-void ConvertHeartBeat::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
-
-  std::string controller_service_name = "";
-  if (context->getProperty(MQTTControllerService.getName(), controller_service_name) && !controller_service_name.empty()) {
-    auto service = context->getControllerService(controller_service_name);
-    mqtt_service_ = std::static_pointer_cast<controllers::MQTTContextService>(service);
-  }
-  mqtt_service_->subscribeToTopic("heartbeats");
-}
-
 void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   if (nullptr == mqtt_service_) {
     context->yield();
@@ -66,29 +41,22 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   }
   std::vector<uint8_t> heartbeat;
   bool received_heartbeat = false;
-  while (mqtt_service_->get(100, "heartbeats", heartbeat)) {
-    received_heartbeat = true;
+  while (mqtt_service_->get(100, listening_topic, heartbeat)) {
+    std::cout << "got it" << std::endl;
     if (heartbeat.size() > 0) {
-      c2::C2Payload &&payload = c2::mqtt::PayloadSerializer::deserialize(heartbeat);
+      c2::C2Payload payload = c2::mqtt::PayloadSerializer::deserialize(heartbeat);
       auto serialized = serializeJsonRootPayload(payload);
       logger_->log_debug("Converted JSON output %s", serialized);
-      minifi::utils::StreamOutputCallback byteCallback(serialized.size()+1);
-      byteCallback.write( const_cast<char*>(serialized.c_str()),serialized.size() );
-      std::cout << "sizse of callback is " << byteCallback.getSize() << std::endl;
-      std::cout << "sizse of serialized is " << serialized.size() << std::endl;
+      minifi::utils::StreamOutputCallback byteCallback(serialized.size() + 1);
+      byteCallback.write(const_cast<char*>(serialized.c_str()), serialized.size());
       auto newff = session->create();
-      session->write(newff,&byteCallback);
-
-      session->transfer(newff,Success);
+      session->write(newff, &byteCallback);
+      session->transfer(newff, Success);
       received_heartbeat = true;
-    } else
+    } else {
       break;
-    // convert the heartbeat to JSON
-
-    //serializeJsonRootPayload()
+    }
   }
-
-  std::cout << "yielding" << std::endl;
   if (!received_heartbeat) {
     context->yield();
   }

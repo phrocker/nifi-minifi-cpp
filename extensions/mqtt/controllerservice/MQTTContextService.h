@@ -135,16 +135,12 @@ class MQTTContextService : public core::controller::ControllerService {
       MQTTClient_message pubmsg = MQTTClient_message_initializer;
       const uint8_t *d = data.data();
       pubmsg.payload = const_cast<uint8_t*>(d);
-      if (pubmsg.payload == 0x00) {
-        std::cout << " is null" << std::endl;
-      }
       pubmsg.payloadlen = data.size();
       pubmsg.qos = qos_;
       pubmsg.retained = 0;
 
       auto resp = MQTTClient_publishMessage(client_, topic.c_str(), &pubmsg, &token);
       if (resp != MQTTCLIENT_SUCCESS) {
-        std::cout << "response is " << resp << std::endl;
         return -1;
       }
       if (qos_ == 0) {
@@ -161,16 +157,12 @@ class MQTTContextService : public core::controller::ControllerService {
 
     MQTTClient_message pubmsg = MQTTClient_message_initializer;
     pubmsg.payload = const_cast<uint8_t*>(data);
-    if (pubmsg.payload == 0x00) {
-      std::cout << " is null" << std::endl;
-    }
     pubmsg.payloadlen = dataSize;
     pubmsg.qos = qos_;
     pubmsg.retained = 0;
 
     auto resp = MQTTClient_publishMessage(client_, topic.c_str(), &pubmsg, &token);
     if (resp != MQTTCLIENT_SUCCESS) {
-      std::cout << "response is " << resp << std::endl;
       return -1;
     }
 
@@ -196,7 +188,6 @@ class MQTTContextService : public core::controller::ControllerService {
     if (topics_.find(newTopic) == topics_.end()) {
       MQTTClient_subscribe(client_, newTopic.c_str(), qos_);
       topics_[newTopic].size_approx();
-      std::cout << " subscribed to " << newTopic << std::endl;
     }
   }
 
@@ -216,9 +207,7 @@ class MQTTContextService : public core::controller::ControllerService {
     std::unique_lock<std::mutex> lock(delivery_mutex_);
     if (delivery_notification_.wait_for(lock, std::chrono::milliseconds(millisToWait), [&] {return topics_[topic].size_approx() > 0;})) {
       Message resp;
-      std::cout << "Got it " << std::endl;
       if (topics_[topic].try_dequeue(resp)) {
-        std::cout << "Got it " << resp.data_.size() << std::endl;
         data = std::move(resp.data_);
         return true;
       } else {
@@ -231,18 +220,14 @@ class MQTTContextService : public core::controller::ControllerService {
 
   bool awaitResponse(const uint64_t millisToWait, int token, const std::string &topic, std::vector<uint8_t> &data) {
     std::unique_lock<std::mutex> lock(delivery_mutex_);
-    std::cout << "awaiting delivery of " << token << std::endl;
     if (delivery_notification_.wait_for(lock, std::chrono::milliseconds(millisToWait), [&] {
-      std::cout << "checking " << token << " " << delivered_[token] << std::endl;
       return
       delivered_[token] == true;
     })) {
       bool delivered = delivered_[token];
       if (delivered) {
-        std::cout << "delivered" << std::endl;
         if (delivery_notification_.wait_for(lock, std::chrono::milliseconds(millisToWait), [&] {return topics_[topic].size_approx() > 0;})) {
           Message resp;
-          std::cout << "Got it " << std::endl;
           if (topics_[topic].try_dequeue(resp)) {
             data = std::move(resp.data_);
             return true;
@@ -277,20 +262,17 @@ class MQTTContextService : public core::controller::ControllerService {
   void enqueue(const std::string &topic, Message &&message) {
     std::unique_lock<std::mutex> lock(delivery_mutex_);
     topics_[topic].enqueue(std::move(message));
-    std::cout << "enqueued" << std::endl;
     delivery_notification_.notify_one();
   }
 
   static void deliveryCallback(void *context, MQTTClient_deliveryToken dt) {
     MQTTContextService *service = (MQTTContextService *) context;
-    std::cout << "delivery of " << dt << std::endl;
     service->acknowledgeDelivery(dt);
   }
 
   static int receiveCallback(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
     MQTTContextService *service = (MQTTContextService *) context;
     std::string topic(topicName, topicLen == 0 ? strlen(topicName) : topicLen);
-    std::cout << "received on " << topic << " " << message->payloadlen << std::endl;
     Message queueMessage(topic, message->payload, message->payloadlen);
     service->enqueue(topic, std::move(queueMessage));
     MQTTClient_freeMessage(&message);
@@ -319,8 +301,6 @@ class MQTTContextService : public core::controller::ControllerService {
     if (MQTTClient_connect(client_, &conn_opts) != MQTTCLIENT_SUCCESS) {
       logger_->log_error("Failed to connect to MQTT broker %s", uri_);
       return false;
-    } else {
-      std::cout << "connected" << std::endl;
     }
 
     if (!topic_.empty()) {

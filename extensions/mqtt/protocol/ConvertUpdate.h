@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __CONVERT_HEARTBEAT_H__
-#define __CONVERT_HEARTBEAT_H__
+#ifndef EXTENSIONS_MQTT_PROTOCOL_CONVERTUPDATE_H_
+#define EXTENSIONS_MQTT_PROTOCOL_CONVERTUPDATE_H_
+
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -36,22 +37,29 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ConvertHeartBeat: public ConvertBase{
-public:
+class ConvertUpdate : public ConvertBase {
+ public:
   // Constructor
   /*!
    * Create a new processor
    */
-  explicit ConvertHeartBeat(std::string name, uuid_t uuid = NULL)
-    : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertHeartBeat>::getLogger()) {
+  explicit ConvertUpdate(std::string name, uuid_t uuid = NULL)
+    : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertUpdate>::getLogger()) {
   }
   // Destructor
-  virtual ~ConvertHeartBeat() {
+  virtual ~ConvertUpdate() {
   }
+
+  static core::Property SSLContext;
   // Processor Name
-  static constexpr char const* ProcessorName = "ConvertHeartBeat";
+  static constexpr char const* ProcessorName = "ConvertUpdate";
 
 public:
+
+  /**
+     * Initialization of the processor
+     */
+    virtual void initialize() override;
   /**
    * Function that's executed when the processor is triggered.
    * @param context process context.
@@ -61,10 +69,11 @@ public:
 
   virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
+protected:
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
 
 } /* namespace processors */
 } /* namespace minifi */
@@ -72,4 +81,4 @@ private:
 } /* namespace apache */
 } /* namespace org */
 
-#endif
+#endif /* EXTENSIONS_MQTT_PROTOCOL_CONVERTUPDATE_H_ */
