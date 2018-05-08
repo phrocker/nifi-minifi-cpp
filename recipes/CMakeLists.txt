@@ -36,25 +36,14 @@ else()
  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-add_executable(transmit_flow transmit_flow.c)
+
+add_executable(monitor_directory monitor_directory.c)
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl and rocksdb
-target_link_libraries(transmit_flow capi core-minifi minifi)
+target_link_libraries(monitor_directory capi core-minifi minifi)
 
 if (APPLE)
-	target_link_libraries (transmit_flow -Wl,-all_load minifi-http-curl)
+	target_link_libraries (monitor_directory -Wl,-all_load minifi-http-curl)
 else ()
-	target_link_libraries (transmit_flow -Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive)
-endif ()
-
-
-add_executable(generate_flow generate_flow.c)
-
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl and rocksdb
-target_link_libraries(generate_flow capi core-minifi minifi)
-
-if (APPLE)
-	target_link_libraries (generate_flow -Wl,-all_load minifi-http-curl)
-else ()
-	target_link_libraries (generate_flow -Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive)
+	target_link_libraries (monitor_directory -Wl,--whole-archive minifi-http-curl -Wl,--no-whole-archive)
 endif ()

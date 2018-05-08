@@ -289,7 +289,11 @@ endif()
 add_subdirectory(main)
 if (NOT DISABLE_CURL)
   add_subdirectory(LibExample)
+  if (NOT DISABLE_RECIPES)	
+    add_subdirectory(recipes)
+  endif()
 endif()
+
 
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
