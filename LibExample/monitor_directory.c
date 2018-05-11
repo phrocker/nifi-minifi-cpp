@@ -22,9 +22,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+
+#include "file_blocks.h"
+#include "comms.h"
 #include "capi/api.h"
 #include "capi/processors.h"
-#include "monitor_directory.h"
 int is_dir(const char *path) {
   struct stat stat_struct;
   if (stat(path, &stat_struct) != 0)
@@ -54,28 +56,9 @@ int main(int argc, char **argv) {
   nifi_instance *instance = create_instance(instance_str, &port);
 
 
-  GetFileConfig config;
-
-  config.directory = directory;
-  config.keep_source = 1;
-
   flow *new_flow = monitor_directory(instance,directory,0x00,KEEP_SOURCE);
 
-
-  flow_file_record *record = get_next_flow_file(instance, new_flow );
-
-  if (record == 0){
-    printf("Could not create flow file");
-    exit(1);
-  }
-
-  transmit_flowfile(record,instance);
-
-  free_flowfile(record);
-
-  // initializing will make the transmission slightly more efficient.
-  //initialize_instance(instance);
-  //transfer_file_or_directory(instance,file);
+  transmit_to_nifi(instance,new_flow,0x00);
 
   free_flow(new_flow);
 

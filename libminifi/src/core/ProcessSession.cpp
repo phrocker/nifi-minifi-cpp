@@ -466,13 +466,11 @@ void ProcessSession::import(std::string source, const std::shared_ptr<core::Flow
         auto endTime = getTimeMillis();
         provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
       } else {
-        std::cout<< "invalid write " << source << std::endl;
         stream->closeStream();
         input.close();
         throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
       }
     } else {
-      std::cout << "write not open" << std::endl;
       throw Exception(FILE_OPERATION_EXCEPTION, "File Import Error");
     }
   } catch (std::exception &exception) {

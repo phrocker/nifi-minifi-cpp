@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_CAPI_NANOFI_H_
 #define LIBMINIFI_INCLUDE_CAPI_NANOFI_H_
 
+#include <stddef.h>
 #include <stdint.h>
 #include "processors.h"
 
