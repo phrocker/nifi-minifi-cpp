@@ -86,9 +86,9 @@ void initialize_instance(nifi_instance *instance) {
  typedef int c2_start_callback(char *);
 
  */
-void enable_c2(nifi_instance *instance, char *identifier, c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
+void enable_async_c2(nifi_instance *instance, C2_Server *server, c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
-  minifi_instance_ref->enableC2(identifier, c1, c2, c3);
+  minifi_instance_ref->enableAsyncC2(server, c1, c2, c3);
 }
 
 /**

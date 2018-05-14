@@ -70,13 +70,26 @@ void free_instance(nifi_instance*);
  * ##################################################################
  */
 
+enum C2_Server_Type{
+  REST,
+  MQTT
+};
+
+typedef struct {
+  char *url;
+  char *ack_url;
+  char *identifier;
+  char *topic;
+  enum C2_Server_Type type;
+} C2_Server;
+
 typedef int c2_update_callback(char *);
 
 typedef int c2_stop_callback(char *);
 
 typedef int c2_start_callback(char *);
 
-void enable_c2(nifi_instance *, char *, c2_stop_callback *, c2_start_callback *, c2_update_callback *);
+void enable_async_c2(nifi_instance *, C2_Server *, c2_stop_callback *, c2_start_callback *, c2_update_callback *);
 
 /****
  * ##################################################################

@@ -90,9 +90,13 @@ class Instance {
     return rpgInitialized_;
   }
 
-  void enableC2(const std::string &identifier,c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
+  void enableAsyncC2(C2_Server *server,c2_stop_callback *c1, c2_start_callback *c2, c2_update_callback *c3) {
     std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider = nullptr;
     running_ = true;
+    if (server->type != C2_Server_Type::MQTT){
+      configure_->set("c2.rest.url",server->url);
+      configure_->set("c2.rest.url.ack",server->ack_url);
+    }
     agent_ = std::make_shared<c2::C2CallbackAgent>(controller_service_provider, nullptr, configure_);
     listener_thread_pool_.start();
     registerUpdateListener(agent_, 1000);

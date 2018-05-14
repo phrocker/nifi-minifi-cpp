@@ -34,16 +34,38 @@ int is_dir(const char *path) {
   return S_ISDIR(stat_struct.st_mode);
 }
 
+pthread_mutex_t mutex;
+pthread_cond_t condition;
 
+uint8_t stopped;
+
+int stop_callback(char *c) {
+  pthread_mutex_lock(&mutex);
+  stopped = 1;
+  pthread_cond_signal(&condition);
+  pthread_mutex_unlock(&mutex);
+  return 0;
+}
+
+uint8_t is_stopped() {
+
+  uint8_t is_stop = 0;
+  pthread_mutex_lock(&mutex);
+  is_stop = stopped;
+  pthread_mutex_unlock(&mutex);
+  return is_stop;
+}
 
 /**
  * This is an example of the C API that transmits a flow file to a remote instance.
  */
 int main(int argc, char **argv) {
-  if (argc < 3) {
+  if (argc < 5) {
     printf("Error: must run ./monitor_directory <instance> <remote port> <directory to monitor>\n");
     exit(1);
   }
+
+  stopped = 0x00;
 
   char *instance_str = argv[1];
   char *portStr = argv[2];
@@ -53,14 +75,30 @@ int main(int argc, char **argv) {
 
   port.pord_id = portStr;
 
+  C2_Server server;
+  server.url = argv[4];
+  server.ack_url = argv[5];
+  server.identifier = "monitor_directory";
+  server.type = REST;
+
   nifi_instance *instance = create_instance(instance_str, &port);
 
+  enable_async_c2(instance, &server, stop_callback, NULL, NULL);
 
-  flow *new_flow = monitor_directory(instance,directory,0x00,KEEP_SOURCE);
+  while (!is_stopped()) {
 
-  transmit_to_nifi(instance,new_flow,0x00);
+    flow *new_flow = monitor_directory(instance, directory, 0x00, KEEP_SOURCE);
 
-  free_flow(new_flow);
+    if (new_flow){
+      transmit_to_nifi(instance, new_flow, 0x00);
+
+      free_flow(new_flow);
+    }
+    else{
+      printf("Sleeping for 500 ms\n");
+      usleep(500000);
+    }
+  }
 
   free_instance(instance);
 }

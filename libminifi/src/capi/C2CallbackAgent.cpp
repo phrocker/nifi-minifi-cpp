@@ -46,39 +46,12 @@ C2CallbackAgent::C2CallbackAgent(const std::shared_ptr<core::controller::Control
 void C2CallbackAgent::handle_c2_server_response(const C2ContentResponse &resp) {
   switch (resp.op) {
     case Operation::CLEAR:
-      // we've been told to clear something
-      if (resp.name == "connection") {
-        for (auto connection : resp.operation_arguments) {
-          logger_->log_debug("Clearing connection %s", connection.second.to_string());
-          update_sink_->clearConnection(connection.second.to_string());
-        }
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-        enqueue_c2_response(std::move(response));
-      } else if (resp.name == "repositories") {
-        update_sink_->drainRepositories();
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-        enqueue_c2_response(std::move(response));
-      } else {
-        logger_->log_debug("Clearing unknown %s", resp.name);
-      }
-
       break;
-    case Operation::UPDATE: {
-      handle_update(resp);
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-      enqueue_c2_response(std::move(response));
-    }
+    case Operation::UPDATE:
       break;
-
     case Operation::DESCRIBE:
-      handle_describe(resp);
       break;
-    case Operation::RESTART: {
-      update_sink_->stop(true);
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
-      protocol_.load()->consumePayload(std::move(response));
-      exit(1);
-    }
+    case Operation::RESTART:
       break;
     case Operation::START:
     case Operation::STOP: {
