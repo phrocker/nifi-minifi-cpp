@@ -18,8 +18,9 @@
 #ifndef EXTENSIONS_ROCKSDBLOADER_H
 #define EXTENSIONS_ROCKSDBLOADER_H
 
-#include "EnvironmentalSensors.h"
 #include "core/ClassLoader.h"
+#include "GetEnvironmentalSensors.h"
+#include "GetMovementSensors.h"
 #include "utils/StringUtils.h"
 
 class __attribute__((visibility("default"))) SensorFactory : public core::ObjectFactory {
@@ -50,8 +51,10 @@ class __attribute__((visibility("default"))) SensorFactory : public core::Object
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
-    if (minifi::utils::StringUtils::equalsIgnoreCase(class_name, "EnvironmentalSensors")) {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::EnvironmentalSensors>());
+    if (minifi::utils::StringUtils::equalsIgnoreCase(class_name, "GetEnvironmentalSensors")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::GetEnvironmentalSensors>());
+    } else if (minifi::utils::StringUtils::equalsIgnoreCase(class_name, "GetMovementSensors")) {
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::GetMovementSensors>());
     } else {
       return nullptr;
     }
@@ -59,9 +62,10 @@ class __attribute__((visibility("default"))) SensorFactory : public core::Object
 
   static bool added;
 
-};
+}
+;
 
 extern "C" {
-void *createGPSFactory(void);
+void *createSensorFactory(void);
 }
 #endif /* EXTENSIONS_ROCKSDBLOADER_H */

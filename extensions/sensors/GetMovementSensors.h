@@ -15,15 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_SENSORS_ENVIRONMENTALSENSORS_H_
-#define EXTENSIONS_SENSORS_ENVIRONMENTALSENSORS_H_
+#ifndef EXTENSIONS_SENSORS_GETMOVEMENT_H_
+#define EXTENSIONS_SENSORS_GETMOVEMENT_H_
 
 
 
 #include <memory>
 #include <regex>
 
-#include <curl/curl.h>
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -42,22 +41,20 @@ namespace minifi {
 namespace processors {
 
 // EnvironmentalSensors Class
-class EnvironmentalSensors : public core::Processor {
+class GetMovementSensors : public core::Processor {
  public:
 
   // Constructor
   /*!
    * Create a new processor
    */
-  EnvironmentalSensors(std::string name, uuid_t uuid = NULL)
+  GetMovementSensors(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
         imu(nullptr),
-        humidity_sensor_(nullptr),
-        pressure_sensor_(nullptr),
-        logger_(logging::LoggerFactory<EnvironmentalSensors>::getLogger()) {
+        logger_(logging::LoggerFactory<GetMovementSensors>::getLogger()) {
   }
   // Destructor
-  virtual ~EnvironmentalSensors();
+  virtual ~GetMovementSensors();
   // Processor Name
   static const char *ProcessorName;
   static core::Relationship Success;
@@ -85,17 +82,15 @@ class EnvironmentalSensors : public core::Processor {
  private:
   RTIMUSettings settings;
   RTIMU *imu;
-  RTHumidity *humidity_sensor_;
-  RTPressure *pressure_sensor_;
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-REGISTER_RESOURCE(EnvironmentalSensors)
+REGISTER_RESOURCE(GetMovementSensors)
 
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-#endif /* EXTENSIONS_SENSORS_ENVIRONMENTALSENSORS_H_ */
+#endif /* EXTENSIONS_SENSORS_GETMOVEMENT_H_ */

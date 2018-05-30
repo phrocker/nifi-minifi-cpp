@@ -24,20 +24,13 @@ set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
 
 include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/) 
-
- ExternalProject_Add(
-    rtimulib
-    GIT_REPOSITORY "https://github.com/RPi-Distro/RTIMULib.git"
-    GIT_TAG "b949681af69b45f0f7f4bb53b6770037b5b02178"  # V7.2.1
-    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/rtimulib-src"
-    BUILD_BYPRODUCTS "thirdparty/rtimulib/lib/rtimulib.a"
-  )
-
+include_directories(../../thirdparty/RTIMULib/RTIMULib)
 file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-sensors STATIC ${SOURCES})
 
-add_dependencies(minifi-sensors rtimulib)
+add_dependencies(minifi-sensors RTIMULib)
+target_link_libraries(minifi-sensors RTIMULib)
 
 set_property(TARGET minifi-sensors PROPERTY POSITION_INDEPENDENT_CODE ON)
 if(THREADS_HAVE_PTHREAD_ARG)
@@ -47,16 +40,8 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-sensors "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
+target_link_libraries(minifi-sensors ${LIBMINIFI} )
 
-# Include UUID
-find_package(UUID REQUIRED)
-target_link_libraries(minifi-sensors ${LIBMINIFI} ${UUID_LIBRARIES} ${LIBGPS_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-sensors ${CMAKE_DL_LIBS} )
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries (minifi-sensors ${ZLIB_LIBRARIES})
 if (WIN32)
     set_target_properties(minifi-sensors PROPERTIES
         LINK_FLAGS "/WHOLEARCHIVE"
@@ -72,6 +57,6 @@ else ()
 endif ()
 
 
-SET (GPS-EXTENSION minifi-sensors PARENT_SCOPE)
+SET (SENSOR-EXTENSIONS minifi-sensors PARENT_SCOPE)
 
 register_extension(minifi-sensors)

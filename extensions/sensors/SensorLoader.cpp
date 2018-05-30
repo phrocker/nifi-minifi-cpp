@@ -19,12 +19,12 @@
 
 #include "core/FlowConfiguration.h"
 
-bool GpsFactory::added = core::FlowConfiguration::add_static_func("createGPSFactory");
+bool SensorFactory::added = core::FlowConfiguration::add_static_func("createSensorFactory");
 
 extern "C" {
 
-void *createGPSFactory(void) {
-  return new GpsFactory();
+void *createSensorFactory(void) {
+  return new SensorFactory();
 }
 
 }

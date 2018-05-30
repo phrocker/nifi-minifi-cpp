@@ -261,7 +261,7 @@ endif()
 
 option(ENABLE_SENSORS "Enables the Sensors package." OFF)
 if(ENABLE_ALL OR ENABLE_SENSORS)
-	include_directories(thirdparty/RTIMULib/RTIMULib)
+	add_subdirectory(thirdparty/RTIMULib/RTIMULib)
 	createExtension(SENSOR-EXTENSIONS "SENSOR EXTENSIONS" "Enables the package of sensor extensions." "extensions/sensors" "${TEST_DIR}/sensors-tests")
 endif()
 
