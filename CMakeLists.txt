@@ -35,20 +35,55 @@ include(FeatureSummary)
 include(ExternalProject)
 
 # Use ccache if present
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-    message("-- Found ccache: ${CCACHE_FOUND}")
-endif(CCACHE_FOUND)
+#find_program(CCACHE_FOUND ccache)
+#if(CCACHE_FOUND)
+#    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+#    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+#    message("-- Found ccache: ${CCACHE_FOUND}")
+#endif(CCACHE_FOUND)
+
+##
+set(CMAKE_SYSTEM_NAME Linux)
+
+#SET(CMAKE_C_COMPILER /home/marc/x-tools/arm-unknown-linux-gnueabi/bin/arm-unknown-linux-gnueabi-gcc)
+#SET(CMAKE_CXX_COMPILER /home/marc/x-tools/arm-unknown-linux-gnueabi/bin/arm-unknown-linux-gnueabi-g++)
+#SET(CMAKE_FIND_ROOT_PATH /home/marc/x-tools/arm-unknown-linux-gnueabi/)
+##SET(CMAKE_ASM_COMPILER /usr/bin/arm-linux-gnueabihf-gcc)
+
+#SET(CMAKE_SYSTEM_PROCESSOR arm)
+
+
+# arm11
+#add_definitions("-mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -marm")
+
+# search for programs in the build host directories
+#SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+# for libraries and headers in the target directories
+#SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+#SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+##
+
+#if( BUILD_TOOL_CHAIN STREQUAL "RPI")
+#        include("${CMAKE_CURRENT_SOURCE_DIR}/toolchains/arm-bcm2708.cmake")
+#else()
+#        if (NOT PORTABLE)
+#                if(MSVC)
+#                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
+#                else()
+#                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+#                endif()
+#        endif()
+#endif()
+set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -latomic")
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11 " COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x " COMPILER_SUPPORTS_CXX0X)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+#include(CheckCXXCompilerFlag)
+#CHECK_CXX_COMPILER_FLAG("-std=c++11 " COMPILER_SUPPORTS_CXX11)
+#CHECK_CXX_COMPILER_FLAG("-std=c++0x " COMPILER_SUPPORTS_CXX0X)
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 if(COMPILER_SUPPORTS_CXX11)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
@@ -59,22 +94,18 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
-if (NOT PORTABLE)
-  if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-  endif()
-endif()
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+
 
 # Search for threads
 find_package(Threads REQUIRED)
 
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 
 if(NOT USE_SYSTEM_OPENSSL)
   message("Using bundled LibreSSL")
@@ -84,7 +115,7 @@ if(NOT USE_SYSTEM_OPENSSL)
     GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
     GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+    CMAKE_ARGS "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}" "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
     PATCH_COMMAND ./autogen.sh
   )
 
@@ -105,6 +136,7 @@ if(NOT USE_SYSTEM_OPENSSL)
   set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
   set(OPENSSL_LIBRARIES tls ssl crypto)
 else()
+  message("huh?")
   # Set the right openssl root path
   if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
@@ -114,7 +146,54 @@ else()
 
   # Include OpenSSL
   find_package (OpenSSL REQUIRED)
-endif(USE_SYSTEM_OPENSSL)
+endif()
+
+if(NOT USE_SYSTEM_CURL)
+  message("Using bundled cURL")
+
+  set(CURL_C_FLAGS "-I${OPENSSL_INCLUDE_DIR}")
+  set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
+
+  ExternalProject_Add(
+    curl-external
+    GIT_REPOSITORY "https://github.com/curl/curl.git"
+    GIT_TAG "4d6bd91ab33328c6d27eddc32e064defc02dc4fd"  # Version 7.59.0
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
+    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
+                -DBUILD_CURL_EXE=OFF
+                -DBUILD_TESTING=OFF
+                -DCURL_STATICLIB=ON
+                -DHTTP_ONLY=ON
+                -DCURL_DISABLE_CRYPTO_AUTH=ON
+                -DHAVE_GLIBC_STRERROR_R=1
+                -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
+                -DHAVE_POSIX_STRERROR_R=0
+                -DHAVE_POSIX_STRERROR_R__TRYRUN_OUTPUT=""
+                -DHAVE_POLL_FINE_EXITCODE=0
+                -DHAVE_FSETXATTR_5=0
+                -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
+                -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+               "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ssl"
+               "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
+               "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
+    BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libcurl.a"
+  )
+
+  if(NOT USE_SYSTEM_OPENSSL)
+    add_dependencies(curl-external libressl-portable)
+  endif()
+
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/curl/dummy")
+  add_library(curl STATIC IMPORTED)
+  set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/lib/libcurl.a")
+  set_target_properties(curl PROPERTIES INTERFACE_LINK_LIBRARIES ${OPENSSL_LIBRARIES})
+  add_dependencies(curl curl-external)
+  set(CURL_FOUND "YES")
+  set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
+  set(CURL_INCLUDE_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
+  set(CURL_LIBRARIES curl)
+  set(CURL_LIBRARY curl)
+endif()
 
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
@@ -130,7 +209,7 @@ if(NOT USE_SYSTEM_ZLIB)
     GIT_REPOSITORY "https://github.com/madler/zlib.git"
     GIT_TAG "cacf7f1d4e3d44d871b605da3b647f07d718623f"  # Version 1.2.11
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-src"
-    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-install"
     BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libz.a"
   )
@@ -163,6 +242,7 @@ else()
   add_subdirectory("thirdparty/uuid")
   set(UUID_FOUND "YES")
   set(UUID_LIBRARIES "uuid")
+  set(UUID_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/uuid/include/")
 endif()
 
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
@@ -185,7 +265,7 @@ include_directories(thirdparty/rapidjson-1.1.0/include)
 ## Expression language extensions
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
 include_directories("extensions/expression-language/common")
-if (DISABLE_EXPRESSION_LANGUAGE)
+if (DISABLE_CURL OR DISABLE_EXPRESSION_LANGUAGE)
     # Build expression language NoOp implementation, if necessary
     include_directories("extensions/expression-language/noop")
     add_subdirectory(extensions/expression-language/noop)
@@ -304,10 +384,8 @@ endif()
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 
 if (NOT BUILD_IDENTIFIER)
-   if (NOT BUILD_IDENTIFIER)
-     string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
-     set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier")
-   endif()
+   string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
+   set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier")
 endif()
 
 message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")

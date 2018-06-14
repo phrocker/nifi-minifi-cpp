@@ -38,17 +38,13 @@ endif()
 
 add_executable(minifiexe MiNiFiMain.cpp)
 if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifiexe "-pthread")
+  target_compile_options(PUBLIC minifiexe "-pthread -latomic")
 endif()
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifiexe "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-# Include UUID
-find_package(UUID REQUIRED)
 
-# Include OpenSSL
-find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, and rocksdb

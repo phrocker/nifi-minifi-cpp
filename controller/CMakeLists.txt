@@ -44,14 +44,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minificontroller "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-# Include UUID
-find_package(UUID REQUIRED)
-
-# Include OpenSSL
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-
-# Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, jsoncpp and rocksdb
+# Link against minifi, which bundles necessary dependencies
 target_link_libraries(minificontroller core-minifi)
 
 if (APPLE)

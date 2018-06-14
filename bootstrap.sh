@@ -39,6 +39,7 @@ CMAKE_OPTIONS_ENABLED=()
 CMAKE_OPTIONS_DISABLED=()
 CMAKE_MIN_VERSION=()
 DEPLOY_LIMITS=()
+RPI_BUILD=$FALSE
 
 DEPENDENCIES=()
 
@@ -291,6 +292,9 @@ do
   if [ "$MENU"  == "main" ]; then
     show_main_menu
     read_main_menu_options
+  elif [ "$MENU" == "cross" ]; then 
+    show_cc_menu
+    read_cc_options  
   elif [ "$MENU" == "advanced" ]; then
     show_advanced_features_menu
     read_advanced_menu_options
@@ -357,6 +361,11 @@ build_cmake_command(){
   if [ "${DEBUG_SYMBOLS}" = "${TRUE}" ]; then
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=RelWithDebInfo"
   fi
+
+  if [ "${RPI_BUILD}" = "${TRUE}" ]; then
+   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_TOOL_CHAIN=RPI"
+  fi
+
 
   if [ "${PORTABLE_BUILD}" = "${TRUE}" ]; then
     CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DPORTABLE=ON "

@@ -17,12 +17,7 @@
 # under the License.
 #
 
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
-
-include_directories(../../libminifi/include  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ../../thirdparty/) 
-
-find_package(LibArchive)
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 	
 include_directories(../../thirdparty/libarchive-3.3.2/libarchive)
 
@@ -38,18 +33,9 @@ if(CMAKE_THREAD_LIBS_INIT)
 endif()
 
 
-# Include UUID
-find_package(UUID REQUIRED)
 target_link_libraries(minifi-archive-extensions ${LIBMINIFI} ${UUID_LIBRARIES})
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
 target_link_libraries(minifi-archive-extensions ${CMAKE_DL_LIBS} )
-if (LibArchive_FOUND AND NOT BUILD_LIBARCHIVE)
-	target_link_libraries(minifi-archive-extensions ${LibArchive_LIBRARIES} )
-else()
-	target_link_libraries(minifi-archive-extensions archive_static )
-endif()
-find_package(ZLIB REQUIRED)
+target_link_libraries(minifi-archive-extensions archive_static )
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-archive-extensions ${ZLIB_LIBRARIES})
 if (WIN32)

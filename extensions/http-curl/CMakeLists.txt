@@ -17,56 +17,15 @@
 # under the License.
 #
 
-if(NOT USE_SYSTEM_CURL)
-  message("Using bundled cURL")
 
-  set(CURL_C_FLAGS "-I${OPENSSL_INCLUDE_DIR}")
-  set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-  ExternalProject_Add(
-    curl-external
-    GIT_REPOSITORY "https://github.com/curl/curl.git"
-    GIT_TAG "4d6bd91ab33328c6d27eddc32e064defc02dc4fd"  # Version 7.59.0
-    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
-                -DBUILD_CURL_EXE=OFF
-                -DBUILD_TESTING=OFF
-                -DCURL_STATICLIB=ON
-                -DHTTP_ONLY=ON
-                -DCURL_DISABLE_CRYPTO_AUTH=ON
-                -DHAVE_GLIBC_STRERROR_R=1
-                -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
-                -DHAVE_POSIX_STRERROR_R=0
-                -DHAVE_POSIX_STRERROR_R__TRYRUN_OUTPUT=""
-                -DHAVE_POLL_FINE_EXITCODE=0
-                -DHAVE_FSETXATTR_5=0
-                -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
-               "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/ssl"
-               "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
-               "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
-    BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libcurl.a"
-  )
+find_package(CURL )
 
-  if(NOT USE_SYSTEM_OPENSSL)
-    add_dependencies(curl-external libressl-portable)
-  endif()
-
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/curl/dummy")
-  add_library(curl STATIC IMPORTED)
-  set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/lib/libcurl.a")
-  set_target_properties(curl PROPERTIES INTERFACE_LINK_LIBRARIES ${OPENSSL_LIBRARIES})
-  add_dependencies(curl curl-external)
-  set(CURL_FOUND "YES")
-  set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/curl/include")
-  set(CURL_LIBRARIES curl)
+if (NOT CURL_FOUND)
+  message(FATAL_ERROR "Could not find cURL!")
 endif()
 
-find_package(CURL REQUIRED)
-
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--export-all-symbols")
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-symbols")
-
-include_directories(../../libminifi/include  ../../libminifi/include/core/yaml  ../../libminifi/include/core  ../../thirdparty/spdlog-20170710/include ../../thirdparty/concurrentqueue ../../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include ${CIVET_THIRDPARTY_ROOT}/include ../../thirdparty/)
 include_directories(protocols client processors sitetosite)
 
 file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")
@@ -90,17 +49,12 @@ if (CURL_FOUND)
   target_link_libraries(minifi-http-curl ${CURL_LIBRARIES})
 endif ()
 
-# Include UUID
-find_package(UUID REQUIRED)
-#set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
 
 # Include OpenSSL
-find_package(OpenSSL REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-http-curl ${CMAKE_DL_LIBS} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifi-http-curl ${OPENSSL_LIBRARIES} crypto  ${CMAKE_DL_LIBS} )
 target_link_libraries(minifi-http-curl minifi-civet-extensions)
 
-find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 target_link_libraries (minifi-http-curl ${ZLIB_LIBRARIES})
 if (WIN32)

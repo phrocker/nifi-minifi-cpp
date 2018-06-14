@@ -238,16 +238,3 @@ IF(NOT WIN32 OR CYGWIN)
   SET_TARGET_PROPERTIES(archive_static PROPERTIES OUTPUT_NAME archive)
 ENDIF(NOT WIN32 OR CYGWIN)
 
-IF(ENABLE_INSTALL)
-  # How to install the libraries
-  INSTALL(TARGETS archive archive_static
-          RUNTIME DESTINATION bin
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib)
-  INSTALL_MAN(${libarchive_MANS})
-  INSTALL(FILES ${include_HEADERS} DESTINATION include)
-ENDIF()
-
-IF(ENABLE_TEST)
-add_subdirectory(test)
-ENDIF()

@@ -92,6 +92,7 @@ save_state(){
    echo "VERSION=1" > ${script_directory}/state
    echo_state_variable BUILD_IDENTIFIER
    echo_state_variable BUILD_DIR
+   echo_state_variable RPI_BUILD
    for option in "${OPTIONS[@]}" ; do
        echo_state_variable $option
    done
@@ -193,8 +194,9 @@ show_main_menu() {
   if [ "$ALL_FEATURES_ENABLED" = "${TRUE}" ]; then
     echo "  All features enabled  ........$(print_feature_status ALL_FEATURES_ENABLED)"
   fi
-  echo "B. Select Advanced Features   "
-  echo "C. Continue with selected options   "
+  echo "B. Manage Cross-Compilation   "
+  echo "C. Select Advanced Features   "
+  echo "D. Continue with selected options   "
   echo -e "Q. Exit\r\n"
 }
 
@@ -204,8 +206,34 @@ read_main_menu_options(){
   choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
   case $choice in
     a) MENU="features" ;;
-    b) MENU="advanced" ;;
-    c) FEATURES_SELECTED="true" ;;
+    b) MENU="cross" ;;
+    c) MENU="advanced" ;;
+    d) FEATURES_SELECTED="true" ;;
+    q) exit 0;;
+    *) echo -e "${RED}Please enter a valid option...${NO_COLOR}" && sleep 1
+  esac
+}
+
+
+show_cc_menu() {
+  clear
+  echo "****************************************"
+  echo " MiNiFi C++ Cross Compilation."
+  echo "****************************************"
+  echo "A. Build for Raspberry Pi ........$(print_feature_status RPI_BUILD) "
+  echo "R. Return to Main Menu   "
+  echo -e "Q. Exit\r\n"
+}
+
+read_cc_options(){
+  local choice
+  read -p "Enter choice  " choice
+  choice=$(echo ${choice} | tr '[:upper:]' '[:lower:]')
+  case $choice in 
+    a) ToggleFeature RPI_BUILD
+        PORTABLE=${FALSE}
+	;;
+    r) MENU="main" ;;
     q) exit 0;;
     *) echo -e "${RED}Please enter a valid option...${NO_COLOR}" && sleep 1
   esac

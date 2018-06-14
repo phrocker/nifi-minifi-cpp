@@ -73,14 +73,12 @@ add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(core-minifi STATIC ${SOURCES})
 target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
 
-find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(core-minifi minifi-expression-language-extensions)
 target_link_libraries (core-minifi ${ZLIB_LIBRARIES})
 
 # Include OpenSSL
-find_package (OpenSSL REQUIRED)
 if (OPENSSL_FOUND)
 	include_directories(${OPENSSL_INCLUDE_DIR})
 	target_link_libraries (core-minifi ${OPENSSL_LIBRARIES})
