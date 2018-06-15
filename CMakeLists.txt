@@ -64,17 +64,14 @@ set(CMAKE_SYSTEM_NAME Linux)
 
 ##
 
-#if( BUILD_TOOL_CHAIN STREQUAL "RPI")
-#        include("${CMAKE_CURRENT_SOURCE_DIR}/toolchains/arm-bcm2708.cmake")
-#else()
-#        if (NOT PORTABLE)
-#                if(MSVC)
-#                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
-#                else()
-#                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-#                endif()
-#        endif()
-#endif()
+if (NOT PORTABLE)
+        if(MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
+        else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+        endif()
+endif()
+
 set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -latomic")
 
 #### Establish Project Configuration ####
@@ -211,7 +208,7 @@ if(NOT USE_SYSTEM_ZLIB)
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-src"
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-install"
-    BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libz.a"
+    BUILD_BYPRODUCTS "thirdparty/zlib-install/lib/libz.a"
   )
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/zlib/dummy")
@@ -220,14 +217,74 @@ if(NOT USE_SYSTEM_ZLIB)
   add_dependencies(z zlib-external)
   set(ZLIB_FOUND "YES")
   set(ZLIB_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include")
+  set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include")
   set(ZLIB_LIBRARIES z)
-else()
+  set(ZLIB_LIBRARY z)
   find_package (ZLIB REQUIRED)
 endif()
+
+find_package (ZLIB REQUIRED)
 
 if (ZLIB_FOUND)
   include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
+
+
+if(CMAKE_TOOLCHAIN_FILE)
+  message("Downloading libPNG")
+
+#"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libpng-install"
+  ExternalProject_Add(
+    libpng-external
+    GIT_REPOSITORY "https://github.com/glennrp/libpng.git"
+    DEPENDS zlib-external
+    GIT_TAG "916117d97058b37e7eef2558a71919a8a073a3d3"
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libpng-src"
+    CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                -DPNG_BUILD_ZLIB=true
+                "-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}"
+                -DPNG_STATIC=true
+                -DPNG_SHARED=OFF
+                "-DM_LIBRARY="
+                -DBUILD_SHARED_LIBS=FALSE
+    BUILD_BYPRODUCTS "thirdparty/libpng-install/build/libpng.a"
+  )
+
+
+  add_library(libpng STATIC IMPORTED)
+  set_target_properties(libpng PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libpng-install/build/libpng.a")
+  add_dependencies(libpng libpng-external)
+  set(PNG_FOUND "YES")
+  set(PNG_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libpng-install/include/")
+  set(PNG_INCLUDE_DIR  "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libpng-install/include/")
+  set(PNG_LIBRARIES libpng)
+  set(PNG_LIBRARY libpng)
+  
+  
+  message("Downloading libusb")
+  ExternalProject_Add(
+    libusb-external
+    GIT_REPOSITORY "https://github.com/libusb/libusb.git"
+    GIT_TAG "0034b2afdcdb1614e78edaa2a9e22d5936aeae5d"
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libusb-src"
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libusb-src/configure --prefix=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libusb-install/
+    BUILD_BYPRODUCTS "thirdparty/libusb-install/lib/libusb-1.0.a"
+    PATCH_COMMAND ./bootstrap.sh
+    BUILD_COMMAND ${MAKE}
+  )
+
+
+  add_library(libusb STATIC IMPORTED)
+  set_target_properties(libusb PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libusb-install/lib/libusb-1.0.a")
+  add_dependencies(libusb libusb-external)
+  set(LIBUSB_FOUND "YES")
+  set(LIBUSB_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libusb-install/include/libusb-1.0/")
+  set(LIBUSB_INCLUDE_DIR  "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libusb-install/include/libusb-1.0/")
+  set(LIBUSB_LIBRARIES libusb)
+  set(LIBUSB_LIBRARY libusb)
+  
+endif()
+
 
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 
@@ -247,7 +304,6 @@ endif()
 
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
 
-include(ExternalProject)
 
 set(CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING OFF CACHE BOOL "Disable dynamic SSL library loading")
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
