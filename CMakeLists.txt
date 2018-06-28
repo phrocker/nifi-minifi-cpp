@@ -165,6 +165,9 @@ else()
   set(UUID_LIBRARIES "uuid")
 endif()
 
+include_directories("thirdparty/bsdiff/")
+add_subdirectory("thirdparty/bsdiff")
+
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
 
 include(ExternalProject)

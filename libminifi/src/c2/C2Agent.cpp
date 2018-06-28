@@ -618,7 +618,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       if (allow_updates_) {
         utils::file::FileUtils::copy_file(file_path, update_location_);
         // remove the downloaded file.
-        logger_->log_trace("removing command %s", file_path);
+        logger_->log_trace("removing file %s", file_path);
         unlink(file_path.c_str());
         update_agent();
       }
