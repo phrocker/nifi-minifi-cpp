@@ -26,6 +26,7 @@
 #include "Relationship.h"
 #include "Scheduling.h"
 #include "core/state/FlowIdentifier.h"
+#include "core/state/FailurePolicy.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -136,7 +137,7 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
   /**
    * Sets the flow version for this connectable.
    */
-  void setFlowIdentifier(const std::shared_ptr<state::FlowIdentifier> &version){
+  void setFlowIdentifier(const std::shared_ptr<state::FlowIdentifier> &version) {
     connectable_version_ = version;
   }
 
@@ -144,8 +145,24 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
    * Returns theflow version
    * @returns flow version. can be null if a flow version is not tracked.
    */
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier(){
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() {
     return connectable_version_;
+  }
+
+  /**
+   * Get the failure policy.
+   * @returns failure policy
+   */
+  state::FAILURE_POLICY getFailurePolicy() const {
+    return failure_policy_;
+  }
+
+  /**
+   * Sets the internal failure policy
+   * @param policy incoming failure policy.
+   */
+  void setFailurePolicy(state::FAILURE_POLICY policy) {
+    failure_policy_ = policy;
   }
 
  protected:
@@ -165,7 +182,7 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
   // Incoming connections
   std::set<std::shared_ptr<Connectable>> _incomingConnections;
   // Outgoing connections map based on Relationship name
-  std::map<std::string, std::set<std::shared_ptr<Connectable>>>out_going_connections_;
+  std::map<std::string, std::set<std::shared_ptr<Connectable>>> out_going_connections_;
 
   // Mutex for protection
   std::mutex relationship_mutex_;
@@ -183,7 +200,9 @@ class __attribute__((visibility("default"))) Connectable : public CoreComponent 
   // version under which this connectable was created.
   std::shared_ptr<state::FlowIdentifier> connectable_version_;
 
-private:
+  std::atomic<state::FAILURE_POLICY> failure_policy_;
+
+ private:
   std::shared_ptr<logging::Logger> logger_;
 };
 

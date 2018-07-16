@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "spdlog/spdlog.h"
+#include "core/Event.h"
 
 namespace org {
 namespace apache {
@@ -34,6 +35,8 @@ namespace logging {
 
 #define LOG_BUFFER_SIZE 1024
 
+#define LOG_EVENTS "LOG_EVENTS"
+
 class LoggerControl {
  public:
   LoggerControl()
@@ -41,11 +44,11 @@ class LoggerControl {
 
   }
 
-  bool is_enabled(){
+  bool is_enabled() {
     return is_enabled_;
   }
 
-  void setEnabled(bool status){
+  void setEnabled(bool status) {
     is_enabled_ = status;
   }
  protected:
@@ -63,14 +66,6 @@ inline std::string format_string(char const* format_str) {
   return format_str;
 }
 
-inline char const* conditional_conversion(std::string const& str) {
-  return str.c_str();
-}
-
-template<typename T>
-inline T conditional_conversion(T const& t) {
-  return t;
-}
 
 typedef enum {
   trace = 0,
@@ -249,24 +244,43 @@ class Logger : public BaseLogger {
         break;
     }
   }
+
+  Logger(const std::string &name, std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller)
+      : delegate_(delegate),
+        controller_(controller),
+        name_(name) {
+  }
+
   Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller)
-      : delegate_(delegate), controller_(controller) {
+      : delegate_(delegate),
+        controller_(controller) {
   }
 
   Logger(std::shared_ptr<spdlog::logger> delegate)
-        : delegate_(delegate), controller_(nullptr) {
-    }
-
+      : delegate_(delegate),
+        controller_(nullptr) {
+  }
 
   std::shared_ptr<spdlog::logger> delegate_;
   std::shared_ptr<LoggerControl> controller_;
-
+  const std::string name_;
   std::mutex mutex_;
+
  private:
+
+  inline char const* conditional_conversion(std::string const& str) {
+    return str.c_str();
+  }
+
+  template<typename T>
+  inline T conditional_conversion(T const& t) {
+    return t;
+  }
+
   template<typename ... Args>
   inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {
     if (controller_ && !controller_->is_enabled())
-         return;
+      return;
     std::lock_guard<std::mutex> lock(mutex_);
     if (!delegate_->should_log(level)) {
       return;

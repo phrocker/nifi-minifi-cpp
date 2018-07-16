@@ -76,10 +76,10 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   std::map<std::string, std::shared_ptr<spdlog::logger>> spdloggers;
   for (auto const & logger_impl : loggers) {
     std::shared_ptr<spdlog::logger> spdlogger;
-    auto it = spdloggers.find(logger_impl->name);
+    auto it = spdloggers.find(logger_impl->getName());
     if (it == spdloggers.end()) {
-      spdlogger = get_logger(logger_, root_namespace_, logger_impl->name, formatter_, true);
-      spdloggers[logger_impl->name] = spdlogger;
+      spdlogger = get_logger(logger_, root_namespace_, logger_impl->getName(), formatter_, true);
+      spdloggers[logger_impl->getName()] = spdlogger;
     } else {
       spdlogger = it->second;
     }
@@ -109,7 +109,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
 
     if ("nullappender" == appender_type || "null appender" == appender_type || "null" == appender_type) {
       sink_map[appender_name] = std::make_shared<spdlog::sinks::null_sink_st>();
-    } else if ("rollingappender" == appender_type || "rolling appender" == appender_type || "rolling" == appender_type) {
+    } else if ("rollingappender" == appender_type || "rolling appender" == appender_type || "rolling" == appender_type || "eventappender" == appender_type || "event appender" == appender_type
+        || "event" == appender_type) {
       std::string file_name = "";
       if (!logger_properties->get(appender_key + ".file_name", file_name)) {
         file_name = "minifi-app.log";
@@ -148,6 +149,14 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
         }
       }
       sink_map[appender_name] = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
+
+      if ("eventappender" == appender_type || "event appender" == appender_type || "event" == appender_type) {
+        //
+        std::string event_repo_name, event_repo_type;
+        if (logger_properties->get(appender_key + ".event_repo_name", event_repo_name) &&
+            logger_properties->get(appender_key + ".event_repo_type", event_repo_type)) {
+        }
+      }
     } else if ("stdout" == appender_type) {
       sink_map[appender_name] = spdlog::sinks::stdout_sink_mt::instance();
     } else {

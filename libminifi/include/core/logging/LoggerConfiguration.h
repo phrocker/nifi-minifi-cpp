@@ -29,6 +29,7 @@
 
 #include "core/Core.h"
 #include "core/logging/Logger.h"
+#include "core/logging/EventLogger.h"
 #include "properties/Properties.h"
 
 namespace org {
@@ -52,8 +53,7 @@ struct LoggerNamespace {
         children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {
   }
 };
-}
-;
+};
 
 class LoggerProperties : public Properties {
  public:
@@ -115,18 +115,19 @@ class LoggerConfiguration {
  private:
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
 
-  class LoggerImpl : public Logger {
+  class LoggerImpl : public EventLogger {
    public:
-    LoggerImpl(std::string name, std::shared_ptr<LoggerControl> controller, std::shared_ptr<spdlog::logger> delegate)
-        : Logger(delegate,controller),
-          name(name) {
+    LoggerImpl(const std::string &name, std::shared_ptr<LoggerControl> controller, std::shared_ptr<spdlog::logger> delegate)
+        : EventLogger(name, delegate,controller) {
     }
     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
       std::lock_guard<std::mutex> lock(mutex_);
       delegate_ = delegate;
     }
-    const std::string name;
 
+    std::string getName(){
+      return name_;
+    }
   };
 
   LoggerConfiguration();

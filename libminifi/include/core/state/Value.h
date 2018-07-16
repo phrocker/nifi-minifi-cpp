@@ -93,42 +93,32 @@ class Int64Value : public Value {
   uint64_t value;
 };
 
-
-static inline std::shared_ptr<Value> createValue(
-    const bool &object) {
-  return std::make_shared<BoolValue>(object);
+static inline std::pair<std::shared_ptr<Value>, size_t> createValue(const bool &object) {
+  return std::make_pair(std::make_shared<BoolValue>(object), 1);
 }
 
-static inline std::shared_ptr<Value> createValue(
-    const char *object) {
-  return std::make_shared<Value>(object);
+static inline std::pair<std::shared_ptr<Value>, size_t> createValue(const char *object) {
+  return std::make_pair(std::make_shared<Value>(object), strlen(object));
 }
 
-static inline std::shared_ptr<Value> createValue(
-    char *object) {
-  return std::make_shared<Value>(std::string(object));
+static inline std::pair<std::shared_ptr<Value>, size_t> createValue(char *object) {
+  return std::make_pair(std::make_shared<Value>(std::string(object)), strlen(object));
 }
 
-static inline std::shared_ptr<Value> createValue(
-    const std::string &object) {
-  return std::make_shared<Value>(object);
+static inline std::pair<std::shared_ptr<Value>, size_t> createValue(const std::string &object) {
+  return std::make_pair(std::make_shared<Value>(object), object.size());
 }
 
-
-static inline std::shared_ptr<Value> createValue(
-    const uint32_t &object) {
-  return std::make_shared<Int64Value>(object);
+static inline std::pair<std::shared_ptr<Value>, size_t> createValue(const uint32_t &object) {
+  return std::make_pair(std::make_shared<Int64Value>(object), sizeof(uint32_t));
 }
-static inline std::shared_ptr<Value> createValue(
-    const uint64_t &object) {
-  return std::make_shared<Int64Value>(object);
+static inline std::pair<std::shared_ptr<Value>, size_t> createValue(const uint64_t &object) {
+  return std::make_pair(std::make_shared<Int64Value>(object), sizeof(uint64_t));
 }
 
-static inline std::shared_ptr<Value> createValue(
-    const int &object) {
-  return std::make_shared<IntValue>(object);
+static inline std::pair<std::shared_ptr<Value>, size_t> createValue(const int &object) {
+  return std::make_pair(std::make_shared<IntValue>(object), sizeof(int));
 }
-
 
 /**
  * Purpose: ValueNode is the AST container for a value
@@ -136,7 +126,8 @@ static inline std::shared_ptr<Value> createValue(
 class ValueNode {
  public:
   ValueNode()
-      : value_(nullptr) {
+      : value_(nullptr),
+        size_(0) {
 
   }
 
@@ -145,18 +136,18 @@ class ValueNode {
    * createValue
    */
   template<typename T>
-  auto operator=(
-      const T ref) -> typename std::enable_if<std::is_same<T, int >::value ||
-      std::is_same<T, uint32_t >::value ||
-      std::is_same<T, uint64_t >::value ||
-      std::is_same<T, bool >::value ||
-      std::is_same<T, char* >::value ||
-      std::is_same<T, const char* >::value ||
-      std::is_same<T, std::string>::value,ValueNode&>::type {
-    value_ = createValue(ref);
+  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, int >::value ||
+  std::is_same<T, uint32_t >::value ||
+  std::is_same<T, uint64_t >::value ||
+  std::is_same<T, bool >::value ||
+  std::is_same<T, char* >::value ||
+  std::is_same<T, const char* >::value ||
+  std::is_same<T, std::string>::value,ValueNode&>::type {
+    auto pr = createValue(ref);
+    value_ = pr.first;
+    size_ = pr.second;
     return *this;
   }
-
 
   ValueNode &operator=(const ValueNode &ref) {
     value_ = ref.value_;
@@ -187,8 +178,13 @@ class ValueNode {
     return value_ == nullptr;
   }
 
+  size_t getSize() const {
+    return size_;
+  }
+
  protected:
   std::shared_ptr<Value> value_;
+  size_t size_;
 };
 
 struct SerializedResponseNode {
@@ -196,7 +192,8 @@ struct SerializedResponseNode {
   ValueNode value;
   bool array;
 
-  SerializedResponseNode() : array(false){
+  SerializedResponseNode()
+      : array(false) {
   }
 
   std::vector<SerializedResponseNode> children;

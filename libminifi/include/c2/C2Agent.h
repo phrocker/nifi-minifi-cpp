@@ -33,13 +33,15 @@
 #include "C2Protocol.h"
 #include "io/validation.h"
 #include "HeartBeatReporter.h"
+#define C2_AGENT_UPDATE_NAME "C2UpdatePolicy"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace c2 {
 
-#define C2_AGENT_UPDATE_NAME "C2UpdatePolicy"
+
 /**
  * Purpose and Justification: C2 agent will be the mechanism that will abstract the protocol to do the work.
  *

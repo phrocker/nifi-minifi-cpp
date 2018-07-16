@@ -31,6 +31,7 @@
 #include "utils/file/DiffUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
+#include "controllers/FailurePolicyControllerService.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -606,6 +607,19 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     }
     if (nullptr != update_service_ && update_occurred) {
       // enable updates to persist the configuration.
+    }
+
+  } else if (resp.name == "failure_policy") {
+    bool update_occurred = false;
+    for (auto policy_state : resp.operation_arguments) {
+      if (nullptr != update_service_) {
+        auto policy_name = policy_state.first;
+        auto policy = policy_state.second.to_string();
+        auto policy_service = std::dynamic_pointer_cast<controllers::FailurePolicyControllerService>(controller_->getControllerService(policy_name));
+        if (nullptr != policy_service && update_service_->canUpdate(policy_name)) {
+          policy_service->update(policy);
+        }
+      }
     }
   } else if (resp.name == "c2") {
     // prior configuration options were already in place. thus

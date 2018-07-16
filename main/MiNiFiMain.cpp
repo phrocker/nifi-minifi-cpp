@@ -30,7 +30,7 @@
 #include <iostream>
 #include "ResourceClaim.h"
 #include "core/Core.h"
-
+#include "core/repository/EventRepository.h"
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
