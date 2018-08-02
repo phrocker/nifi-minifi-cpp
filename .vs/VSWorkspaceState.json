@@ -1,0 +1,19 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\extensions\\gps",
+    "\\extensions\\http-curl",
+    "\\extensions\\http-curl\\client",
+    "\\extensions\\http-curl\\processors",
+    "\\extensions\\http-curl\\protocols",
+    "\\extensions\\http-curl\\sitetosite",
+    "\\extensions\\http-curl\\tests",
+    "\\extensions\\libarchive",
+    "\\extensions\\windows-event-log",
+    "\\libminifi",
+    "\\libminifi\\include",
+    "\\libminifi\\include\\core"
+  ],
+  "SelectedNode": "\\libminifi\\src\\io\\DataStream.cpp",
+  "PreviewInSolutionExplorer": false
+}

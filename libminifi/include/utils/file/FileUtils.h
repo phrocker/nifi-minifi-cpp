@@ -17,6 +17,9 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILEUTILS_H_
 
+
+
+
 #include <sstream>
 #include <fstream>
 #ifdef BOOST_VERSION
@@ -24,14 +27,30 @@
 #else
 #include <cstring>
 #include <cstdlib>
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
+#else
 #include <sys/stat.h>
 #include <dirent.h>
 #endif
+#endif
 #include <cstdio>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <fcntl.h>
 #ifdef WIN32
 #define stat _stat
+#include <direct.h>
+#include <windows.h> // winapi
+#include <sys/stat.h> // stat
+#include <tchar.h> // _tcscpy,_tcscat,_tcscmp
+#include <string> // string
+#include <algorithm> // replace
 #endif
 
 namespace org {
@@ -72,6 +91,7 @@ class FileUtils {
       //display error message
     }
     return 0;
+#elif defined(WIN32)
 #else
     DIR *current_directory = opendir(path.c_str());
     int r = -1;
@@ -136,11 +156,15 @@ class FileUtils {
 #else
     struct stat dir_stat;
     if (stat(path.c_str(), &dir_stat)) {
-      mkdir(path.c_str(), 0700);
-    }
-    return 0;
+#ifdef WIN32
+      _mkdir(path.c_str());
+#else
+	mkdir(path.c_str(), 0700);
 #endif
-    return -1;
+	return 0;
+    }
+	return -1;
+#endif
   }
 
   static int copy_file(const std::string &path_from, const std::string dest_path) {

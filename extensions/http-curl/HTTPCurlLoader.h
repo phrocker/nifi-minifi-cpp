@@ -18,6 +18,15 @@
 #ifndef EXTENSIONS_HTTPCURLLOADER_H_
 #define EXTENSIONS_HTTPCURLLOADER_H_
 
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib" )
+#pragma comment(lib, "crypt32.lib" )
+#pragma comment(lib, "Ws2_32.lib")
+
+#define CURL_STATICLIB 
+#include <curl/curl.h>
+#endif
+
 #include "c2/protocols/RESTProtocol.h"
 #include "protocols/RESTSender.h"
 #include "processors/InvokeHTTP.h"
@@ -26,7 +35,7 @@
 #include "sitetosite/HTTPProtocol.h"
 #include "utils/StringUtils.h"
 
-class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core::ObjectFactory {
+class HttpCurlObjectFactory : public core::ObjectFactory {
  public:
   HttpCurlObjectFactory() {
 
@@ -48,6 +57,7 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
    * @return class name for the processor.
    */
   virtual std::vector<std::string> getClassNames() override{
+	  std::cout << "wut2" << std::endl;
     std::vector<std::string> class_names;
     class_names.push_back("HttpProtocol");
     class_names.push_back("RESTSender");
@@ -58,6 +68,7 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
+	  std::cout << "wut " << class_name << std::endl;
     if (utils::StringUtils::equalsIgnoreCase(class_name, "RESTSender")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::c2::RESTSender>());
     } else if (utils::StringUtils::equalsIgnoreCase(class_name, "InvokeHTTP")) {
@@ -76,6 +87,6 @@ class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core
 };
 
 extern "C" {
-void *createHttpCurlFactory(void);
+	DLL_EXPORT void *createHttpCurlFactory(void);
 }
 #endif /* EXTENSIONS_HTTPCURLLOADER_H_ */

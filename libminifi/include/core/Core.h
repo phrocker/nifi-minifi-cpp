@@ -23,7 +23,39 @@
 #include <memory>
 #include <string>
 #include <uuid/uuid.h>
+
+#if defined _WIN32 || defined __CYGWIN__
+#ifdef BUILDING_DLL
+#ifdef __GNUC__
+#define DLL_PUBLIC __attribute__ ((dllexport))
+#else
+#define DLL_PUBLIC __declspec(dllexport) // Note: actually gcc seems to also supports this syntax.
+#endif
+#else
+#ifdef __GNUC__
+#define DLL_PUBLIC __attribute__ ((dllimport))
+#else
+#define DLL_PUBLIC __declspec(dllimport) // Note: actually gcc seems to also supports this syntax.
+#endif
+#endif
+#define DLL_LOCAL
+#else
+#if __GNUC__ >= 4
+#define DLL_PUBLIC __attribute__ ((visibility ("default")))
+#define DLL_LOCAL  __attribute__ ((visibility ("hidden")))
+#else
+#define DLL_PUBLIC
+#define DLL_LOCAL
+#endif
+#endif
+
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+ // can't include cxxabi
+#else
 #include <cxxabi.h>
+#endif
 
 #include "utils/Id.h"
 
@@ -47,12 +79,16 @@ namespace core {
 
 template<typename T>
 static inline std::string getClassName() {
+#ifndef WIN32
   char *b = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
   if (b == nullptr)
     return std::string();
   std::string name = b;
   std::free(b);
   return name;
+#else
+  return typeid(T).name();
+#endif
 }
 
 template<typename T>
@@ -99,9 +135,10 @@ class CoreComponent {
   /**
    * Constructor that sets the name and uuid.
    */
-  explicit CoreComponent(const std::string name, uuid_t uuid = nullptr)
+#ifdef WIN32
+  explicit CoreComponent(const std::string name, m_uuid uuid)
       : name_(name) {
-    if (nullptr == uuid)
+    if (uuid_is_null(uuid))
       // Generate the global UUID for the flow record
       id_generator_->generate(uuid_);
     else
@@ -111,6 +148,32 @@ class CoreComponent {
     uuid_unparse_lower(uuid_, uuidStr);
     uuidStr_ = uuidStr;
   }
+
+  explicit CoreComponent(const std::string name)
+	  : name_(name) {
+	  
+	   // Generate the global UUID for the flow record
+	  id_generator_->generate(uuid_);
+
+	  char uuidStr[37] = { 0 };
+	  uuid_unparse_lower(uuid_, uuidStr);
+	  uuidStr_ = uuidStr;
+  }
+#else
+
+	 explicit CoreComponent(const std::string name, m_uuid uuid = nullptr)
+		 : name_(name) {
+		 if (nullptr == uuid)
+			 // Generate the global UUID for the flow record
+			 id_generator_->generate(uuid_);
+		 else
+			 uuid_copy(uuid_, uuid);
+
+		 char uuidStr[37] = { 0 };
+		 uuid_unparse_lower(uuid_, uuidStr);
+		 uuidStr_ = uuidStr;
+	 }
+#endif
 
   /**
    * Move Constructor.
@@ -137,7 +200,7 @@ class CoreComponent {
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(uuid_t uuid);
+  void setUUID(m_uuid uuid);
 
   void setUUIDStr(const std::string uuidStr);
 
@@ -146,7 +209,7 @@ class CoreComponent {
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  bool getUUID(uuid_t uuid);
+  bool getUUID(m_uuid uuid);
 
   unsigned const char *getUUID();
   /**
@@ -162,7 +225,7 @@ class CoreComponent {
 
  protected:
   // A global unique identifier
-  uuid_t uuid_;
+  m_uuid uuid_;
   // UUID string
   std::string uuidStr_;
 

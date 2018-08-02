@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "core/ProcessGroup.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <memory>
@@ -39,7 +38,7 @@ namespace core {
 
 std::shared_ptr<utils::IdGenerator> ProcessGroup::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid, int version, ProcessGroup *parent)
+ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name, m_uuid uuid, int version, ProcessGroup *parent)
     : logger_(logging::LoggerFactory<ProcessGroup>::getLogger()),
       name_(name),
       type_(type),
@@ -168,12 +167,12 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, Eve
   }
 }
 
-std::shared_ptr<Processor> ProcessGroup::findProcessor(uuid_t uuid) {
+std::shared_ptr<Processor> ProcessGroup::findProcessor(m_uuid uuid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<Processor> ret = NULL;
   for (auto processor : processors_) {
     logger_->log_debug("find processor %s", processor->getName());
-    uuid_t processorUUID;
+    m_uuid processorUUID;
 
     if (processor->getUUID(processorUUID)) {
       char uuid_str[37];  // ex. "1b4e28ba-2fa1-11d2-883f-0016d3cca427" + "\0"
@@ -277,14 +276,14 @@ void ProcessGroup::addConnection(std::shared_ptr<Connection> connection) {
     // We do not have the same connection in this process group yet
     connections_.insert(connection);
     logger_->log_debug("Add connection %s into process group %s", connection->getName(), name_);
-    uuid_t sourceUUID;
+    m_uuid sourceUUID;
     std::shared_ptr<Processor> source = NULL;
     connection->getSourceUUID(sourceUUID);
     source = this->findProcessor(sourceUUID);
     if (source)
       source->addConnection(connection);
     std::shared_ptr<Processor> destination = NULL;
-    uuid_t destinationUUID;
+    m_uuid destinationUUID;
     connection->getDestinationUUID(destinationUUID);
     destination = this->findProcessor(destinationUUID);
     if (destination && destination != source)
@@ -299,14 +298,14 @@ void ProcessGroup::removeConnection(std::shared_ptr<Connection> connection) {
     // We do not have the same connection in this process group yet
     connections_.erase(connection);
     logger_->log_debug("Remove connection %s into process group %s", connection->getName(), name_);
-    uuid_t sourceUUID;
+    m_uuid sourceUUID;
     std::shared_ptr<Processor> source = NULL;
     connection->getSourceUUID(sourceUUID);
     source = this->findProcessor(sourceUUID);
     if (source)
       source->removeConnection(connection);
     std::shared_ptr<Processor> destination = NULL;
-    uuid_t destinationUUID;
+    m_uuid destinationUUID;
     connection->getDestinationUUID(destinationUUID);
     destination = this->findProcessor(destinationUUID);
     if (destination && destination != source)

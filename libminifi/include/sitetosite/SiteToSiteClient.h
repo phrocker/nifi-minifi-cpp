@@ -96,11 +96,20 @@ class SiteToSiteClient : public core::Connectable {
    * @returns true if the process succeeded, failure OR exception thrown otherwise
    */
   virtual bool transfer(TransferDirection direction, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-    if (__builtin_expect(direction == SEND, 1)) {
+#ifndef WIN32
+	  if (__builtin_expect(direction == SEND, 1)) {
       return transferFlowFiles(context, session);
     } else {
       return receiveFlowFiles(context, session);
     }
+#else
+	  if (direction == SEND) {
+		  return transferFlowFiles(context, session);
+	  }
+	  else {
+		  return receiveFlowFiles(context, session);
+	  }
+#endif
   }
 
   /**
@@ -136,7 +145,7 @@ class SiteToSiteClient : public core::Connectable {
   virtual bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
                                std::map<std::string, std::string> attributes) = 0;
 
-  void setPortId(uuid_t id) {
+  void setPortId(m_uuid id) {
     uuid_copy(port_id_, id);
     char idStr[37];
     uuid_unparse_lower(id, idStr);
@@ -241,7 +250,7 @@ class SiteToSiteClient : public core::Connectable {
   std::string port_id_str_;
 
   // portId
-  uuid_t port_id_;
+  m_uuid port_id_;
 
   // Peer Connection
   std::unique_ptr<SiteToSitePeer> peer_;
@@ -285,7 +294,7 @@ class WriteCallback : public OutputStreamCallback {
     int len = _packet->_size;
     int total = 0;
     while (len > 0) {
-      int size = std::min(len, 16384);
+	  int size = len < 16384 ? len : 16384; 
       int ret = _packet->transaction_->getStream().readData(buffer, size);
       if (ret != size) {
         logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;

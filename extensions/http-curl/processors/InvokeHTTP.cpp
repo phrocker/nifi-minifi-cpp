@@ -17,7 +17,11 @@
  */
 
 #include "InvokeHTTP.h"
+#ifdef WIN32
+#include <regex>
+#else
 #include <regex.h>
+#endif
 #include <curl/easy.h>
 #include <uuid/uuid.h>
 #include <memory>
@@ -234,7 +238,7 @@ InvokeHTTP::~InvokeHTTP() {
 }
 
 std::string InvokeHTTP::generateId() {
-  uuid_t txId;
+  m_uuid txId;
   id_generator_->generate(txId);
   char uuidStr[37];
   uuid_unparse_lower(txId, uuidStr);

@@ -35,7 +35,7 @@
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #else
-#include <uuid/uuid_types.h>
+#include <uuid/m_uuidypes.h>
 #endif
 #include <sys/types.h>
 
@@ -59,5 +59,5 @@ struct uuid {
 /*
  * prototypes
  */
-void uuid_pack(const struct uuid *uu, uuid_t ptr);
-void uuid_unpack(const uuid_t in, struct uuid *uu);
+void uuid_pack(const struct uuid *uu, m_uuid ptr);
+void uuid_unpack(const m_uuid in, struct uuid *uu);

@@ -39,7 +39,7 @@ namespace provenance {
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
 
-  ProvenanceRepository(std::string name, uuid_t uuid)
+  ProvenanceRepository(std::string name, m_uuid uuid)
       : ProvenanceRepository(name){
 
   }

@@ -267,7 +267,7 @@ class MergeContent : public processors::BinFiles {
   /*!
    * Create a new processor
    */
-  explicit MergeContent(std::string name, uuid_t uuid = NULL)
+  explicit MergeContent(std::string name, m_uuid uuid = NULL)
       : processors::BinFiles(name, uuid),
         logger_(logging::LoggerFactory<MergeContent>::getLogger()) {
     mergeStratgey_ = MERGE_STRATEGY_DEFRAGMENT;

@@ -17,7 +17,11 @@
 # under the License.
 #
 
-include_directories("include/uuid")
+if (WIN32)
+	include_directories("include/win32")
+else()
+	include_directories("include/uuid")
+endif(WIN32)
 
 add_library(
     uuid

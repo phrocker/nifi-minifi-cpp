@@ -18,11 +18,9 @@
  * limitations under the License.
  */
 #include "FlowController.h"
-#include <sys/time.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <vector>
 #include <queue>
 #include <map>
@@ -56,6 +54,13 @@
 #include "core/Connectable.h"
 #include "utils/HTTPClient.h"
 
+
+#ifdef _MSC_VER
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -63,7 +68,7 @@ namespace minifi {
 
 std::shared_ptr<utils::IdGenerator> FlowController::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-#define DEFAULT_CONFIG_NAME "conf/flow.yml"
+#define DEFAULT_CONFIG_NAME "conf/config.yml"
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<Configure> configure,
                                std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<core::ContentRepository> content_repo, const std::string name, bool headless_mode)
@@ -133,8 +138,12 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
 
 void FlowController::initializePaths(const std::string &adjustedFilename) {
   char *path = NULL;
+#ifndef WIN32
   char full_path[PATH_MAX];
   path = realpath(adjustedFilename.c_str(), full_path);
+#else
+  path = const_cast<char*>(adjustedFilename.c_str());
+#endif
 
   if (path == NULL) {
     throw std::runtime_error("Path is not specified. Either manually set MINIFI_HOME or ensure ../conf exists");
@@ -144,7 +153,7 @@ void FlowController::initializePaths(const std::string &adjustedFilename) {
   logger_->log_info("FlowController NiFi Configuration file %s", pathString);
 
   if (!path) {
-    logger_->log_error("Could not locate path from provided configuration file name (%s).  Exiting.", full_path);
+    logger_->log_error("Could not locate path from provided configuration file name (%s).  Exiting.", path);
     exit(1);
   }
 }

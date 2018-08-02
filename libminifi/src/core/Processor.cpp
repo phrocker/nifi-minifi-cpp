@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "core/Processor.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <queue>
@@ -45,7 +44,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-Processor::Processor(std::string name, uuid_t uuid)
+Processor::Processor(std::string name, m_uuid uuid)
     : Connectable(name, uuid),
       ConfigurableComponent(),
       logger_(logging::LoggerFactory<Processor>::getLogger()) {
@@ -87,8 +86,8 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
   std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
   std::lock_guard<std::mutex> lock(mutex_);
 
-  uuid_t srcUUID;
-  uuid_t destUUID;
+  m_uuid srcUUID;
+  m_uuid destUUID;
 
   connection->getSourceUUID(srcUUID);
   connection->getDestinationUUID(destUUID);
@@ -147,8 +146,8 @@ void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
 
   std::lock_guard<std::mutex> lock(mutex_);
 
-  uuid_t srcUUID;
-  uuid_t destUUID;
+  m_uuid srcUUID;
+  m_uuid destUUID;
 
   std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
 

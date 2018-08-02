@@ -30,12 +30,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship UpdateAttribute::Success(
-    "success",
-    "All files are routed to success");
-core::Relationship UpdateAttribute::Failure(
-    "failure",
-    "Failed files are transferred to failure");
+core::Relationship UpdateAttribute::Success("success", "All files are routed to success");
+core::Relationship UpdateAttribute::Failure("failure", "Failed files are transferred to failure");
 
 void UpdateAttribute::initialize() {
   std::set<core::Property> properties;
@@ -47,8 +43,7 @@ void UpdateAttribute::initialize() {
   setSupportedRelationships(relationships);
 }
 
-void UpdateAttribute::onSchedule(core::ProcessContext *context,
-                                 core::ProcessSessionFactory *sessionFactory) {
+void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
   attributes_.clear();
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
   logger_->log_info("UpdateAttribute registering %d keys", dynamic_prop_keys.size());
@@ -59,8 +54,7 @@ void UpdateAttribute::onSchedule(core::ProcessContext *context,
   }
 }
 
-void UpdateAttribute::onTrigger(core::ProcessContext *context,
-                                core::ProcessSession *session) {
+void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   auto flow_file = session->get();
 
   // Do nothing if there are no incoming files
@@ -73,9 +67,7 @@ void UpdateAttribute::onTrigger(core::ProcessContext *context,
       std::string value;
       context->getDynamicProperty(attribute, value, flow_file);
       flow_file->setAttribute(attribute, value);
-      logger_->log_info("Set attribute '%s' of flow file '%s' with value '%s'",
-                        attribute,
-                        flow_file->getUUIDStr(), value);
+      logger_->log_info("Set attribute '%s' of flow file '%s' with value '%s'", attribute, flow_file->getUUIDStr(), value);
     }
     session->transfer(flow_file, Success);
   } catch (const std::exception &e) {

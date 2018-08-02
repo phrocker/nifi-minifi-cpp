@@ -48,7 +48,7 @@
 static int test_uuid(const char * uuid, int isValid)
 {
 	static const char * validStr[2] = {"invalid", "valid"};
-	uuid_t uuidBits;
+	m_uuid uuidBits;
 	int parsedOk;
 
 	parsedOk = uuid_parse(uuid, uuidBits) == 0;
@@ -71,7 +71,7 @@ static int test_uuid(const char * uuid, int isValid)
 int
 main(int argc ATTR((unused)) , char **argv ATTR((unused)))
 {
-	uuid_t		buf, tst;
+	m_uuid		buf, tst;
 	char		str[100];
 	struct timeval	tv;
 	time_t		time_reg, time_gen;
@@ -88,7 +88,7 @@ main(int argc ATTR((unused)) , char **argv ATTR((unused)))
 		printf("%02x", *cp++);
 	}
 	printf("\n");
-	type = uuid_type(buf); 	variant = uuid_variant(buf);
+	type = m_uuidype(buf); 	variant = uuid_variant(buf);
 	printf("UUID type = %d, UUID variant = %d\n", type, variant);
 	if (variant != UUID_VARIANT_DCE) {
 		printf("Incorrect UUID Variant; was expecting DCE!\n");
@@ -104,7 +104,7 @@ main(int argc ATTR((unused)) , char **argv ATTR((unused)))
 		printf("%02x", *cp++);
 	}
 	printf("\n");
-	type = uuid_type(buf);
+	type = m_uuidype(buf);
 	variant = uuid_variant(buf);
 	printf("UUID type = %d, UUID variant = %d\n", type, variant);
 	if (variant != UUID_VARIANT_DCE) {
@@ -127,7 +127,7 @@ main(int argc ATTR((unused)) , char **argv ATTR((unused)))
 		printf("%02x", *cp++);
 	}
 	printf("\n");
-	type = uuid_type(buf);
+	type = m_uuidype(buf);
 	variant = uuid_variant(buf);
 	printf("UUID type = %d, UUID variant = %d\n", type, variant);
 	if (variant != UUID_VARIANT_DCE) {
@@ -142,7 +142,7 @@ main(int argc ATTR((unused)) , char **argv ATTR((unused)))
 
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
-	time_reg = uuid_time(buf, &tv);
+	time_reg = m_uuidime(buf, &tv);
 	printf("UUID generated at %lu reports %lu (%ld.%ld)\n",
 	       time_gen, time_reg, tv.tv_sec, (long)tv.tv_usec);
 	/* allow 1s margin in case of rollover between sampling

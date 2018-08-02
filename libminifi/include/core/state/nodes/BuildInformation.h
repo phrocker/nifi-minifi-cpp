@@ -19,10 +19,11 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_METRICS_BuildInformation_H_
 
 #include "core/Resource.h"
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <functional>
 #include <sys/ioctl.h>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
 #include <net/if_dl.h>
@@ -32,13 +33,17 @@
 #include <net/if.h> 
 #include <unistd.h>
 #include <netinet/in.h>
-#include <string.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ifaddrs.h>
+#include <unistd.h>
+#endif
+#include <functional>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+
 #include <sstream>
 #include <map>
 #include "../nodes/MetricsBase.h"
@@ -61,7 +66,7 @@ namespace response {
 class BuildInformation : public DeviceInformation {
  public:
 
-  BuildInformation(std::string name, uuid_t uuid)
+  BuildInformation(std::string name, m_uuid uuid)
       : DeviceInformation(name, uuid) {
   }
 

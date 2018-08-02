@@ -1,1 +1,21 @@
-build_script: echo NOOP
+image: Visual Studio 2017
+
+environment:
+  MSVC_DEFAULT_OPTIONS: ON
+  
+branches:
+ only: 
+  - windows
+  
+clone_folder: C:\projects\nifi-minifi-cpp
+  
+build_script:
+   - cd C:\projects\nifi-minifi-cpp
+   - mkdir build
+   - cd build
+   - cmake -g"Visual Studio 14 2015 Win64" -DUSE_SYSTEM_OPENSSL=on -DOPENSSL_ROOT_HINTS="c:\\OpenSSL-Win64\\" -DDISABLE_ROCKSDB=ON -DDISABLE_CURL=ON -DDISABLE_LIBARCHIVE=ON -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DDISABLE_EXPRESSION_LANGUAGE=ON -DSKIP_TESTS=ON ..
+   
+   - if "%platform%" == "x86" set msbuild_platform=Win32
+   - if "%platform%" == "x64" set msbuild_platform=%platform% 
+   - msbuild nifi-minifi-cpp.sln
+   

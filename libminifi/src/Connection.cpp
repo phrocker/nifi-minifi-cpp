@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "Connection.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <queue>
@@ -39,8 +38,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, uuid_t uuid, uuid_t srcUUID,
-                       uuid_t destUUID)
+Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, std::string name, m_uuid uuid, m_uuid srcUUID,
+                       m_uuid destUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
       content_repo_(content_repo),

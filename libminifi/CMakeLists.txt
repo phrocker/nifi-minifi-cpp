@@ -35,16 +35,22 @@ IF (IOS)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-abi-version=2 -fobjc-arc -std=gnu++11 -stdlib=libc++ -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-abi-version=2 -fobjc-arc -isysroot ${CMAKE_OSX_SYSROOT} -DIOS")
 ELSE ()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT -DYAML_SUPPORT")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT -DYAML_SUPPORT")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBDIFF")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DBDIFF")
-include_directories("../thirdparty/bsdiff/")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYAML_SUPPORT")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DYAML_SUPPORT")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBDIFF")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DBDIFF")
+#include_directories("../thirdparty/bsdiff/")
 
 ENDIF()
 
 
 include(CheckCXXCompilerFlag)
+if (MSVC_VERSION GREATER_EQUAL "1900")
+    CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
+    if (_cpp_latest_flag_supported)
+        add_compile_options("/std:c++14")
+    endif()
+else()
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
@@ -55,7 +61,13 @@ else()
  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-reorder")
+endif()
+
+if (WIN32)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
+else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-reorder")
+endif()
 
 include_directories(../thirdparty/spdlog-20170710/include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-20171024/include)
@@ -64,7 +76,16 @@ include_directories(../thirdparty/rapidjson-1.1.0/include)
 include_directories(../thirdparty/concurrentqueue/)
 include_directories(include)
 
-file(GLOB SOURCES  "src/sitetosite/*.cpp"  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/core/state/nodes/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp")
+
+if(WIN32)
+include_directories(opsys/win)
+set(SOCKET_SOURCES "src/io/win/*.cpp")
+else()
+include_directories(opsys/posix)
+set(SOCKET_SOURCES "src/io/posix/*.cpp")
+endif()
+
+file(GLOB SOURCES  "src/sitetosite/*.cpp"  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/core/state/nodes/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" ${SOCKET_SOURCES} "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp")
 
 file(GLOB PROCESSOR_SOURCES  "src/processors/*.cpp" )
 
@@ -78,30 +99,35 @@ add_library(spdlog STATIC ${SPD_SOURCES})
 add_library(core-minifi STATIC ${SOURCES})
 target_link_libraries(core-minifi ${CMAKE_DL_LIBS} ${UUID_LIBRARIES} yaml-cpp)
 
-target_link_libraries(core-minifi  PRIVATE bsdiff )
+#target_link_libraries(core-minifi  PRIVATE bsdiff )
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 target_link_libraries(core-minifi minifi-expression-language-extensions)
 target_link_libraries (core-minifi ${ZLIB_LIBRARIES})
-
+set_target_properties(core-minifi PROPERTIES LINK_FLAGS "/WHOLEARCHIVE")
 
 
 
 # Include OpenSSL
-find_package (OpenSSL REQUIRED)
+find_package(OpenSSL)
 if (OPENSSL_FOUND)
 	include_directories(${OPENSSL_INCLUDE_DIR})
 	target_link_libraries (core-minifi ${OPENSSL_LIBRARIES})
 else ()
-    message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
+  message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
 
 add_library(minifi STATIC ${PROCESSOR_SOURCES})
 add_library(capi STATIC ${CAPI_SOURCES})
 
+
 target_link_libraries(minifi core-minifi)
+if (WIN32)
+set_target_properties(minifi PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+set_target_properties(minifi PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:core-minifi")
+endif()
 
 
 

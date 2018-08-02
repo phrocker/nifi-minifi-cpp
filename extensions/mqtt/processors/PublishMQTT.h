@@ -43,7 +43,7 @@ public:
   /*!
    * Create a new processor
    */
-  explicit PublishMQTT(std::string name, uuid_t uuid = NULL)
+  explicit PublishMQTT(std::string name, m_uuid uuid = NULL)
     : processors::AbstractMQTTProcessor(name, uuid), logger_(logging::LoggerFactory<PublishMQTT>::getLogger()) {
     retain_ = false;
     max_seg_size_ = ULLONG_MAX;

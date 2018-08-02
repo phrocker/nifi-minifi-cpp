@@ -42,7 +42,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
+#ifndef WIN32
 core::Property ExecuteProcess::Command("Command", "Specifies the command to be executed; if just the name of an executable"
                                        " is provided, it must be in the user's environment PATH.",
                                        "");
@@ -229,7 +229,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
     }
   }
 }
-
+#endif
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -69,7 +69,7 @@ uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int num
 
 uint64_t IdGenerator::getRandomDeviceSegment(int numBits) {
   uint64_t deviceSegment = 0;
-  uuid_t random_uuid;
+  m_uuid random_uuid;
   for (int word = 0; word < 2; word++) {
     uuid_generate_random(random_uuid);
     for (int i = 0; i < 4; i++) {
@@ -129,7 +129,7 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
   }
 }
 
-void IdGenerator::generate(uuid_t output) {
+void IdGenerator::generate(m_uuid output) {
   switch (implementation_) {
     case UUID_RANDOM_IMPL:
       uuid_generate_random(output);
