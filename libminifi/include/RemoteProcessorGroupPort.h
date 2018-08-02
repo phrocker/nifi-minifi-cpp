@@ -72,7 +72,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   /*!
    * Create a new processor
    */
-  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, const std::shared_ptr<Configure> &configure, uuid_t uuid = nullptr)
+  RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, std::string name, std::string url, const std::shared_ptr<Configure> &configure, m_uuid uuid = nullptr)
       : core::Processor(name, uuid),
         configure_(configure),
         direction_(sitetosite::SEND),
@@ -184,7 +184,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   // local network interface
   std::string local_network_interface_;
 
-  uuid_t protocol_uuid_;
+  m_uuid protocol_uuid_;
 
   // rest API end point info
   std::string host_;

@@ -36,7 +36,7 @@ namespace processors {
 class RouteOnAttribute : public core::Processor {
  public:
 
-  RouteOnAttribute(std::string name, uuid_t uuid = NULL)
+  RouteOnAttribute(std::string name, m_uuid uuid = NULL)
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<RouteOnAttribute>::getLogger()) {
   }

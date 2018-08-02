@@ -53,7 +53,11 @@ class BuildDescription {
 
   static struct Components getClassDescriptions(const std::string group = "minifi-system") {
     static std::map<std::string, struct Components> class_mappings;
-    if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
+#ifndef WIN32
+	if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
+#else
+	if (!class_mappings[group].processors_.empty()) {
+#endif
       for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
         std::string class_name = clazz;
         auto lastOfIdx = clazz.find_last_of("::");

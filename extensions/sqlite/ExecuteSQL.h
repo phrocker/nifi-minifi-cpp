@@ -33,7 +33,7 @@ namespace processors {
 
 class ExecuteSQL : public core::Processor {
  public:
-  explicit ExecuteSQL(const std::string &name, uuid_t uuid = nullptr)
+  explicit ExecuteSQL(const std::string &name, m_uuid uuid = nullptr)
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteSQL>::getLogger()) {
   }

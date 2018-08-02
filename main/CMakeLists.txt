@@ -15,7 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
+# 
 
 cmake_minimum_required(VERSION 2.6)
 
@@ -26,20 +26,28 @@ ENDIF(POLICY CMP0048)
 include_directories(../libminifi/include ../thirdparty/spdlog-20170710/include ../thirdparty/concurrentqueue ../thirdparty/yaml-cpp-yaml-cpp-20171024/include ../thirdparty/rapidjson-1.1.0/include ../thirdparty/)
 
 include(CheckCXXCompilerFlag)
+if (MSVC_VERSION GREATER_EQUAL "1900")
+    CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
+    if (_cpp_latest_flag_supported)
+        add_compile_options("/std:c++14")
+    endif()
+else()
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Os")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Os")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-add_executable(minifiexe MiNiFiMain.cpp)
-if(THREADS_HAVE_PTHREAD_ARG)
-  target_compile_options(PUBLIC minifiexe "-pthread")
 endif()
+
+add_executable(minifiexe MiNiFiMain.cpp)
+#if(THREADS_HAVE_PTHREAD_ARG)
+#  target_compile_options(PUBLIC minifiexe "-pthread")
+#endif()
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifiexe "${CMAKE_THREAD_LIBS_INIT}")
 endif()
@@ -47,9 +55,6 @@ endif()
 # Include UUID
 find_package(UUID REQUIRED)
 
-# Include OpenSSL
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
 
 # Link against minifi, yaml-cpp, civetweb-cpp, uuid, openssl, and rocksdb
 #target_link_libraries(minifiexe core-minifi)
@@ -66,7 +71,16 @@ else ()
 	target_link_libraries (minifiexe -Wl,--whole-archive minifi -Wl,--no-whole-archive)
 endif ()
 
-target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ) #
+
+# Include OpenSSL
+if (OPENSSL_FOUND)
+	target_link_libraries(minifiexe ${OPENSSL_LIBRARIES})
+	include_directories(${OPENSSL_INCLUDE_DIR})
+endif(OPENSSL_FOUND)
+
+
+
 
 if (APPLE)
 	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)

@@ -29,7 +29,7 @@ namespace core {
 std::shared_ptr<utils::IdGenerator> CoreComponent::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 // Set UUID
-void CoreComponent::setUUID(uuid_t uuid) {
+void CoreComponent::setUUID(m_uuid uuid) {
   uuid_copy(uuid_, uuid);
   char uuidStr[37];
   uuid_unparse_lower(uuid_, uuidStr);
@@ -41,7 +41,7 @@ void CoreComponent::setUUIDStr(const std::string uuidStr) {
   uuidStr_ = uuidStr;
 }
 // Get UUID
-bool CoreComponent::getUUID(uuid_t uuid) {
+bool CoreComponent::getUUID(m_uuid uuid) {
   if (uuid) {
     uuid_copy(uuid, uuid_);
     return true;

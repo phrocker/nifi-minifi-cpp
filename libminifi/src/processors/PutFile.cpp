@@ -19,10 +19,8 @@
  */
 
 #include "processors/PutFile.h"
-
+#include "utils/file/FileUtils.h"
 #include <sys/stat.h>
-#include <dirent.h>
-#include <unistd.h>
 #include <uuid/uuid.h>
 #include <cstdint>
 #include <cstdio>
@@ -30,6 +28,13 @@
 #include <memory>
 #include <string>
 #include <set>
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
 
 namespace org {
 namespace apache {
@@ -143,6 +148,8 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     // something exists at directory path
     if (S_ISDIR(statResult.st_mode)) {
       // it's a directory, count the files
+		int64_t ct = 0;
+#ifndef WIN32
       DIR *myDir = opendir(directory.c_str());
       if (!myDir) {
         logger_->log_warn("Could not open %s", directory);
@@ -151,7 +158,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
       }
       struct dirent* entry = nullptr;
 
-      int64_t ct = 0;
+      
       while ((entry = readdir(myDir)) != nullptr) {
         if ((strcmp(entry->d_name, ".") != 0) && (strcmp(entry->d_name, "..") != 0)) {
           ct++;
@@ -165,6 +172,26 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
         }
       }
       closedir(myDir);
+#else
+		HANDLE hFind;
+		WIN32_FIND_DATA FindFileData;
+
+		if ((hFind = FindFirstFile(directory.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
+			do {
+				if ((strcmp(FindFileData.cFileName, ".") != 0) && (strcmp(FindFileData.cFileName, "..") != 0)) {
+					ct++;
+					if (ct >= max_dest_files_) {
+						logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
+							"configured max number of files", directory, max_dest_files_);
+						session->transfer(flowFile, Failure);
+						FindClose(hFind);
+						return;
+					}
+				}
+			} while (FindNextFile(hFind, &FindFileData));
+			FindClose(hFind);
+		}
+#endif
     }
   }
 
@@ -187,7 +214,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
 std::string PutFile::tmpWritePath(const std::string &filename, const std::string &directory) const {
   char tmpFileUuidStr[37];
-  uuid_t tmpFileUuid;
+  m_uuid tmpFileUuid;
   id_generator_->generate(tmpFileUuid);
   uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;
@@ -230,7 +257,7 @@ bool PutFile::putFile(core::ProcessSession *session,
 
       if (!dir_path_component.empty()) {
         logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
-        mkdir(dir_path.c_str(), 0700);
+		utils::file::FileUtils::create_dir(dir_path);
         dir_path_stream << '/';
       } else if (pos == 0) {
         // Support absolute paths

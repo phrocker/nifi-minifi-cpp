@@ -41,7 +41,7 @@ namespace response {
 class SystemInformation : public DeviceInformation {
  public:
 
-  SystemInformation(const std::string &name, uuid_t uuid)
+  SystemInformation(const std::string &name, m_uuid uuid)
       : DeviceInformation(name, uuid) {
   }
 
@@ -62,7 +62,7 @@ class SystemInformation : public DeviceInformation {
     SerializedResponseNode identifier;
     identifier.name = "identifier";
     identifier.value = "identifier";
-
+#ifndef WIN32
     SerializedResponseNode systemInfo;
     systemInfo.name = "systemInfo";
 
@@ -94,10 +94,11 @@ class SystemInformation : public DeviceInformation {
       arch.value = std::string(buf.machine);
     }
 
-    systemInfo.children.push_back(arch);
-
+	    systemInfo.children.push_back(arch);
+		serialized.push_back(systemInfo);
+#endif
     serialized.push_back(identifier);
-    serialized.push_back(systemInfo);
+    
 
     return serialized;
   }

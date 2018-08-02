@@ -75,7 +75,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   HTTPClient();
 
-  HTTPClient(std::string name, uuid_t uuid);
+  HTTPClient(std::string name, m_uuid uuid);
 
   HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 

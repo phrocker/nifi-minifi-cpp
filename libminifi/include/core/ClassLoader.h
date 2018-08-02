@@ -22,7 +22,9 @@
 #include <vector>
 #include <map>
 #include "utils/StringUtils.h"
-#include <dlfcn.h>
+#ifndef WIN32
+	#include <dlfcn.h>
+#endif
 #include "core/Core.h"
 #include "io/DataStream.h"
 
@@ -67,14 +69,14 @@ class ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string &name, uuid_t uuid) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string &name, m_uuid uuid) {
     return nullptr;
   }
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual CoreComponent* createRaw(const std::string &name, uuid_t uuid) {
+  virtual CoreComponent* createRaw(const std::string &name, m_uuid uuid) {
     return nullptr;
   }
 
@@ -125,7 +127,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string &name, uuid_t uuid) {
+  virtual std::shared_ptr<CoreComponent> create(const std::string &name, m_uuid uuid) {
     std::shared_ptr<T> ptr = std::make_shared<T>(name, uuid);
     return std::static_pointer_cast<CoreComponent>(ptr);
   }
@@ -141,7 +143,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual CoreComponent* createRaw(const std::string &name, uuid_t uuid) {
+  virtual CoreComponent* createRaw(const std::string &name, m_uuid uuid) {
     T *ptr = new T(name, uuid);
     return dynamic_cast<CoreComponent*>(ptr);
   }
@@ -201,9 +203,11 @@ class ClassLoader {
 
   ~ClassLoader() {
     loaded_factories_.clear();
+#ifndef WIN32
     for (auto ptr : dl_handles_) {
       dlclose(ptr);
     }
+#endif
   }
 
   /**
@@ -285,7 +289,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  std::shared_ptr<T> instantiate(const std::string &class_name, uuid_t uuid);
+  std::shared_ptr<T> instantiate(const std::string &class_name, m_uuid uuid);
 
   /**
    * Instantiate object based on class_name
@@ -303,7 +307,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  T *instantiateRaw(const std::string &class_name, uuid_t uuid);
+  T *instantiateRaw(const std::string &class_name, m_uuid uuid);
 
  protected:
 
@@ -329,7 +333,7 @@ std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const
 }
 
 template<class T>
-std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, uuid_t uuid) {
+std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, m_uuid uuid) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
@@ -353,7 +357,7 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, const std::string 
 }
 
 template<class T>
-T *ClassLoader::instantiateRaw(const std::string &class_name, uuid_t uuid) {
+T *ClassLoader::instantiateRaw(const std::string &class_name, m_uuid uuid) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {

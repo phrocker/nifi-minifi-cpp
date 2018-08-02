@@ -42,7 +42,7 @@ class ThreadManagementService : public core::controller::ControllerService {
         logger_(logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }
 
-  explicit ThreadManagementService(const std::string &name, uuid_t uuid = 0)
+  explicit ThreadManagementService(const std::string &name, m_uuid uuid = 0)
       : ControllerService(name, uuid),
         logger_(logging::LoggerFactory<ThreadManagementService>::getLogger()) {
   }

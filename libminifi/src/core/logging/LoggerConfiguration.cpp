@@ -20,7 +20,6 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include <sys/stat.h>
-#include <unistd.h>
 #include <algorithm>
 #include <vector>
 #include <queue>
@@ -34,6 +33,16 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/null_sink.h"
+#ifdef WIN32
+#define stat _stat
+#include <direct.h>
+#include <windows.h> // winapi
+#include <sys/stat.h> // stat
+#include <tchar.h> // _tcscpy,_tcscat,_tcscmp
+#include <string> // string
+#include <algorithm> // replace
+#endif
+
 
 namespace org {
 namespace apache {
@@ -120,10 +129,18 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
         // Create the log directory if needed
         directory += "/logs";
         struct stat logDirStat;
-        if (stat(directory.c_str(), &logDirStat) != 0 || !S_ISDIR(logDirStat.st_mode)) {
+#ifdef WIN32
+		if (stat(directory.c_str(), &logDirStat) != 0 ) {
+
+			if (_mkdir(directory.c_str()) == -1) {
+				exit(1);
+			}
+#else
+		if (stat(directory.c_str(), &logDirStat) != 0 || !S_ISDIR(logDirStat.st_mode)) {
           if (mkdir(directory.c_str(), 0777) == -1) {
             exit(1);
           }
+#endif
         }
         file_name = directory + "/" + file_name;
       }

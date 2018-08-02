@@ -33,7 +33,7 @@ namespace processors {
 
 class TFExtractTopLabels : public core::Processor {
  public:
-  explicit TFExtractTopLabels(const std::string &name, uuid_t uuid = nullptr)
+  explicit TFExtractTopLabels(const std::string &name, m_uuid uuid = nullptr)
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<TFExtractTopLabels>::getLogger()) {
   }

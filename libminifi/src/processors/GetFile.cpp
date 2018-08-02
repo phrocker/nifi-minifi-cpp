@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 #include "processors/GetFile.h"
-#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <stdio.h>
-#include <dirent.h>
 #include <limits.h>
-#include <unistd.h>
+#ifndef WIN32
 #include <regex.h>
+#else
+#include <regex>
+#endif
 #include <vector>
 #include <queue>
 #include <map>
@@ -34,9 +35,21 @@
 #include <string>
 #include <iostream>
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+
+
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+#define R_OK    4       /* Test for read permission.  */
+#define W_OK    2       /* Test for write permission.  */
+ //#define   X_OK    1       /* execute permission - unsupported in windows*/
+#define F_OK    0       /* Test for existence.  */
+
+
 
 namespace org {
 namespace apache {
@@ -224,7 +237,7 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
 
     if (request.keepSourceFile == false && access(fullName.c_str(), W_OK) != 0)
       return false;
-
+#ifndef WIN32
     regex_t regex;
     int ret = regcomp(&regex, request.fileFilter.c_str(), 0);
     if (ret)
@@ -233,6 +246,13 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
     regfree(&regex);
     if (ret)
       return false;
+#else
+	std::regex regex(request.fileFilter);
+	if (!std::regex_match(name, regex))
+	{
+		return false;
+	}
+#endif
     metrics_->input_bytes_ += statbuf.st_size;
     metrics_->accepted_files_++;
     return true;
@@ -242,7 +262,8 @@ bool GetFile::acceptFile(std::string fullName, std::string name, const GetFileRe
 }
 
 void GetFile::performListing(std::string dir, const GetFileRequest &request) {
-  DIR *d;
+#ifndef WIN32
+DIR *d;
   d = opendir(dir.c_str());
   if (!d)
     return;
@@ -273,6 +294,36 @@ void GetFile::performListing(std::string dir, const GetFileRequest &request) {
     }
   }
   closedir(d);
+#else
+	HANDLE hFind;
+	WIN32_FIND_DATA FindFileData;
+
+	if ((hFind = FindFirstFile(dir.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
+		do {
+			
+			struct stat statbuf {};
+			if (stat(FindFileData.cFileName, &statbuf) != 0) {
+				logger_->log_warn("Failed to stat %s", FindFileData.cFileName);
+				break;
+			}
+
+			std::string path = dir + "/" + FindFileData.cFileName;
+			if (S_ISDIR(statbuf.st_mode)) {
+				//if ((strcmp(FindFileData.cFileName, ".") != 0) && (strcmp(FindFileData.cFileName, "..") != 0)) {
+				if (request.recursive && strcmp(FindFileData.cFileName, "..") != 0 && strcmp(FindFileData.cFileName, ".") != 0) {
+					performListing(path, request);
+				}
+			}
+			else {
+				if (acceptFile(path, FindFileData.cFileName, request)) {
+					// check whether we can take this file
+					putListing(path);
+				}
+			}
+		} while (FindNextFile(hFind, &FindFileData));
+		FindClose(hFind);
+	}
+#endif
 }
 
 int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {

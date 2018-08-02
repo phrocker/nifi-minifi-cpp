@@ -19,10 +19,11 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
 
 #include "core/Resource.h"
+
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <functional>
 #include <sys/ioctl.h>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
 #include <net/if_dl.h>
@@ -32,13 +33,17 @@
 #include <net/if.h> 
 #include <unistd.h>
 #include <netinet/in.h>
-#include <string.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ifaddrs.h>
+#include <unistd.h>
+#endif
+#include <functional>
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <sstream>
 #include <sstream>
 #include <map>
 #include "../nodes/MetricsBase.h"
@@ -61,7 +66,7 @@ namespace response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(std::string name, uuid_t uuid)
+  ComponentManifest(std::string name, m_uuid uuid)
       : DeviceInformation(name, uuid) {
   }
 
@@ -173,7 +178,7 @@ class ComponentManifest : public DeviceInformation {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(std::string name, uuid_t uuid)
+  Bundles(std::string name, m_uuid uuid)
       : DeviceInformation(name, uuid) {
     setArray(true);
   }
@@ -227,7 +232,7 @@ class Bundles : public DeviceInformation {
 class AgentStatus : public StateMonitorNode {
  public:
 
-  AgentStatus(std::string name, uuid_t uuid)
+  AgentStatus(std::string name, m_uuid uuid)
       : StateMonitorNode(name, uuid) {
 
   }
@@ -356,7 +361,7 @@ class AgentMonitor {
 class AgentManifest : public DeviceInformation {
  public:
 
-  AgentManifest(std::string name, uuid_t uuid)
+  AgentManifest(std::string name, m_uuid uuid)
       : DeviceInformation(name, uuid) {
     //setArray(true);
   }
@@ -438,7 +443,7 @@ class AgentManifest : public DeviceInformation {
 class AgentInformation : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
 
-  AgentInformation(std::string name, uuid_t uuid)
+  AgentInformation(std::string name, m_uuid uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
   }

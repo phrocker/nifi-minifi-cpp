@@ -17,6 +17,7 @@
  */
 
 #include "core/repository/VolatileContentRepository.h"
+#include "capi/expect.h"
 #include <cstdio>
 #include <string>
 #include <memory>
@@ -102,7 +103,7 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::write(const std::shar
   }
 
   int size = 0;
-  if (__builtin_expect(minimize_locking_ == true, 1)) {
+  if (LIKELY(minimize_locking_ == true)) {
     for (auto ent : value_vector_) {
       if (ent->testAndSetKey(claim, nullptr, nullptr, resource_claim_comparator_)) {
         std::lock_guard<std::mutex> lock(map_mutex_);
@@ -158,7 +159,8 @@ std::shared_ptr<io::BaseStream> VolatileContentRepository::read(const std::share
 }
 
 bool VolatileContentRepository::remove(const std::shared_ptr<minifi::ResourceClaim> &claim) {
-  if (__builtin_expect(minimize_locking_ == true, 1)) {
+
+  if (LIKELY(minimize_locking_ == true)) {
     std::lock_guard<std::mutex> lock(map_mutex_);
     auto ent = master_list_.find(claim->getContentFullPath());
     if (ent != master_list_.end()) {

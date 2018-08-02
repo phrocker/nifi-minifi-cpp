@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 #include "io/ClientSocket.h"
+#ifndef WIN32
 #include <netinet/tcp.h>
-#include <sys/types.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -26,6 +26,9 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <unistd.h>
+#endif
+#include <sys/types.h>
+
 #include <cstdio>
 #include <memory>
 #include <utility>
@@ -57,10 +60,12 @@ Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string 
       logger_(logging::LoggerFactory<Socket>::getLogger()) {
   FD_ZERO(&total_list_);
   FD_ZERO(&read_fds_);
+  initialize_socket();
 }
 
 Socket::Socket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0) {
+	initialize_socket();
 }
 
 Socket::Socket(const Socket &&other)
@@ -109,8 +114,12 @@ void Socket::setNonBlocking() {
     nonBlocking_ = true;
   }
 }
-
-int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
+//in_addr_t
+#ifdef WIN32
+  int8_t Socket::createConnection(const addrinfo *p, struct in_addr &addr) {
+#else
+  int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
+#endif
   if ((socket_file_descriptor_ = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
     logger_->log_error("error while connecting to server socket");
     return -1;
@@ -120,6 +129,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
 
   if (listeners_ <= 0 && !local_network_interface_.getInterface().empty()) {
     // bind to local network interface
+#ifndef WIN32
     ifaddrs* list = NULL;
     ifaddrs* item = NULL;
     ifaddrs* itemFound = NULL;
@@ -145,6 +155,7 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
       }
       freeifaddrs(list);
     }
+#endif
   }
 
   if (listeners_ > 0) {
@@ -175,7 +186,12 @@ int8_t Socket::createConnection(const addrinfo *p, in_addr_t &addr) {
           sa_loc->sin_addr.s_addr = htonl(INADDR_ANY);
         }
       } else {
+#ifdef WIN32
+		  sa_loc->sin_addr.s_addr = addr.s_addr;
+#else
         sa_loc->sin_addr.s_addr = addr;
+#endif
+
       }
       if (connect(socket_file_descriptor_, p->ai_addr, p->ai_addrlen) == -1) {
         close(socket_file_descriptor_);
@@ -219,9 +235,13 @@ int16_t Socket::initialize() {
 
   socket_file_descriptor_ = -1;
 
+#ifndef WIN32
   in_addr_t addr;
+#else
+  in_addr addr;
+#endif
   struct hostent *h;
-#ifdef __MACH__
+#if defined( __MACH__ ) || defined(WIN32)
   h = gethostbyname(requested_hostname_.c_str());
 #else
   const char *host;
@@ -247,12 +267,19 @@ int16_t Socket::initialize() {
     if (port_ > 0 && createConnection(p, addr) >= 0) {
       // Put the socket in non-blocking mode:
       if (nonBlocking_) {
+#ifndef WIN32
         if (fcntl(socket_file_descriptor_, F_SETFL, O_NONBLOCK) < 0) {
           // handle error
           logger_->log_error("Could not create non blocking to socket", strerror(errno));
         } else {
           logger_->log_debug("Successfully applied O_NONBLOCK to fd");
         }
+#else
+		  u_long iMode = 1;
+		  if (ioctlsocket(socket_file_descriptor_, FIONBIO, &iMode) == NO_ERROR) {
+			  logger_->log_debug("Successfully applied O_NONBLOCK to fd");
+		  }
+#endif
       }
       logger_->log_debug("Successfully created connection");
       return 0;
@@ -312,8 +339,9 @@ int16_t Socket::select_descriptor(const uint16_t msec) {
   return -1;
 }
 
-int16_t Socket::setSocketOptions(const int sock) {
+int16_t Socket::setSocketOptions(const SocketDescriptor sock) {
   int opt = 1;
+#ifndef WIN32	
 #ifndef __MACH__
   if (setsockopt(sock, SOL_TCP, TCP_NODELAY, static_cast<void*>(&opt), sizeof(opt)) < 0) {
     logger_->log_error("setsockopt() TCP_NODELAY failed");
@@ -343,6 +371,7 @@ int16_t Socket::setSocketOptions(const int sock) {
     }
   }
 #endif
+#endif
   return 0;
 }
 
@@ -363,7 +392,12 @@ int Socket::writeData(uint8_t *value, int size) {
 
   int fd = select_descriptor(1000);
   while (bytes < size) {
-    ret = send(fd, value + bytes, size - bytes, 0);
+#ifdef WIN32
+	  const char *vts = (const char*)value;
+    ret = send(fd, vts + bytes, size - bytes, 0);
+#else
+	  ret = send(fd, value + bytes, size - bytes, 0);
+#endif
     // check for errors
     if (ret <= 0) {
       close(fd);
@@ -452,7 +486,12 @@ int Socket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
       }
       return -1;
     }
-    int bytes_read = recv(fd, buf, buflen, 0);
+#ifdef WIN32
+	char *bfs = (char*)buf;
+    int bytes_read = recv(fd, bfs, buflen, 0);
+#else
+	int bytes_read = recv(fd, buf, buflen, 0);
+#endif
     logger_->log_trace("Recv call %d", bytes_read);
     if (bytes_read <= 0) {
       if (bytes_read == 0) {

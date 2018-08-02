@@ -1,0 +1,18 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\LibExample",
+    "\\libminifi",
+    "\\libminifi\\src",
+    "\\libminifi\\src\\capi",
+    "\\libminifi\\src\\io",
+    "\\main",
+    "\\thirdparty",
+    "\\thirdparty\\uuid",
+    "\\thirdparty\\uuid\\include",
+    "\\thirdparty\\uuid\\include\\uuid",
+    "\\thirdparty\\uuid\\include\\win32"
+  ],
+  "SelectedNode": "\\thirdparty\\uuid\\uuid_time.c",
+  "PreviewInSolutionExplorer": false
+}

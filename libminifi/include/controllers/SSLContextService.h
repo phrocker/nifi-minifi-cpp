@@ -36,17 +36,27 @@ namespace controllers {
 
 class SSLContext {
  public:
+#ifdef OPENSSL_SUPPORT
   SSLContext(SSL_CTX *context)
       : context_(context) {
 
   }
+#else
+	 SSLContext(void *context) {
+
+	 }
+#endif
   ~SSLContext() {
+#ifdef OPENSSL_SUPPORT
     if (context_) {
       SSL_CTX_free(context_);
     }
+#endif
   }
  protected:
+#ifdef OPENSSL_SUPPORT
   SSL_CTX *context_;
+#endif
 };
 
 /**
@@ -68,7 +78,7 @@ class SSLContextService : public core::controller::ControllerService {
         logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
-  explicit SSLContextService(const std::string &name, uuid_t uuid = 0)
+  explicit SSLContextService(const std::string &name, m_uuid uuid = 0)
       : ControllerService(name, uuid),
         initialized_(false),
         valid_(false),
@@ -159,6 +169,7 @@ class SSLContextService : public core::controller::ControllerService {
     return false;
   }
 
+#ifdef OPENSSL_SUPPORT
   bool configure_ssl_context(SSL_CTX *ctx) {
     if (!IsNullOrEmpty(certificate)) {
       if (SSL_CTX_use_certificate_file(ctx, certificate.c_str(), SSL_FILETYPE_PEM) <= 0) {
@@ -194,6 +205,7 @@ class SSLContextService : public core::controller::ControllerService {
 
     return true;
   }
+#endif
 
   virtual void onEnable();
 
@@ -236,5 +248,4 @@ REGISTER_RESOURCE(SSLContextService);
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
 #endif /* LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_ */

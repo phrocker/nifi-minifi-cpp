@@ -46,7 +46,7 @@ public:
 	/*!
 	 * Create a new processor
 	 */
-	ManipulateArchive(std::string name, uuid_t uuid = NULL)
+	ManipulateArchive(std::string name, m_uuid uuid = NULL)
 	: core::Processor(name, uuid),
 		logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
 	}

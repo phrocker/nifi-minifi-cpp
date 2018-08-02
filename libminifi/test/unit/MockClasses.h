@@ -33,7 +33,7 @@ class MockControllerService : public core::controller::ControllerService {
 
   }
 
-  explicit MockControllerService(const std::string &name, uuid_t uuid)
+  explicit MockControllerService(const std::string &name, m_uuid uuid)
       : ControllerService(name, uuid) {
 
   }
@@ -81,7 +81,7 @@ class MockControllerService : public core::controller::ControllerService {
 class MockProcessor : public core::Processor {
  public:
 
-  explicit MockProcessor(const std::string &name, uuid_t uuid)
+  explicit MockProcessor(const std::string &name, m_uuid uuid)
       : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }

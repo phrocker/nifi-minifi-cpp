@@ -34,7 +34,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-
+#ifndef WIN32
 core::Property ListenSyslog::RecvBufSize("Receive Buffer Size", "The size of each buffer used to receive Syslog messages.", "65507 B");
 core::Property ListenSyslog::MaxSocketBufSize("Max Size of Socket Buffer", "The maximum size of the socket buffer that should be used.", "1 MB");
 core::Property ListenSyslog::MaxConnections("Max Number of TCP Connections", "The maximum number of concurrent connections to accept Syslog messages in TCP mode.", "2");
@@ -296,7 +296,7 @@ void ListenSyslog::onTrigger(core::ProcessContext *context, core::ProcessSession
   flowFile->addAttribute("syslog.port", std::to_string(_port));
   session->transfer(flowFile, Success);
 }
-
+#endif
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

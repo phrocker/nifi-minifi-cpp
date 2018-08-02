@@ -144,7 +144,7 @@ Value expr_ip(const std::vector<Value> &args) {
 }
 
 Value expr_uuid(const std::vector<Value> &args) {
-  uuid_t uuid;
+  m_uuid uuid;
   utils::IdGenerator::getIdGenerator()->generate(uuid);
   char uuid_str[37];
   uuid_unparse_lower(uuid, uuid_str);

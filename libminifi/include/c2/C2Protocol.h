@@ -34,7 +34,7 @@ namespace c2 {
 class C2Protocol : public core::Connectable {
  public:
 
-  C2Protocol(std::string name, uuid_t uuid)
+  C2Protocol(std::string name, m_uuid uuid)
       : core::Connectable(name, uuid),
         running_(true) {
 

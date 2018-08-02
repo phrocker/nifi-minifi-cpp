@@ -70,17 +70,17 @@ class FlowConfiguration : public CoreComponent {
   virtual ~FlowConfiguration();
 
   // Create Processor (Node/Input/Output Port) based on the name
-  std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid);
+  std::shared_ptr<core::Processor> createProcessor(std::string name, m_uuid uuid);
   // Create Root Processor Group
 
-  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, uuid_t uuid, int version);
+  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, m_uuid uuid, int version);
 
-  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &name, uuid_t uuid);
+  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &name, m_uuid uuid);
 
   // Create Remote Processor Group
-  std::unique_ptr<core::ProcessGroup> createRemoteProcessGroup(std::string name, uuid_t uuid);
+  std::unique_ptr<core::ProcessGroup> createRemoteProcessGroup(std::string name, m_uuid uuid);
   // Create Connection
-  std::shared_ptr<minifi::Connection> createConnection(std::string name, uuid_t uuid);
+  std::shared_ptr<minifi::Connection> createConnection(std::string name, m_uuid uuid);
   // Create Provenance Report Task
   std::shared_ptr<core::Processor> createProvenanceReportTask(void);
 

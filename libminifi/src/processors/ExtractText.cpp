@@ -108,7 +108,7 @@ int64_t ExtractText::ReadCallback::process(std::shared_ptr<io::BaseStream> strea
 }
 
 ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ctx)
-    : max_read_(getpagesize()),
+    : max_read_(4096),
       flowFile_(flowFile),
       ctx_(ctx) {
           buffer_.resize(max_read_);

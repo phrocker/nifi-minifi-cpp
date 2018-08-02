@@ -26,9 +26,9 @@ set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON)
-option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" ON)
+option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" OFF)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
-option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON)
+option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" OFF)
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 
@@ -64,19 +64,25 @@ endif(CCACHE_FOUND)
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11 " COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x " COMPILER_SUPPORTS_CXX0X)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+if (MSVC_VERSION GREATER_EQUAL "1900")
+    CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
+    if (_cpp_latest_flag_supported)
+        add_compile_options("/std:c++14")
+    endif()
+else()
+CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+ message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+endif()
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 if (NOT PORTABLE)
   if(MSVC)
@@ -95,56 +101,72 @@ find_package(Threads REQUIRED)
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if(NOT USE_SYSTEM_OPENSSL)
-  message("Using bundled LibreSSL")
-  
-  ExternalProject_Add(
-    libressl-portable
-    GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
-    GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
-    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-               "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
-    PATCH_COMMAND ./autogen.sh
-  )
-
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
-  add_library(crypto STATIC IMPORTED)
-  set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
-  add_dependencies(crypto libressl-portable)
-  add_library(ssl STATIC IMPORTED)
-  set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
-  set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-  add_dependencies(ssl libressl-portable)
-  add_library(tls STATIC IMPORTED)
-  set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
-  set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-  add_dependencies(tls libressl-portable)
-
-  set(OPENSSL_FOUND "YES")
-  set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
-  set(OPENSSL_LIBRARIES tls ssl crypto)
+if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
+	message("Using bundled LibreSSL")
+	set(BUILD_ARGS "")
+	if (WIN32)
+	set(BUILD_ARGS " -GVisual Studio 15 2017")
+	endif(WIN32)
+	ExternalProject_Add(
+	libressl-portable
+	GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
+	GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
+	SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
+	CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+	            "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+				"${BUILD_ARGS}"
+	PATCH_COMMAND ./autogen.sh
+	)
+	
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+	add_library(crypto STATIC IMPORTED)
+	set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
+	add_dependencies(crypto libressl-portable)
+	add_library(ssl STATIC IMPORTED)
+	set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
+	set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
+	add_dependencies(ssl libressl-portable)
+	add_library(tls STATIC IMPORTED)
+	set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
+	set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
+	add_dependencies(tls libressl-portable)
+	
+	set(OPENSSL_FOUND "YES")
+	set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
+	set(OPENSSL_LIBRARIES tls ssl crypto)
 else()
-  # Set the right openssl root path
-  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
-  else()
-    set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
-  endif()
-
-  # Include OpenSSL
-  find_package (OpenSSL REQUIRED)
+	# Set the right openssl root path
+	if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
+	elseif(NOT WIN32)
+	set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+	else()
+		#set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+	endif()
+	
+	# Include OpenSSL
+	find_package (OpenSSL REQUIRED)
+	
+	if (OPENSSL_FOUND)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
+	endif()
 endif()
-
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
+  MESSAGE("OpenSSL found at ${OPENSSL_LIBRARIES}")
 else ()
   message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
 
-if(NOT USE_SYSTEM_ZLIB)
+if(USE_SYSTEM_ZLIB STREQUAL "OFF")
   message("Using bundled zlib")
 
+  if (WIN32)
+  set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstaticd.lib")
+  else()
+  set(BYPRODUCT "thirdparty/zlib-install/lib/libz.a")
+  endif()
   ExternalProject_Add(
     zlib-external
     GIT_REPOSITORY "https://github.com/madler/zlib.git"
@@ -152,12 +174,12 @@ if(NOT USE_SYSTEM_ZLIB)
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-src"
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-install"
-    BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libz.a"
+    BUILD_BYPRODUCTS ${BYPRODUCT}
   )
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/zlib/dummy")
   add_library(z STATIC IMPORTED)
-  set_target_properties(z PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-install/lib/libz.a")
+  set_target_properties(z PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}")
   add_dependencies(z zlib-external)
   set(ZLIB_FOUND "YES")
   set(ZLIB_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include")
@@ -170,42 +192,12 @@ if (ZLIB_FOUND)
   include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
-if(NOT USE_SYSTEM_BZIP2)
-  message("Using bundled bzip2")
-
-  ExternalProject_Add(
-    bzip2-external
-    URL http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz
-    URL_MD5 00b516f4704d4a7cb50a1d97e6e8e15b
-    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/bzip2-src"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND make libbz2.a CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-    BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS "thirdparty/bzip2-src/libbz2.a"
-    INSTALL_COMMAND ""
-  )
-
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bzip2/dummy")
-  add_library(bz2 STATIC IMPORTED)
-  set_target_properties(bz2 PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/bzip2-src/libbz2.a")
-  add_dependencies(bz2 bzip2-external)
-  set(BZIP2_FOUND "YES")
-  set(BZIP2_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/bzip2-src")
-  set(BZIP2_LIBRARY bz2)
-  set(BZIP2_LIBRARIES ${BZIP2_LIBRARY})
-else()
-  find_package (BZip2 REQUIRED)
-endif()
-
-if (BZIP2_FOUND)
-  include_directories(${BZIP2_INCLUDE_DIRS})
-endif()
-
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 
 include(Extensions)
 
-if (USE_SYSTEM_UUID)
+if (USE_SYSTEM_UUID STREQUAL "ON")
+  message("USE_SYSTEM_UUID ${USE_SYSTEM_UUID}")
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/sys")
   find_package(UUID REQUIRED)
 else()
@@ -276,6 +268,8 @@ include(ExternalProject)
 
 set(CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING OFF CACHE BOOL "Disable dynamic SSL library loading")
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
+set(CIVETWEB_ENABLE_SSL OFF CACHE BOOL "DISABLE SSL")
+
 SET(WITH_TOOLS OFF CACHE BOOL "Do not build RocksDB tools")
 SET(WITH_TESTS OFF CACHE BOOL "Build RocksDB library (not repo) tests")
 set(CIVET_THIRDPARTY_ROOT "${CMAKE_SOURCE_DIR}/thirdparty/civetweb-1.10/" CACHE STRING "Path to CivetWeb root")
@@ -392,11 +386,6 @@ if (ENABLE_TENSORFLOW)
 endif()
 
 
-find_package(bzip2)
-include_directories("thirdparty/bsdiff/")
-add_subdirectory("thirdparty/bsdiff")
-
-
 ## Bustache/template extensions
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 if (ENABLE_BUSTACHE)
@@ -406,9 +395,7 @@ endif()
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
-if (NOT DISABLE_CURL)
-  add_subdirectory(LibExample)
-endif()
+add_subdirectory(LibExample)
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 

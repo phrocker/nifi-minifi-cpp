@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 #include "io/DataStream.h"
-#include <arpa/inet.h>
 #include <vector>
 #include <iostream>
 #include <cstdint>

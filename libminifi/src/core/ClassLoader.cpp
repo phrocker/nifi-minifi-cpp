@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-#include <sys/mman.h>
 #include <memory>
 #include <string>
 
@@ -36,7 +35,8 @@ ClassLoader &ClassLoader::getDefaultClassLoader() {
   return ret;
 }
 uint16_t ClassLoader::registerResource(const std::string &resource, const std::string &resourceFunction) {
-  void *resource_ptr = nullptr;
+	void *resource_ptr = nullptr;
+#ifndef WIN32
   if (resource.empty()) {
     dlclose(dlopen(0, RTLD_LAZY | RTLD_GLOBAL));
     resource_ptr = dlopen(0, RTLD_NOW | RTLD_GLOBAL);
@@ -58,7 +58,7 @@ uint16_t ClassLoader::registerResource(const std::string &resource, const std::s
   createFactory* create_factory_func = reinterpret_cast<createFactory*>(dlsym(resource_ptr, resourceFunction.c_str()));
   const char* dlsym_error = dlerror();
   if (dlsym_error) {
-    return RESOURCE_FAILURE;
+    
   }
 
   ObjectFactory *factory = create_factory_func();
@@ -72,6 +72,9 @@ uint16_t ClassLoader::registerResource(const std::string &resource, const std::s
   delete factory;
 
   return RESOURCE_SUCCESS;
+#else
+  return RESOURCE_FAILURE;
+#endif
 }
 
 } /* namespace core */

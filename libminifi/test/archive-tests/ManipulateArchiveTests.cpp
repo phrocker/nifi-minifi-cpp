@@ -111,7 +111,7 @@ TEST_CASE("Test creation of ManipulateArchive", "[manipulatearchiveCreate]") {
   TestController testController;
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ManipulateArchive>("processorname");
   REQUIRE(processor->getName() == "processorname");
-  uuid_t processoruuid;
+  m_uuid processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 }
 

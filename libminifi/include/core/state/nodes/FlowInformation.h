@@ -19,26 +19,14 @@
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 
 #include "core/Resource.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <functional>
-#include <sys/ioctl.h>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #endif
-#include <ifaddrs.h>
-#include <net/if.h> 
-#include <unistd.h>
-#include <netinet/in.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <ifaddrs.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sstream>
 #include <map>
 #include "../nodes/MetricsBase.h"
@@ -144,7 +132,7 @@ class FlowVersion : public DeviceInformation {
 class FlowMonitor : public StateMonitorNode {
  public:
 
-  FlowMonitor(std::string name, uuid_t uuid)
+  FlowMonitor(std::string name, m_uuid uuid)
       : StateMonitorNode(name, uuid) {
   }
 
@@ -173,7 +161,7 @@ class FlowMonitor : public StateMonitorNode {
 class FlowInformation : public FlowMonitor {
  public:
 
-  FlowInformation(std::string name, uuid_t uuid)
+  FlowInformation(std::string name, m_uuid uuid)
       : FlowMonitor(name, uuid) {
   }
 

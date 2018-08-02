@@ -142,7 +142,7 @@ class Bin {
   std::string groupId_;
   std::shared_ptr<logging::Logger> logger_;
   // A global unique identifier
-  uuid_t uuid_;
+  m_uuid uuid_;
   // UUID string
   std::string uuid_str_;
 };
@@ -225,7 +225,7 @@ class BinFiles : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit BinFiles(std::string name, uuid_t uuid = NULL)
+  explicit BinFiles(std::string name, m_uuid uuid = NULL)
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<BinFiles>::getLogger()) {
     maxBinCount_ = 100;

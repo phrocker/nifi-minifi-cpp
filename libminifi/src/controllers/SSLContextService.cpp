@@ -17,8 +17,11 @@
  */
 
 #include "controllers/SSLContextService.h"
+
+#ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#endif
 #include <string>
 #include <memory>
 #include <set>
@@ -45,6 +48,7 @@ void SSLContextService::initialize() {
 }
 
 std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
+#ifdef OPENSSL_SUPPORT
   SSL_library_init();
   const SSL_METHOD *method;
 
@@ -82,6 +86,9 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
     logger_->log_error("Can not load CA certificate %s, Exiting, error : %s", ca_certificate_, std::strerror(errno));
   }
   return std::unique_ptr<SSLContext>(new SSLContext(ctx));
+#else
+	return nullptr;
+#endif
 }
 
 const std::string &SSLContextService::getCertificateFile() {

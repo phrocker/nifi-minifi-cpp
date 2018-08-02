@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "processors/GenerateFlowFile.h"
-#include <sys/time.h>
 #include <time.h>
 #include <vector>
 #include <queue>
@@ -29,6 +28,10 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#ifdef WIN32
+#define srandom srand
+#define random rand
+#endif
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
