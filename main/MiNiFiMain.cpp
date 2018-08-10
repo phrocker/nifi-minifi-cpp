@@ -22,9 +22,7 @@
 #include <cstdlib>
 #ifdef WIN32
 #include <direct.h>
-#else
 #include <semaphore.h>
-#endif
 #include <signal.h>
 #include <vector>
 #include <queue>
