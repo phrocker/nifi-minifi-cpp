@@ -20,7 +20,11 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <cstdlib>
+#ifdef WIN32
+#include <direct.h>
+#else
 #include <semaphore.h>
+#endif
 #include <signal.h>
 #include <vector>
 #include <queue>
@@ -85,7 +89,11 @@ int main(int argc, char **argv) {
     logger->log_info("MINIFI_HOME is not set; determining based on environment.");
     char *path = nullptr;
     char full_path[PATH_MAX];
+#ifndef WIN32
     path = realpath(argv[0], full_path);
+#else
+	path = full_path.c_str();
+#endif
 
     if (path != nullptr) {
       std::string minifiHomePath(path);
@@ -98,12 +106,20 @@ int main(int argc, char **argv) {
     // attempt to use cwd as MINIFI_HOME
     if (minifiHome.empty() || !validHome(minifiHome)) {
       char cwd[PATH_MAX];
-      getcwd(cwd, PATH_MAX);
+#ifdef WIN32
+	  _getcwd(cwd,PATH_MAX);
+#else
+	  getcwd(cwd, PATH_MAX);
+#endif
       minifiHome = cwd;
     }
 
     logger->log_debug("Setting %s to %s", MINIFI_HOME_ENV_KEY, minifiHome);
+#ifdef WIN32
+	SetEnvironmentVariable(MINIFI_HOME_ENV_KEY, minifiHome.c_str());
+#else
     setenv(MINIFI_HOME_ENV_KEY, minifiHome.c_str(), 0);
+#endif
   }
 
   if (!validHome(minifiHome)) {

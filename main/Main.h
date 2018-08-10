@@ -39,6 +39,12 @@
 #define CONFIG_YAML_REMOTE_PROCESSING_GROUPS_KEY "Remote Processing Groups"
 
 
+#ifdef _MSC_VER
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
+#endif
+
 /**
  * Validates a MINIFI_HOME value.
  * @param home_path
