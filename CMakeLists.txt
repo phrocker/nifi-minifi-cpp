@@ -394,6 +394,10 @@ endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
+if (WIN32)
+  	add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")
+endif()
+
 add_subdirectory(main)
 add_subdirectory(LibExample)
 

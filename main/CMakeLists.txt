@@ -74,8 +74,7 @@ endif ()
 target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ) #
 
 if (WIN32)
-	include_directories("thirdparty/Simple-Windows-Posix-Semaphore")
-  	add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")
+	include_directories("../thirdparty/Simple-Windows-Posix-Semaphore")
   	target_link_libraries(minifiexe semaphore)
 endif()
 
