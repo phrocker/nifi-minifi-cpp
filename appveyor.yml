@@ -19,7 +19,7 @@ build_script:
    - cd C:\projects\nifi-minifi-cpp
    - mkdir build
    - cd build
-   - cmake -g "Visual Studio 15 2017" .. -DUSE_SYSTEM_OPENSSL=on -DOPENSSL_ROOT_HINTS="c:\\OpenSSL-Win64\" -DDISABLE_ROCKSDB=ON -DDISABLE_CURL=TRUE -DDISABLE_LIBARCHIVE=TRUE -DDISABLE_SCRIPTING=TRUE -DEXCLUDE_BOOST=TRUE -DDISABLE_EXPRESSION_LANGAUGE=TRUE -DSKIP_TESTS=TRUE
+   - cmake -g "Visual Studio 15 2017" -DUSE_SYSTEM_OPENSSL=on -DOPENSSL_ROOT_HINTS="c:\\OpenSSL-Win64\" -DDISABLE_ROCKSDB=ON -DDISABLE_CURL=TRUE -DDISABLE_LIBARCHIVE=TRUE -DDISABLE_SCRIPTING=TRUE -DEXCLUDE_BOOST=TRUE -DDISABLE_EXPRESSION_LANGUAGE=TRUE -DSKIP_TESTS=TRUE ..
    
    - if "%platform%" == "x86" set msbuild_platform=Win32
    - if "%platform%" == "x64" set msbuild_platform=%platform% 
