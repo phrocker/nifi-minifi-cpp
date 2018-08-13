@@ -3,8 +3,8 @@ os: Visual Studio 2017
 environment:
   MSVC_DEFAULT_OPTIONS: ON
   
- configuration:
-  - Release
+configuration:
+ - Release
   
  platform:
    - x64
