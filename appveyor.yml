@@ -4,7 +4,7 @@ environment:
   MSVC_DEFAULT_OPTIONS: ON
   
 configuration:
- - Release
+ - Debug
 
 platform: x64
    
