@@ -47,6 +47,12 @@ void SSLContextService::initialize() {
   initialized_ = true;
 }
 
+
+/**
+ * If OpenSSL is not installed we may still continue operations. Nullptr will
+ * be returned and it will be up to the caller to determien if this failure is
+ * recoverable.
+ */
 std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
 #ifdef OPENSSL_SUPPORT
   SSL_library_init();

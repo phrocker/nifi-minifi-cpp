@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include <stdio.h>
-#include <time.h>
 #include <chrono>
 #include <thread>
 #include <random>

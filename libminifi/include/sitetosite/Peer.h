@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
 
 #include <stdio.h>
-#include <fcntl.h>
 #include <string>
 #include <errno.h>
 #include <uuid/uuid.h>
