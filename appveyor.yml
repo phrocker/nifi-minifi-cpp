@@ -6,13 +6,17 @@ environment:
  configuration:
   - Release
   
-  platform:
+ platform:
    - x64
    
-   
-  clone_folder: C:\projects\nifi-minifi-cpp
+
+branches:
+ only: 
+  - windows
   
-  build_script:
+clone_folder: C:\projects\nifi-minifi-cpp
+  
+build_script:
    - cd C:\projects\nifi-minifi-cpp
    - mkdir build
    - cd build
