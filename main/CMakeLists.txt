@@ -108,6 +108,7 @@ install(TARGETS minifiexe
         DESTINATION bin
         COMPONENT bin)
 
-
+if (NOT WIN32)
 add_custom_command(TARGET minifiexe POST_BUILD
            COMMAND cat ${CMAKE_BINARY_DIR}/all.log)
+endif()

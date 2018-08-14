@@ -32,8 +32,15 @@
 #include <uuid/uuid.h>
  /* This implementation is only for native Windows systems.  */
 #if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
-
-# include <windows.h>
+#define _WINSOCKAPI_
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
+#include <direct.h>
 
 int
 getpagesize(void)

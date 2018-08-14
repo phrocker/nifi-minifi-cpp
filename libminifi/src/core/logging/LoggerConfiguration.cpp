@@ -36,6 +36,7 @@
 #ifdef WIN32
 #define stat _stat
 #include <direct.h>
+#define _WINSOCKAPI_
 #include <windows.h> // winapi
 #include <sys/stat.h> // stat
 #include <tchar.h> // _tcscpy,_tcscat,_tcscmp

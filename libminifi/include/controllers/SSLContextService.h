@@ -17,9 +17,10 @@
  */
 #ifndef LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
 #define LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
-
+#ifdef OPENSSL_SUPPORT
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#endif
 #include <iostream>
 #include <memory>
 #include "core/Resource.h"

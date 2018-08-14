@@ -17,11 +17,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
+#include <direct.h>
+#endif
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <cstdlib>
-#ifdef WIN32
-#include <direct.h>
 #include <semaphore.h>
 #include <signal.h>
 #include <vector>
@@ -90,7 +99,7 @@ int main(int argc, char **argv) {
 #ifndef WIN32
     path = realpath(argv[0], full_path);
 #else
-	path = full_path.c_str();
+	path = argv[0];
 #endif
 
     if (path != nullptr) {
@@ -126,10 +135,19 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+#ifdef WIN32
+
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR ) {
     std::cerr << "Cannot install signal handler" << std::endl;
     return -1;
   }
+
+#else
+  if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR || signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+	  std::cerr << "Cannot install signal handler" << std::endl;
+	  return -1;
+  }
+#endif
 
   std::shared_ptr<logging::LoggerProperties> log_properties = std::make_shared<logging::LoggerProperties>();
   log_properties->setHome(minifiHome);

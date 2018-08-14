@@ -26,6 +26,7 @@ set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON)
+option(OPENSSL_OFF "Disables OpenSSL" OFF)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" OFF)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
 option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" OFF)
@@ -98,9 +99,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Search for threads
 find_package(Threads REQUIRED)
 
+if (WIN32)
+  	add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")
+endif()
+
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+if (OPENSSL_OFF STREQUAL "OFF")
 if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
 	message("Using bundled LibreSSL")
 	set(BUILD_ARGS "")
@@ -158,7 +164,7 @@ if (OPENSSL_FOUND)
 else ()
   message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
-
+endif()
 if(USE_SYSTEM_ZLIB STREQUAL "OFF")
   message("Using bundled zlib")
 
@@ -393,10 +399,6 @@ if (ENABLE_BUSTACHE)
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
-
-if (WIN32)
-  	add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")
-endif()
 
 add_subdirectory(main)
 add_subdirectory(LibExample)

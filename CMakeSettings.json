@@ -34,13 +34,13 @@
       "buildCommandArgs": "-v:minimal -m:8",
       "variables": [
         {
-          "name": "USE_SYSTEM_OPENSSL",
+          "name": "OPENSSL_OFF",
           "value": "ON"
         },
-        {
-          "name": "_OPENSSL_ROOT_HINTS",
-          "value": "\"C:\\OpenSSL-Win64\\\""
-        },
+      //  {
+    //      "name": "_OPENSSL_ROOT_HINTS",
+  //        "value": "\"C:\\OpenSSL-Win64\\\""
+//        },
         {
           "name": "USE_SYSTEM_ZLIB",
           "value": "OFF"

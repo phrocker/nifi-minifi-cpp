@@ -26,6 +26,15 @@
 #ifndef _SEMAPHORE_H_
 #define _SEMAPHORE_H_   1
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
+#include <direct.h>
+#endif
+
 /**
     @file semaphore.h
     @brief POSIX Semaphore Definitions and Routines
@@ -64,7 +73,7 @@
 #ifndef ETIMEDOUT
 #define ETIMEDOUT				138 /* This is the value in VC 2010. */
 #endif
-
+#include <time.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -85,17 +94,20 @@ typedef struct {
 	} arch_sem_t;
 
 #ifndef _TIMESPEC_DEFINED
+/*
 struct timespec {
-	time_t  tv_sec;       /* Seconds */
-	long    tv_nsec;      /* Nanoseconds */
+	time_t  tv_sec;     
+	long    tv_nsec;    
 	};
 
 struct itimerspec {
-	struct timespec  it_interval; /* Timer period */
-	struct timespec  it_value;    /* Timer expiration */
+	struct timespec  it_interval; 
+	struct timespec  it_value;    
 	};
+
 #define _TIMESPEC_DEFINED       1
-#endif  /* _TIMESPEC_DEFINED */
+*/
+#endif 
 
 int sem_init(sem_t *sem, int pshared, unsigned int value);
 int sem_wait(sem_t *sem);

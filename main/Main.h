@@ -19,6 +19,7 @@
 #define MAIN_MAIN_H_
 
 
+#define WIN32_LEAN_AND_MEAN
 //! Main thread sleep interval 1 second
 #define SLEEP_INTERVAL 1
 //! Main thread stop wait time

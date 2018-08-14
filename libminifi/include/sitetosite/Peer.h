@@ -33,6 +33,7 @@
 #include "properties/Configure.h"
 #include "io/ClientSocket.h"
 #include "io/BaseStream.h"
+#include "io/DataStream.h"
 #include "utils/TimeUtil.h"
 #include "utils/HTTPClient.h"
 
