@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 #ifndef WIN32
     path = realpath(argv[0], full_path);
 #else
-	path = argv[0];
+	path = nullptr;
 #endif
 
     if (path != nullptr) {
@@ -121,6 +121,7 @@ int main(int argc, char **argv) {
       minifiHome = cwd;
     }
 
+	
     logger->log_debug("Setting %s to %s", MINIFI_HOME_ENV_KEY, minifiHome);
 #ifdef WIN32
 	SetEnvironmentVariable(MINIFI_HOME_ENV_KEY, minifiHome.c_str());
@@ -130,14 +131,18 @@ int main(int argc, char **argv) {
   }
 
   if (!validHome(minifiHome)) {
-    logger->log_error("No valid MINIFI_HOME could be inferred. "
-                      "Please set MINIFI_HOME or run minifi from a valid location.");
-    return -1;
+	  minifiHome = minifiHome.substr(0, minifiHome.find_last_of("/\\"));    //Remove /bin from path
+	  if (!validHome(minifiHome)) {
+		  logger->log_error("No valid MINIFI_HOME could be inferred. "
+			  "Please set MINIFI_HOME or run minifi from a valid location. minifiHome is %s", minifiHome);
+		  return -1;
+	  }
   }
 
 #ifdef WIN32
 
   if (signal(SIGINT, sigHandler) == SIG_ERR || signal(SIGTERM, sigHandler) == SIG_ERR ) {
+	logger->log_error("Cannot install signal handler");
     std::cerr << "Cannot install signal handler" << std::endl;
     return -1;
   }
@@ -166,6 +171,7 @@ int main(int argc, char **argv) {
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
+ 
   if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {
     try {
       stop_wait_time = std::stoi(graceful_shutdown_seconds);
