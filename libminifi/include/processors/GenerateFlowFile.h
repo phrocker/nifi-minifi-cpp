@@ -38,7 +38,7 @@ class GenerateFlowFile : public core::Processor {
   /*!
    * Create a new processor
    */
-  GenerateFlowFile(std::string name, m_uuid uuid = NULL)
+  GenerateFlowFile(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid) {
     _data = NULL;
     _dataSize = 0;

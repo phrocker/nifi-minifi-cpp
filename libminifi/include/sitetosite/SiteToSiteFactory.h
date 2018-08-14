@@ -58,7 +58,7 @@ static std::unique_ptr<SiteToSitePeer> createStreamingPeer(const SiteToSiteClien
  * RawSiteToSiteClient will be instantiated and returned through a unique ptr.
  */
 static std::unique_ptr<SiteToSiteClient> createRawSocket(const SiteToSiteClientConfiguration &client_configuration) {
-  m_uuid uuid;
+  uuid_t uuid;
   client_configuration.getPeer()->getPortId(uuid);
   auto rsptr = createStreamingPeer(client_configuration);
   if (nullptr == rsptr){
@@ -77,7 +77,7 @@ static std::unique_ptr<SiteToSiteClient> createRawSocket(const SiteToSiteClientC
  * @returns site to site client or nullptr.
  */
 static std::unique_ptr<SiteToSiteClient> createClient(const SiteToSiteClientConfiguration &client_configuration) {
-  m_uuid uuid;
+  uuid_t uuid;
   client_configuration.getPeer()->getPortId(uuid);
   switch (client_configuration.getClientType()) {
     case RAW:

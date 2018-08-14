@@ -100,7 +100,7 @@ TEST_CASE("Test Hex Device Segment 16 bits correct digits", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  m_uuid uid;
+  uuid_t uid;
   generator->generate(uid);
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
@@ -126,7 +126,7 @@ TEST_CASE("Test Hex Device Segment 16 bits too many digits", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  m_uuid uid;
+  uuid_t uid;
   generator->generate(uid);
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
@@ -155,7 +155,7 @@ TEST_CASE("Test Hex Device Segment 18 bits", "[id]") {
   std::shared_ptr<utils::IdGenerator> generator = utils::IdGenerator::getIdGenerator();
   generator->initialize(id_props);
 
-  m_uuid uid;
+  uuid_t uid;
   generator->generate(uid);
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);

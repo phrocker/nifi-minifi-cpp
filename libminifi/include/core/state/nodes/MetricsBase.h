@@ -44,7 +44,7 @@ class ResponseNode : public core::Connectable {
         is_array_(false) {
   }
 
-  ResponseNode(std::string name, m_uuid uuid)
+  ResponseNode(std::string name, uuid_t uuid)
       : core::Connectable(name, uuid),
         is_array_(false) {
   }
@@ -86,7 +86,7 @@ class ResponseNode : public core::Connectable {
  */
 class DeviceInformation : public ResponseNode {
  public:
-  DeviceInformation(std::string name, m_uuid uuid)
+  DeviceInformation(std::string name, uuid_t uuid)
       : ResponseNode(name, uuid) {
   }
 };
@@ -96,7 +96,7 @@ class DeviceInformation : public ResponseNode {
  */
 class ObjectNode : public ResponseNode {
  public:
-  ObjectNode(std::string name, m_uuid uuid)
+  ObjectNode(std::string name, uuid_t uuid)
       : ResponseNode(name, uuid) {
   }
 

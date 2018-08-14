@@ -46,7 +46,7 @@ TEST_CASE("Test Creation of ExtractText", "[extracttextCreate]") {
     TestController testController;
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExtractText>("processorname");
     REQUIRE(processor->getName() == "processorname");
-    m_uuid processoruuid;
+    uuid_t processoruuid;
     REQUIRE(processor->getUUID(processoruuid));
 }
 

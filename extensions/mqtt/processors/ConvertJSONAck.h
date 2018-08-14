@@ -47,7 +47,7 @@ class ConvertJSONAck : public ConvertBase {
   /*!
    * Create a new processor
    */
-  explicit ConvertJSONAck(std::string name, m_uuid uuid = NULL)
+  explicit ConvertJSONAck(std::string name, uuid_t uuid = NULL)
       : ConvertBase(name, uuid),
         logger_(logging::LoggerFactory<ConvertJSONAck>::getLogger()) {
   }

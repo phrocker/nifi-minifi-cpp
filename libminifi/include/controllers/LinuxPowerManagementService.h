@@ -50,7 +50,7 @@ class LinuxPowerManagerService : public ThreadManagementService {
         logger_(logging::LoggerFactory<LinuxPowerManagerService>::getLogger()) {
   }
 
-  explicit LinuxPowerManagerService(const std::string &name, m_uuid uuid = 0)
+  explicit LinuxPowerManagerService(const std::string &name, uuid_t uuid = 0)
       : ThreadManagementService(name, uuid),
         enabled_(false),
         battery_level_(0),

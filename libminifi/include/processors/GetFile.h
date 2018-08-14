@@ -56,7 +56,7 @@ class GetFileMetrics : public state::response::ResponseNode {
     input_bytes_ = 0;
   }
 
-  GetFileMetrics(std::string name, m_uuid uuid)
+  GetFileMetrics(std::string name, uuid_t uuid)
       : state::response::ResponseNode(name, uuid) {
     iterations_ = 0;
     accepted_files_ = 0;
@@ -109,7 +109,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   /*!
    * Create a new processor
    */
-  explicit GetFile(std::string name, m_uuid uuid = NULL)
+  explicit GetFile(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<GetFile>::getLogger()) {
     metrics_ = std::make_shared<GetFileMetrics>();

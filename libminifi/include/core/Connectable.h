@@ -40,7 +40,7 @@ namespace core {
 class Connectable : public CoreComponent {
  public:
 
-  explicit Connectable(std::string name, m_uuid uuid);
+  explicit Connectable(std::string name, uuid_t uuid);
 
   explicit Connectable(const Connectable &&other);
 

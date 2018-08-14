@@ -47,7 +47,7 @@ class ListenHTTP : public core::Processor {
   /*!
    * Create a new processor
    */
-  ListenHTTP(std::string name, m_uuid uuid = NULL)
+  ListenHTTP(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenHTTP>::getLogger()) {
   }

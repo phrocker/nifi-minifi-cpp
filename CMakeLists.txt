@@ -65,7 +65,7 @@ endif(CCACHE_FOUND)
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
-if (MSVC_VERSION GREATER_EQUAL "1900")
+if ( (MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
     CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
     if (_cpp_latest_flag_supported)
         add_compile_options("/std:c++14")

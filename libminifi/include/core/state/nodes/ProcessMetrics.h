@@ -43,7 +43,7 @@ namespace response {
 class ProcessMetrics : public ResponseNode {
  public:
 
-  ProcessMetrics(const std::string &name, m_uuid uuid)
+  ProcessMetrics(const std::string &name, uuid_t uuid)
       : ResponseNode(name, uuid) {
   }
 

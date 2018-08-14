@@ -73,7 +73,7 @@ class Instance {
         no_op_repo_(std::make_shared<minifi::core::Repository>()) {
     running_ = false;
     stream_factory_ = minifi::io::StreamFactory::getInstance(configure_);
-    m_uuid uuid;
+    uuid_t uuid;
     uuid_parse(port.c_str(), uuid);
     rpg_ = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, url, url, configure_, uuid);
     proc_node_ = std::make_shared<core::ProcessorNode>(rpg_);

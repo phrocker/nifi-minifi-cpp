@@ -206,7 +206,7 @@ class FlowFile : public core::Connectable {
    */
   uint64_t getOffset();
 
-  bool getUUID(m_uuid other) {
+  bool getUUID(uuid_t other) {
     uuid_copy(other, uuid_);
     return true;
   }

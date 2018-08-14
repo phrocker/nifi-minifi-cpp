@@ -66,7 +66,7 @@ namespace response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(std::string name, m_uuid uuid)
+  ComponentManifest(std::string name, uuid_t uuid)
       : DeviceInformation(name, uuid) {
   }
 
@@ -178,7 +178,7 @@ class ComponentManifest : public DeviceInformation {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(std::string name, m_uuid uuid)
+  Bundles(std::string name, uuid_t uuid)
       : DeviceInformation(name, uuid) {
     setArray(true);
   }
@@ -232,7 +232,7 @@ class Bundles : public DeviceInformation {
 class AgentStatus : public StateMonitorNode {
  public:
 
-  AgentStatus(std::string name, m_uuid uuid)
+  AgentStatus(std::string name, uuid_t uuid)
       : StateMonitorNode(name, uuid) {
 
   }
@@ -361,7 +361,7 @@ class AgentMonitor {
 class AgentManifest : public DeviceInformation {
  public:
 
-  AgentManifest(std::string name, m_uuid uuid)
+  AgentManifest(std::string name, uuid_t uuid)
       : DeviceInformation(name, uuid) {
     //setArray(true);
   }
@@ -443,7 +443,7 @@ class AgentManifest : public DeviceInformation {
 class AgentInformation : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
 
-  AgentInformation(std::string name, m_uuid uuid)
+  AgentInformation(std::string name, uuid_t uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
   }

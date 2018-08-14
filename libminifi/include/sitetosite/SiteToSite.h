@@ -323,7 +323,7 @@ class Transaction {
   TransferDirection _direction;
 
   // A global unique identifier
-  m_uuid uuid_;
+  uuid_t uuid_;
   // UUID string
   std::string uuid_str_;
 

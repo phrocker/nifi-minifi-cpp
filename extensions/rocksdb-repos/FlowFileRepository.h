@@ -50,7 +50,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
  public:
   // Constructor
 
-  FlowFileRepository(std::string name, m_uuid uuid)
+  FlowFileRepository(std::string name, uuid_t uuid)
       : FlowFileRepository(name) {
   }
 

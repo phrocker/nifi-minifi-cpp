@@ -57,7 +57,7 @@ class ProcessGroup {
   /*!
    * Create a new process group
    */
-  ProcessGroup(ProcessGroupType type, std::string name, m_uuid uuid = NULL, int version = 0, ProcessGroup *parent = NULL);
+  ProcessGroup(ProcessGroupType type, std::string name, uuid_t uuid = NULL, int version = 0, ProcessGroup *parent = NULL);
   // Destructor
   virtual ~ProcessGroup();
   // Set Processor Name
@@ -140,11 +140,11 @@ class ProcessGroup {
     return (yield_period_msec_);
   }
   // Set UUID
-  void setUUID(m_uuid uuid) {
+  void setUUID(uuid_t uuid) {
     uuid_copy(uuid_, uuid);
   }
   // Get UUID
-  bool getUUID(m_uuid uuid) {
+  bool getUUID(uuid_t uuid) {
     if (uuid) {
       uuid_copy(uuid, uuid_);
       return true;
@@ -182,7 +182,7 @@ class ProcessGroup {
   // ! Add connections
   void addConnection(std::shared_ptr<Connection> connection);
   // findProcessor based on UUID
-  std::shared_ptr<Processor> findProcessor(m_uuid uuid);
+  std::shared_ptr<Processor> findProcessor(uuid_t uuid);
   // findProcessor based on name
   std::shared_ptr<Processor> findProcessor(const std::string &processorName);
 
@@ -212,7 +212,7 @@ class ProcessGroup {
 
  protected:
   // A global unique identifier
-  m_uuid uuid_;
+  uuid_t uuid_;
   // Processor Group Name
   std::string name_;
   // version

@@ -40,7 +40,7 @@
 
 #define UUCMP(u1,u2) if (u1 != u2) return((u1 < u2) ? -1 : 1);
 
-int uuid_compare(const m_uuid uu1, const m_uuid uu2)
+int uuid_compare(const uuid_t uu1, const uuid_t uu2)
 {
 	struct uuid	uuid1, uuid2;
 

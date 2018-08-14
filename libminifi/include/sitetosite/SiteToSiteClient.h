@@ -145,7 +145,7 @@ class SiteToSiteClient : public core::Connectable {
   virtual bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
                                std::map<std::string, std::string> attributes) = 0;
 
-  void setPortId(m_uuid id) {
+  void setPortId(uuid_t id) {
     uuid_copy(port_id_, id);
     char idStr[37];
     uuid_unparse_lower(id, idStr);
@@ -250,7 +250,7 @@ class SiteToSiteClient : public core::Connectable {
   std::string port_id_str_;
 
   // portId
-  m_uuid port_id_;
+  uuid_t port_id_;
 
   // Peer Connection
   std::unique_ptr<SiteToSitePeer> peer_;

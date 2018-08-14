@@ -132,7 +132,7 @@ class FlowVersion : public DeviceInformation {
 class FlowMonitor : public StateMonitorNode {
  public:
 
-  FlowMonitor(std::string name, m_uuid uuid)
+  FlowMonitor(std::string name, uuid_t uuid)
       : StateMonitorNode(name, uuid) {
   }
 
@@ -161,7 +161,7 @@ class FlowMonitor : public StateMonitorNode {
 class FlowInformation : public FlowMonitor {
  public:
 
-  FlowInformation(std::string name, m_uuid uuid)
+  FlowInformation(std::string name, uuid_t uuid)
       : FlowMonitor(name, uuid) {
   }
 

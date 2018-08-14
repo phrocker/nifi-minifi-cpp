@@ -45,7 +45,7 @@ namespace sitetosite {
 
 class Peer {
  public:
-  explicit Peer(m_uuid port_id, const std::string &host, uint16_t port, bool secure = false)
+  explicit Peer(uuid_t port_id, const std::string &host, uint16_t port, bool secure = false)
       : host_(host),
         port_(port),
         secure_(secure) {
@@ -84,7 +84,7 @@ class Peer {
     return secure_;
   }
 
-  void getPortId(m_uuid other) const {
+  void getPortId(uuid_t other) const {
     uuid_copy(other, port_id_);
   }
 
@@ -93,7 +93,7 @@ class Peer {
 
   uint16_t port_;
 
-  m_uuid port_id_;
+  uuid_t port_id_;
 
   // secore comms
 

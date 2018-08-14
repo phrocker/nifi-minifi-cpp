@@ -64,10 +64,10 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   processor->setStreamFactory(stream_factory);
   processor->initialize();
 
-  m_uuid processoruuid;
+  uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
-  m_uuid logattribute_uuid;
+  uuid_t logattribute_uuid;
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
@@ -176,10 +176,10 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   processor->setStreamFactory(stream_factory);
   processor->initialize();
 
-  m_uuid processoruuid;
+  uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
-  m_uuid logattribute_uuid;
+  uuid_t logattribute_uuid;
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
@@ -301,10 +301,10 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   processor->setStreamFactory(stream_factory);
   processor->initialize();
 
-  m_uuid processoruuid;
+  uuid_t processoruuid;
   REQUIRE(true == processor->getUUID(processoruuid));
 
-  m_uuid logattribute_uuid;
+  uuid_t logattribute_uuid;
   REQUIRE(true == logAttribute->getUUID(logattribute_uuid));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");

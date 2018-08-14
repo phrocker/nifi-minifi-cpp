@@ -38,7 +38,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     return nullptr;
   }
 
-  m_uuid uuid;
+  uuid_t uuid;
   uuid_generate(uuid);
 
   processor->setStreamFactory(stream_factory);
@@ -66,7 +66,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     connection->setSource(last);
     connection->setDestination(processor);
 
-    m_uuid uuid_copy, uuid_copy_next;
+    uuid_t uuid_copy, uuid_copy_next;
     last->getUUID(uuid_copy);
     connection->setSourceUUID(uuid_copy);
     processor->getUUID(uuid_copy_next);
@@ -95,7 +95,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::string &
     return nullptr;
   }
 
-  m_uuid uuid;
+  uuid_t uuid;
   uuid_generate(uuid);
 
   auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
@@ -186,7 +186,7 @@ std::shared_ptr<minifi::Connection> ExecutionPlan::buildFinalConnection(std::sha
   if (setDest)
     connection->setDestination(processor);
 
-  m_uuid uuid_copy;
+  uuid_t uuid_copy;
   last->getUUID(uuid_copy);
   connection->setSourceUUID(uuid_copy);
   if (setDest)

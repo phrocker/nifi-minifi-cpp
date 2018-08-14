@@ -42,7 +42,7 @@ namespace response {
 class StateMonitorNode : public DeviceInformation {
  public:
 
-  StateMonitorNode(std::string name, m_uuid uuid)
+  StateMonitorNode(std::string name, uuid_t uuid)
       : DeviceInformation(name, uuid),
         monitor_(nullptr) {
 

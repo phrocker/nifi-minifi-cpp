@@ -38,7 +38,7 @@ namespace response {
 class QueueMetrics : public ResponseNode {
  public:
 
-  QueueMetrics(const std::string &name, m_uuid uuid)
+  QueueMetrics(const std::string &name, uuid_t uuid)
       : ResponseNode(name, uuid) {
   }
 

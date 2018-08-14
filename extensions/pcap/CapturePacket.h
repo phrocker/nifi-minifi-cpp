@@ -97,7 +97,7 @@ class CapturePacket : public core::Processor {
   /*!
    * Create a new processor
    */
-  explicit CapturePacket(std::string name, m_uuid uuid = NULL)
+  explicit CapturePacket(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
         capture_bluetooth_(false),
         pcap_batch_size_(50),

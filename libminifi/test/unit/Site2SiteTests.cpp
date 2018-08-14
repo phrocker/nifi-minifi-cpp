@@ -38,7 +38,7 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
 
   std::string uuid_str = "c56a4180-65aa-42ec-a945-5fd21dec0538";
 
-  m_uuid fakeUUID;
+  uuid_t fakeUUID;
 
   uuid_parse(uuid_str.c_str(), fakeUUID);
 
@@ -55,7 +55,7 @@ TEST_CASE("TestSetPortIdUppercase", "[S2S2]") {
 
   std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
 
-  m_uuid fakeUUID;
+  uuid_t fakeUUID;
 
   uuid_parse(uuid_str.c_str(), fakeUUID);
 
@@ -100,7 +100,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 
   std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
 
-  m_uuid fakeUUID;
+  uuid_t fakeUUID;
 
   uuid_parse(uuid_str.c_str(), fakeUUID);
 
@@ -169,7 +169,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
 
   std::string uuid_str = "C56A4180-65AA-42EC-A945-5FD21DEC0538";
 
-  m_uuid fakeUUID;
+  uuid_t fakeUUID;
 
   uuid_parse(uuid_str.c_str(), fakeUUID);
 

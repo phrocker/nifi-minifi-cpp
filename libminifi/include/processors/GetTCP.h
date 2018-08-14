@@ -125,7 +125,7 @@ class GetTCPMetrics : public state::response::ResponseNode {
     input_bytes_ = 0;
   }
 
-  GetTCPMetrics(std::string name, m_uuid uuid)
+  GetTCPMetrics(std::string name, uuid_t uuid)
       : state::response::ResponseNode(name, uuid) {
     iterations_ = 0;
     accepted_files_ = 0;
@@ -178,7 +178,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   /*!
    * Create a new processor
    */
-  explicit GetTCP(std::string name, m_uuid uuid = NULL)
+  explicit GetTCP(std::string name, uuid_t uuid = NULL)
       : Processor(name, uuid),
         running_(false),
         stay_connected_(true),

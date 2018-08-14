@@ -36,7 +36,7 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-RESTSender::RESTSender(std::string name, m_uuid uuid)
+RESTSender::RESTSender(std::string name, uuid_t uuid)
     : C2Protocol(name, uuid),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
 }

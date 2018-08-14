@@ -109,7 +109,7 @@ class CoreComponent {
    * Constructor that sets the name and uuid.
    */
 #ifdef WIN32
-  explicit CoreComponent(const std::string name, m_uuid uuid)
+  explicit CoreComponent(const std::string name, uuid_t uuid)
       : name_(name) {
     if (uuid_is_null(uuid))
       // Generate the global UUID for the flow record
@@ -134,7 +134,7 @@ class CoreComponent {
   }
 #else
 
-	 explicit CoreComponent(const std::string name, m_uuid uuid = nullptr)
+	 explicit CoreComponent(const std::string name, uuid_t uuid = nullptr)
 		 : name_(name) {
 		 if (nullptr == uuid)
 			 // Generate the global UUID for the flow record
@@ -173,7 +173,7 @@ class CoreComponent {
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(m_uuid uuid);
+  void setUUID(uuid_t uuid);
 
   void setUUIDStr(const std::string uuidStr);
 
@@ -182,7 +182,7 @@ class CoreComponent {
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  bool getUUID(m_uuid uuid);
+  bool getUUID(uuid_t uuid);
 
   unsigned const char *getUUID();
   /**
@@ -198,7 +198,7 @@ class CoreComponent {
 
  protected:
   // A global unique identifier
-  m_uuid uuid_;
+  uuid_t uuid_;
   // UUID string
   std::string uuidStr_;
 

@@ -33,7 +33,7 @@ namespace processors {
 
 class PutSQL : public core::Processor {
  public:
-  explicit PutSQL(const std::string &name, m_uuid uuid = nullptr)
+  explicit PutSQL(const std::string &name, uuid_t uuid = nullptr)
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<PutSQL>::getLogger()) {
   }

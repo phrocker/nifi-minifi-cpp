@@ -49,7 +49,7 @@ public:
   /*!
    * Create a new processor
    */
-  explicit ConsumeMQTT(std::string name, m_uuid uuid = NULL)
+  explicit ConsumeMQTT(std::string name, uuid_t uuid = NULL)
     : processors::AbstractMQTTProcessor(name, uuid), logger_(logging::LoggerFactory<ConsumeMQTT>::getLogger()) {
     isSubscriber_ = true;
     maxQueueSize_ = 100;

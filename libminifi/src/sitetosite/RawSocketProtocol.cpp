@@ -240,7 +240,7 @@ bool RawSiteToSiteClient::handShake() {
     return false;
   }
   logger_->log_debug("Site2Site Protocol Perform hand shake with destination port %s", port_id_str_);
-  m_uuid uuid;
+  uuid_t uuid;
   // Generate the global UUID for the com identify
   id_generator_->generate(uuid);
   char uuidStr[37];

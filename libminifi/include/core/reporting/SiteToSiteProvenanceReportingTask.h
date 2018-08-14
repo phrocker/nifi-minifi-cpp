@@ -70,7 +70,7 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
   //! Initialize, over write by NiFi SiteToSiteProvenanceReportingTask
   virtual void initialize(void);
   //! Set Port UUID
-  void setPortUUID(m_uuid port_uuid) {
+  void setPortUUID(uuid_t port_uuid) {
     uuid_copy(protocol_uuid_, port_uuid);
   }
   //! Set Host
@@ -98,7 +98,7 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
     return (batch_size_);
   }
   //! Get Port UUID
-  void getPortUUID(m_uuid port_uuid) {
+  void getPortUUID(uuid_t port_uuid) {
     uuid_copy(port_uuid, protocol_uuid_);
   }
 

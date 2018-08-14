@@ -256,19 +256,19 @@ class TestFlowController : public minifi::FlowController {
     return true;
   }
 
-  std::shared_ptr<core::Processor> createProcessor(std::string name, m_uuid uuid) {
+  std::shared_ptr<core::Processor> createProcessor(std::string name, uuid_t uuid) {
     return 0;
   }
 
-  core::ProcessGroup *createRootProcessGroup(std::string name, m_uuid uuid) {
+  core::ProcessGroup *createRootProcessGroup(std::string name, uuid_t uuid) {
     return 0;
   }
 
-  core::ProcessGroup *createRemoteProcessGroup(std::string name, m_uuid uuid) {
+  core::ProcessGroup *createRemoteProcessGroup(std::string name, uuid_t uuid) {
     return 0;
   }
 
-  std::shared_ptr<minifi::Connection> createConnection(std::string name, m_uuid uuid) {
+  std::shared_ptr<minifi::Connection> createConnection(std::string name, uuid_t uuid) {
     return 0;
   }
  protected:

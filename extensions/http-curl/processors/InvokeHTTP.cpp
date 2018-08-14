@@ -237,7 +237,7 @@ InvokeHTTP::~InvokeHTTP() {
 }
 
 std::string InvokeHTTP::generateId() {
-  m_uuid txId;
+  uuid_t txId;
   id_generator_->generate(txId);
   char uuidStr[37];
   uuid_unparse_lower(txId, uuidStr);

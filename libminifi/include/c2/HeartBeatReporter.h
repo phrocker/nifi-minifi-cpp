@@ -36,7 +36,7 @@ namespace c2 {
 class HeartBeatReporter : public core::Connectable {
  public:
 
-  HeartBeatReporter(std::string name, m_uuid uuid)
+  HeartBeatReporter(std::string name, uuid_t uuid)
       : core::Connectable(name, uuid),
         controller_(nullptr),
         update_sink_(nullptr),

@@ -67,7 +67,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   /*!
    * Create a new processor
    */
-  Processor(std::string name, m_uuid uuid = NULL);
+  Processor(std::string name, uuid_t uuid = NULL);
   // Destructor
   virtual ~Processor() {
     notifyStop();

@@ -36,7 +36,7 @@ namespace processors {
 
 class ExecuteScript : public core::Processor {
  public:
-  explicit ExecuteScript(const std::string &name, m_uuid uuid = nullptr)
+  explicit ExecuteScript(const std::string &name, uuid_t uuid = nullptr)
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteScript>::getLogger()),
         script_engine_q_() {

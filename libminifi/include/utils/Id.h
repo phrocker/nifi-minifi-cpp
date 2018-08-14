@@ -39,7 +39,7 @@ namespace utils {
 
 class IdGenerator {
  public:
-  void generate(m_uuid output);
+  void generate(uuid_t output);
   void initialize(const std::shared_ptr<Properties> & properties);
 
   static std::shared_ptr<IdGenerator> getIdGenerator() {

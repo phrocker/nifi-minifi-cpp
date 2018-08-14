@@ -214,7 +214,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
 std::string PutFile::tmpWritePath(const std::string &filename, const std::string &directory) const {
   char tmpFileUuidStr[37];
-  m_uuid tmpFileUuid;
+  uuid_t tmpFileUuid;
   id_generator_->generate(tmpFileUuid);
   uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;

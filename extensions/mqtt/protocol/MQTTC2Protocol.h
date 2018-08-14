@@ -44,7 +44,7 @@ namespace c2 {
  */
 class MQTTC2Protocol : public C2Protocol {
  public:
-  explicit MQTTC2Protocol(std::string name, m_uuid uuid = nullptr);
+  explicit MQTTC2Protocol(std::string name, uuid_t uuid = nullptr);
 
   virtual ~MQTTC2Protocol();
 

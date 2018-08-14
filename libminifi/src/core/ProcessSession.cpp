@@ -639,7 +639,7 @@ bool ProcessSession::exportContent(const std::string &destination, const std::st
 
 bool ProcessSession::exportContent(const std::string &destination, const std::shared_ptr<core::FlowFile> &flow, bool keepContent) {
   char tmpFileUuidStr[37];
-  m_uuid tmpFileUuid;
+  uuid_t tmpFileUuid;
   id_generator_->generate(tmpFileUuid);
   uuid_unparse_lower(tmpFileUuid, tmpFileUuidStr);
   std::stringstream tmpFileSs;
