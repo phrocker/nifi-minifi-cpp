@@ -138,7 +138,7 @@ class FlowMonitor : public StateMonitorNode {
 
   void addConnection(const std::shared_ptr<minifi::Connection> &connection) {
     if (nullptr != connection) {
-      connections_.insert(std::make_pair(connection->getName(), connection));
+      connections_.insert(std::make_pair(connection->getUUIDStr(), connection));
     }
   }
 
@@ -187,12 +187,13 @@ class FlowInformation : public FlowMonitor {
 
     if (!connections_.empty()) {
       SerializedResponseNode queues;
-
+      queues.collapsible = false;
       queues.name = "queues";
 
       for (auto &queue : connections_) {
         SerializedResponseNode repoNode;
-        repoNode.name = queue.first;
+        repoNode.collapsible = false;
+        repoNode.name = queue.second->getName();
 
         SerializedResponseNode queuesize;
         queuesize.name = "size";
@@ -223,13 +224,11 @@ class FlowInformation : public FlowMonitor {
 
     if (nullptr != monitor_) {
       auto components = monitor_->getAllComponents();
-      SerializedResponseNode componentsNode;
-
+      SerializedResponseNode componentsNode(false);
       componentsNode.name = "components";
 
       for (auto component : components) {
-        SerializedResponseNode componentNode;
-
+        SerializedResponseNode componentNode(false);
         componentNode.name = component->getComponentName();
 
         SerializedResponseNode componentStatusNode;
