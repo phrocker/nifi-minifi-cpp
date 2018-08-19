@@ -113,7 +113,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   }
 
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-  virtual void load();
+  virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload=false);
 
   // Whether the Flow Controller is start running
   virtual bool isRunning() {
@@ -361,6 +361,7 @@ class FlowController : public core::controller::ControllerServiceProvider, publi
   std::string configuration_filename_;
 
   std::atomic<bool> c2_initialized_;
+  std::atomic<bool> flow_update_;
   std::atomic<bool> c2_enabled_;
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;

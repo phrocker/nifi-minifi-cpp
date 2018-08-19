@@ -165,6 +165,11 @@ class C2Agent : public state::UpdateController, public state::response::Response
    */
   void handle_describe(const C2ContentResponse &resp);
 
+  /**
+   * Updates a property
+   */
+  bool update_property(const std::string &property_name, const std::string &property_value,  bool persist = false);
+
   std::timed_mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_map_;
 

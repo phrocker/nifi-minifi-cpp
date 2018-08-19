@@ -139,20 +139,33 @@ void setJsonStr(const std::string& key, const state::response::ValueNode& value,
   auto base_type = value.getValue();
   keyVal.SetString(c_key, key.length(), alloc);
 
+  auto type_index = base_type->getTypeIndex();
   if (auto sub_type = std::dynamic_pointer_cast<core::TransformableValue>(base_type)) {
     auto str = base_type->getStringValue();
     const char* c_val = str.c_str();
     valueVal.SetString(c_val, str.length(), alloc);
-  } else if (auto sub_type = std::dynamic_pointer_cast<state::response::IntValue>(base_type)) {
-    valueVal.SetInt(sub_type->getValue());
-  } else if (auto sub_type = std::dynamic_pointer_cast<state::response::Int64Value>(base_type)) {
-    valueVal.SetInt64(sub_type->getValue());
-  } else if (auto sub_type = std::dynamic_pointer_cast<state::response::BoolValue>(base_type)) {
-    valueVal.SetBool(sub_type->getValue());
   } else {
-    auto str = base_type->getStringValue();
-    const char* c_val = str.c_str();
-    valueVal.SetString(c_val, str.length(), alloc);
+    if (type_index == state::response::Value::BOOL_TYPE) {
+      bool value = false;
+      base_type->convertValue(value);
+      valueVal.SetBool(value);
+    } else if (type_index == state::response::Value::INT_TYPE) {
+      int value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt(value);
+    } else if (type_index == state::response::Value::INT64_TYPE) {
+      int64_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt64(value);
+    } else if (type_index == state::response::Value::UINT64_TYPE) {
+      int64_t value = 0;
+      base_type->convertValue(value);
+      valueVal.SetInt64(value);
+    } else {
+      auto str = base_type->getStringValue();
+      const char* c_val = str.c_str();
+      valueVal.SetString(c_val, str.length(), alloc);
+    }
   }
   parent.AddMember(keyVal, valueVal, alloc);
 }
