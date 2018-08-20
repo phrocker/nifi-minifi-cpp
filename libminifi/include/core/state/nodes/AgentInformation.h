@@ -58,7 +58,6 @@ namespace response {
 
 #define GROUP_STR "org::apache::nifi::minifi"
 
-
 class ComponentManifest : public DeviceInformation {
  public:
   ComponentManifest(std::string name, uuid_t uuid)
@@ -99,7 +98,6 @@ class ComponentManifest : public DeviceInformation {
         className.name = "type";
         className.value = group.class_name_;
 
-
         if (!group.class_properties_.empty()) {
           SerializedResponseNode props;
           props.name = "propertyDescriptors";
@@ -124,6 +122,10 @@ class ComponentManifest : public DeviceInformation {
             descriptorValidRegex.name = "validRegex";
             descriptorValidRegex.value = prop.second.getValidRegex();
 
+            SerializedResponseNode descriptorDefaultValue;
+            descriptorDefaultValue.name = "defaultValue";
+            descriptorDefaultValue.value = prop.second.getValue();
+
             SerializedResponseNode descriptorDependentProperties;
             descriptorDependentProperties.name = "dependentProperties";
 
@@ -146,6 +148,7 @@ class ComponentManifest : public DeviceInformation {
             child.children.push_back(descriptorName);
             child.children.push_back(descriptorDescription);
             child.children.push_back(descriptorRequired);
+            child.children.push_back(descriptorDefaultValue);
             child.children.push_back(descriptorValidRegex);
             child.children.push_back(descriptorDependentProperties);
             child.children.push_back(descriptorExclusiveOfProperties);
@@ -158,10 +161,35 @@ class ComponentManifest : public DeviceInformation {
 
         SerializedResponseNode dyn_prop;
         dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.support_dynamic_;
+        dyn_prop.value = group.dynamic_properties_;
 
+        SerializedResponseNode dyn_relat;
+        dyn_relat.name = "supportsDynamicRelationships";
+        dyn_relat.value = group.dynamic_relationships_;
+
+        if (group.class_relationships_.size() > 0) {
+          SerializedResponseNode relationships;
+          relationships.name = "supportedRelationships";
+
+          for (const auto &relationship : group.class_relationships_) {
+
+            SerializedResponseNode child;
+            child.name = relationship.getName();
+
+            SerializedResponseNode descriptorDescription;
+            descriptorDescription.name = "description";
+            descriptorDescription.value = relationship.getDescription();
+
+            child.children.push_back(descriptorDescription);
+
+            relationships.children.push_back(child);
+          }
+          desc.children.push_back(relationships);
+        }
+        desc.children.push_back(dyn_relat);
         desc.children.push_back(dyn_prop);
         desc.children.push_back(className);
+
         type.children.push_back(desc);
       }
       response.children.push_back(type);
@@ -169,7 +197,6 @@ class ComponentManifest : public DeviceInformation {
 
   }
 };
-
 
 class Bundles : public DeviceInformation {
  public:
@@ -519,7 +546,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
 
         SerializedResponseNode dyn_prop;
         dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.support_dynamic_;
+        dyn_prop.value = group.dynamic_properties_;
 
         desc.children.push_back(dyn_prop);
 
@@ -554,7 +581,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
 
         SerializedResponseNode dyn_prop;
         dyn_prop.name = "supportsDynamicProperties";
-        dyn_prop.value = group.support_dynamic_;
+        dyn_prop.value = group.dynamic_properties_;
 
         desc.children.push_back(dyn_prop);
 
