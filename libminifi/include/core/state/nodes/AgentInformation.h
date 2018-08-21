@@ -172,7 +172,6 @@ class ComponentManifest : public DeviceInformation {
           relationships.name = "supportedRelationships";
 
           for (const auto &relationship : group.class_relationships_) {
-
             SerializedResponseNode child;
             child.name = relationship.getName();
 

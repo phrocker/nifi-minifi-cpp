@@ -24,6 +24,7 @@
 #include <vector>
 #include <queue>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <atomic>
 #include <functional>
@@ -47,18 +48,16 @@ enum TimeUnit {
   NANOSECOND
 };
 
+class PropertyBuilder;
+
+
 class Property {
 
  public:
   /*!
    * Create a new property
    */
-  Property(std::string name,
-           std::string description,
-           std::string value,
-           bool is_required,
-           std::string valid_regex,
-           std::vector<std::string> dependent_properties,
+  Property(std::string name, std::string description, std::string value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
            std::vector<std::pair<std::string, std::string>> exclusive_of_properties)
       : name_(std::move(name)),
         description_(std::move(description)),
@@ -85,6 +84,26 @@ class Property {
         is_collection_(true) {
   }
 
+  Property(Property &&other)
+      : name_(std::move(other.name_)),
+        description_(std::move(other.description_)),
+        is_required_(other.is_required_),
+        valid_regex_(std::move(other.valid_regex_)),
+        dependent_properties_(std::move(other.dependent_properties_)),
+        exclusive_of_properties_(std::move(other.exclusive_of_properties_)),
+        is_collection_(other.is_collection_) {
+  }
+
+  Property(const Property &other)
+      : name_(other.name_),
+        description_(other.description_),
+        is_required_(other.is_required_),
+        valid_regex_(other.valid_regex_),
+        dependent_properties_(other.dependent_properties_),
+        exclusive_of_properties_(other.exclusive_of_properties_),
+        is_collection_(other.is_collection_) {
+  }
+
   Property()
       : name_(""),
         description_(""),
@@ -109,10 +128,10 @@ class Property {
    */
   void addValue(std::string value);
   const Property &operator=(const Property &other);
-  // Compare
+// Compare
   bool operator <(const Property & right) const;
 
-  // Convert TimeUnit to MilliSecond
+// Convert TimeUnit to MilliSecond
   template<typename T>
   static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, T &out) {
     if (unit == MILLISECOND) {
@@ -146,7 +165,7 @@ class Property {
     return ConvertTimeUnitToMS<uint64_t>(input, unit, out);
   }
 
-  // Convert TimeUnit to NanoSecond
+// Convert TimeUnit to NanoSecond
   template<typename T>
   static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, T &out) {
     if (unit == MILLISECOND) {
@@ -169,17 +188,17 @@ class Property {
     }
   }
 
-  // Convert TimeUnit to NanoSecond
+// Convert TimeUnit to NanoSecond
   static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, uint64_t &out) {
     return ConvertTimeUnitToNS<uint64_t>(input, unit, out);
   }
 
-  // Convert TimeUnit to NanoSecond
+// Convert TimeUnit to NanoSecond
   static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, int64_t &out) {
     return ConvertTimeUnitToNS<int64_t>(input, unit, out);
   }
 
-  // Convert String
+// Convert String
   static bool StringToTime(std::string input, uint64_t &output, TimeUnit &timeunit) {
     if (input.size() == 0) {
       return false;
@@ -233,7 +252,7 @@ class Property {
       return false;
   }
 
-  // Convert String
+// Convert String
   static bool StringToTime(std::string input, int64_t &output, TimeUnit &timeunit) {
     if (input.size() == 0) {
       return false;
@@ -287,7 +306,7 @@ class Property {
       return false;
   }
 
-  // Convert String to Integer
+// Convert String to Integer
   template<typename T>
   static bool StringToInt(std::string input, T &output) {
     if (input.size() == 0) {
@@ -359,7 +378,7 @@ class Property {
     return StringToInt<int64_t>(input, output);
   }
 
-  // Convert String to Integer
+// Convert String to Integer
   static bool StringToInt(std::string input, uint64_t &output) {
     return StringToInt<uint64_t>(input, output);
   }
@@ -368,12 +387,13 @@ class Property {
     return StringToInt<int32_t>(input, output);
   }
 
-  // Convert String to Integer
+// Convert String to Integer
   static bool StringToInt(std::string input, uint32_t &output) {
     return StringToInt<uint32_t>(input, output);
   }
 
  protected:
+
   std::string name_;
   std::string description_;
   bool is_required_;
@@ -385,8 +405,46 @@ class Property {
 
  private:
 
+  friend class PropertyBuilder;
 };
 
+class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
+public:
+  static std::shared_ptr<PropertyBuilder > createProperty(const std::string &name) {
+    std::shared_ptr<PropertyBuilder> builder = std::move(std::unique_ptr<PropertyBuilder>(new PropertyBuilder()));
+    builder->prop.name_ = name;
+    return builder;
+  }
+
+  std::shared_ptr<PropertyBuilder > withDescription(const std::string &description) {
+    prop.description_ = description;
+    return shared_from_this();
+  }
+
+  std::shared_ptr<PropertyBuilder > isRequired(bool required) {
+    prop.is_required_ = false;
+    return shared_from_this();
+  }
+
+  std::shared_ptr<PropertyBuilder > withDefaultValue(const std::string &df) {
+    prop.values_.push_back(std::move(df));
+    return shared_from_this();
+  }
+
+  std::shared_ptr<PropertyBuilder > withExclusiveProperty(const std::string &property, const std::string regex) {
+    prop.exclusive_of_properties_.push_back( { property, regex });
+    return shared_from_this();
+  }
+
+  Property &&build() {
+    return std::move(prop);
+  }
+ private:
+  Property prop;
+
+  PropertyBuilder() {
+  }
+};
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

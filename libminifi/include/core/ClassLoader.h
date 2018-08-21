@@ -85,6 +85,7 @@ class ObjectFactory {
   virtual std::string getName() = 0;
 
   virtual std::string getClassName() = 0;
+
   /**
    * Gets the class name for the object
    * @return class name for the processor.
@@ -144,6 +145,11 @@ class DefautObjectFactory : public ObjectFactory {
   virtual CoreComponent* createRaw(const std::string &name, uuid_t uuid) {
     T *ptr = new T(name, uuid);
     return dynamic_cast<CoreComponent*>(ptr);
+  }
+
+  template<typename J>
+  bool is_type() {
+    return std::is_convertible<T, J>::value;
   }
 
   /**
@@ -240,6 +246,18 @@ class ClassLoader {
     module_mapping_[group].push_back(factory->getName());
 
     loaded_factories_.insert(std::make_pair(name, std::move(factory)));
+  }
+
+  template<typename X>
+  std::vector<std::string> getClassesOfType(){
+    std::vector<std::string> classes;
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    for(const auto &fac : loaded_factories_){
+      if ( fac.second->is_type<X>() ){
+        classes.emplace_back(fac.first);
+      }
+    }
+    return classes;
   }
 
   std::vector<std::string> getClasses(const std::string &group) {

@@ -65,14 +65,17 @@ core::Property InvokeHTTP::FollowRedirects("Follow Redirects", "Follow HTTP redi
 core::Property InvokeHTTP::AttributesToSend("Attributes to Send", "Regular expression that defines which attributes to send as HTTP"
                                             " headers in the request. If not defined, no attributes are sent as headers.",
                                             "");
-core::Property InvokeHTTP::SSLContext("SSL Context Service",
-                                      "The SSL Context Service used to provide client certificate "
-                                      "information for TLS/SSL (https) connections.",
-                                      "",
-                                      false,
-                                      "",
-                                      {},
-                                      {{"Remote URL", "^http:.*$"}});
+core::Property InvokeHTTP::SSLContext( core::PropertyBuilder::createProperty("SSL Context Service")->withDescription("The SSL Context Service used to provide client certificate "
+                                      "information for TLS/SSL (https) connections.")->isRequired(false)->withExclusiveProperty("Remote URL", "^http:.*$")->build());
+/*core::Property InvokeHTTP::SSLContext("SSL Context Service",
+ "The SSL Context Service used to provide client certificate "
+ "information for TLS/SSL (https) connections.",
+ "",
+ false,
+ "",
+ {},
+ {{"Remote URL", "^http:.*$"}});
+ */
 core::Property InvokeHTTP::ProxyHost("Proxy Host", "The fully qualified hostname or IP address of the proxy server", "");
 core::Property InvokeHTTP::ProxyPort("Proxy Port", "The port of the proxy server", "");
 core::Property InvokeHTTP::ProxyUser("invokehttp-proxy-user", "Username to set when authenticating against proxy", "");
@@ -366,12 +369,8 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 }
 
-void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request,
-                       std::shared_ptr<FlowFileRecord> &response,
-                       const std::shared_ptr<core::ProcessSession> &session,
-                       const std::shared_ptr<core::ProcessContext> &context,
-                       bool isSuccess,
-                       int statusCode) {
+void InvokeHTTP::route(std::shared_ptr<FlowFileRecord> &request, std::shared_ptr<FlowFileRecord> &response, const std::shared_ptr<core::ProcessSession> &session,
+                       const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int statusCode) {
   // check if we should yield the processor
   if (!isSuccess && request == nullptr) {
     context->yield();
