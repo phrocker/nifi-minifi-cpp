@@ -24,7 +24,7 @@ NO_COLOR='\033[0;0;39m'
 CORES=1
 BUILD="false"
 PACKAGE="false"
-BUILD_IDENTIFIER=""
+export BUILD_IDENTIFIER=""
 TRUE="Enabled"
 FALSE="Disabled"
 FEATURES_SELECTED="false"
@@ -88,7 +88,10 @@ while :; do
       BUILD="true"
       ;;
     "--build_identifier="* )
+      
       BUILD_IDENTIFIER="${1#*=}"
+      export BUILD_IDENTIFIER="${BUILD_IDENTIFIER}"
+      echo ${BUILD_IDENTIFIER}
       ;;
     *) break
   esac

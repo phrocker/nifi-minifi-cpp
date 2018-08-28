@@ -329,6 +329,18 @@ class SchedulingDefaults : public DeviceInformation {
 
     schedulingDefaults.children.push_back(defaultMaxConcurrentTasks);
 
+    SerializedResponseNode yieldDuration;
+    yieldDuration.name = "yieldDuration";
+    yieldDuration.value = DEFAULT_MAX_CONCURRENT_TASKS;
+
+    schedulingDefaults.children.push_back(yieldDuration);
+
+    SerializedResponseNode penalizationPeriod;
+    penalizationPeriod.name = "penalizationPeriod";
+    penalizationPeriod.value = DEFAULT_MAX_CONCURRENT_TASKS;
+
+    schedulingDefaults.children.push_back(penalizationPeriod);
+
     serialized.push_back(schedulingDefaults);
 
     return serialized;
