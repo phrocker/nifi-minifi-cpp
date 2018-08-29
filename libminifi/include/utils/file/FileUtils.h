@@ -92,6 +92,45 @@ class FileUtils {
     }
     return 0;
 #elif defined(WIN32)
+	  WIN32_FIND_DATA FindFileData;
+	  HANDLE hFind;
+	  DWORD Attributes;
+	  const char *str;
+
+	  {
+		  std::stringstream strs;
+		  strs << path << "\\.*";
+		  str = strs.str().c_str();
+	  }
+	  //List files
+	  hFind = FindFirstFile(str, &FindFileData);
+	  do {
+		  if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0)
+		  {
+			  //Str append Example
+			 
+				std::stringstream strs;
+				strs << path << "\\" << FindFileData.cFileName;
+				str = strs.str().c_str();
+			  
+			  //_tprintf (TEXT("File Found: %s\n"),str);
+			  Attributes = GetFileAttributes(str);
+			  if (Attributes & FILE_ATTRIBUTE_DIRECTORY)
+			  {
+				  //is directory
+				  delete_dir(str, delete_files_recursively);
+			  }
+			  else
+			  {
+				  remove(str);
+				  //not directory
+			  }
+		  }
+	  } while (FindNextFile(hFind, &FindFileData));
+	  FindClose(hFind);
+
+	  RemoveDirectory(path.c_str());
+	  return 0;
 #else
     DIR *current_directory = opendir(path.c_str());
     int r = -1;

@@ -27,6 +27,8 @@
 
 #ifndef WIN32
 	using uuid_t = m_uuid;
+#else
+	#pragma comment(lib, "shlwapi.lib")
 #endif
 
 

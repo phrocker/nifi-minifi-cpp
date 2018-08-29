@@ -55,7 +55,7 @@
         },
         {
           "name": "DISABLE_ROCKSDB",
-          "value": "TRUE"
+          "value": "FALSE"
         },
         {
           "name": "ENABLE_WEL",
