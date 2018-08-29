@@ -24,6 +24,10 @@
 #include <string>
 #include <uuid/uuid.h>
 
+
+using uuid_t = m_uuid;
+
+
 #if defined _WIN32 || defined __CYGWIN__
 #ifdef BUILDING_DLL
 #ifdef __GNUC__
