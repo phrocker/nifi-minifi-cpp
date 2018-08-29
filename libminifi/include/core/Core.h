@@ -25,9 +25,7 @@
 #include <uuid/uuid.h>
 
 
-#ifndef WIN32
-	using uuid_t = m_uuid;
-#else
+#ifdef WIN32
 	#pragma comment(lib, "shlwapi.lib")
 #endif
 
@@ -143,18 +141,17 @@ class CoreComponent {
   /**
    * Constructor that sets the name and uuid.
    */
-#ifdef WIN32
-  explicit CoreComponent(const std::string name, m_uuid uuid)
+
+  explicit CoreComponent(const std::string name, utils::Identifier uuid)
       : name_(name) {
-    if (uuid_is_null(uuid))
+    if (uuid == nullptr)
       // Generate the global UUID for the flow record
       id_generator_->generate(uuid_);
-    else
-      uuid_copy(uuid_, uuid);
+    else{
+      uuid_ = uuid;
+    }
 
-    char uuidStr[37] = {0};
-    uuid_unparse_lower(uuid_, uuidStr);
-    uuidStr_ = uuidStr;
+    uuidStr_ = uuid_.to_string();
   }
 
   explicit CoreComponent(const std::string name)
@@ -163,13 +160,13 @@ class CoreComponent {
 	   // Generate the global UUID for the flow record
 	  id_generator_->generate(uuid_);
 
-	  char uuidStr[37] = { 0 };
-	  uuid_unparse_lower(uuid_, uuidStr);
-	  uuidStr_ = uuidStr;
+	  uuidStr_ = uuid_.to_string();
   }
+/*
+  #ifdef WIN32
 #else
 
-	 explicit CoreComponent(const std::string name, m_uuid uuid = nullptr)
+	 explicit CoreComponent(const std::string name, Identifier uuid = nullptr)
 		 : name_(name) {
 		 if (nullptr == uuid)
 			 // Generate the global UUID for the flow record
@@ -182,13 +179,14 @@ class CoreComponent {
 		 uuidStr_ = uuidStr;
 	 }
 #endif
-
+*/
   /**
    * Move Constructor.
    */
   explicit CoreComponent(const CoreComponent &&other)
       : name_(std::move(other.name_)) {
-    uuid_copy(uuid_, other.uuid_);
+    uuid_ = other.uuid_;
+    //uuid_copy(uuid_, other.uuid_);
   }
 
   virtual ~CoreComponent() {
@@ -208,7 +206,7 @@ class CoreComponent {
    * Set UUID in this instance
    * @param uuid uuid to apply to the internal representation.
    */
-  void setUUID(m_uuid uuid);
+  void setUUID(utils::Identifier &uuid);
 
   void setUUIDStr(const std::string uuidStr);
 
@@ -217,7 +215,8 @@ class CoreComponent {
    * @param uuid uuid struct to which we will copy the memory
    * @return success of request
    */
-  bool getUUID(m_uuid uuid);
+  //bool getUUID(m_uuid uuid);
+  bool getUUID(utils::Identifier &uuid);
 
   unsigned const char *getUUID();
   /**
@@ -233,7 +232,7 @@ class CoreComponent {
 
  protected:
   // A global unique identifier
-  m_uuid uuid_;
+  utils::Identifier uuid_;
   // UUID string
   std::string uuidStr_;
 

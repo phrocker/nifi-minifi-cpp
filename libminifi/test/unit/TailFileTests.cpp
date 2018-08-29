@@ -134,9 +134,9 @@ TEST_CASE("TailFileWithDelimiter", "[tailfiletest1]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::TailFile>("tailfile");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    m_uuid processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    m_uuid logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -203,9 +203,9 @@ TEST_CASE("TailFileWithoutDelimiter", "[tailfiletest2]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::TailFile>("tailfile");
     std::shared_ptr<core::Processor> logAttributeProcessor = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-    m_uuid processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(true == processor->getUUID(processoruuid));
-    m_uuid logAttributeuuid;
+    utils::Identifier logAttributeuuid;
     REQUIRE(true == logAttributeProcessor->getUUID(logAttributeuuid));
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();

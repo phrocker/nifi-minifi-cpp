@@ -456,7 +456,7 @@ try_again:
 }
 
 
-int __uuid_generate_time(m_uuid out, int *num)
+int __uuid_generate_time(UUID_FIELD out, int *num)
 {
 	static unsigned char node_id[6];
 	static int has_init = 0;
@@ -490,7 +490,7 @@ int __uuid_generate_time(m_uuid out, int *num)
  *
  * Since there is no daemon here, use fall-back right away
  */
-static int uuid_generate_time_generic(m_uuid out) {
+static int uuid_generate_time_generic(UUID_FIELD out) {
 	return __uuid_generate_time(out, 0);
 }
 
@@ -499,21 +499,21 @@ static int uuid_generate_time_generic(m_uuid out) {
  *
  * Discards return value from uuid_generate_time_generic()
  */
-void uuid_generate_time(m_uuid out)
+void uuid_generate_time(UUID_FIELD out)
 {
 	(void)uuid_generate_time_generic(out);
 }
 
 
-int uuid_generate_time_safe(m_uuid out)
+int uuid_generate_time_safe(UUID_FIELD out)
 {
 	return uuid_generate_time_generic(out);
 }
 
 
-void __uuid_generate_random(m_uuid out, int *num)
+void __uuid_generate_random(UUID_FIELD out, int *num)
 {
-	m_uuid	buf;
+	UUID_FIELD	buf;
 	struct uuid uu;
 	int i, n;
 
@@ -530,11 +530,11 @@ void __uuid_generate_random(m_uuid out, int *num)
 		uu.time_hi_and_version = (uu.time_hi_and_version & 0x0FFF)
 			| 0x4000;
 		uuid_pack(&uu, out);
-		out += sizeof(m_uuid);
+		out += sizeof(UUID_FIELD);
 	}
 }
 
-void uuid_generate_random(m_uuid out)
+void uuid_generate_random(UUID_FIELD out)
 {
 	int	num = 1;
 	/* No real reason to use the daemon for random uuid's -- yet */
@@ -560,7 +560,7 @@ static int have_random_source(void)
  * /dev/urandom is available, since otherwise we won't have
  * high-quality randomness.
  */
-void uuid_generate(m_uuid out)
+void uuid_generate(UUID_FIELD out)
 {
 	if (have_random_source())
 		uuid_generate_random(out);

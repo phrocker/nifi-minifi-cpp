@@ -50,7 +50,7 @@ TEST_CASE("Test Creation of ApplyTemplate", "[ApplyTemplateCreate]") {
     TestController testController;
     std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ApplyTemplate>("processorname");
     REQUIRE(processor->getName() == "processorname");
-    m_uuid processoruuid;
+    utils::Identifier processoruuid;
     REQUIRE(processor->getUUID(processoruuid));
 }
 

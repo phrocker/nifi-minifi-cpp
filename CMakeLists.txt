@@ -212,17 +212,12 @@ SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 
 include(Extensions)
 
-if (USE_SYSTEM_UUID STREQUAL "ON")
-  message("USE_SYSTEM_UUID ${USE_SYSTEM_UUID}")
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/sys")
-  find_package(UUID REQUIRED)
-else()
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/dummy")
-  include_directories("thirdparty/uuid/include")
-  add_subdirectory("thirdparty/uuid")
-  set(UUID_FOUND "YES")
-  set(UUID_LIBRARIES "uuid")
-endif()
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/dummy")
+include_directories("thirdparty/uuid/include")
+add_subdirectory("thirdparty/uuid")
+set(UUID_FOUND "YES")
+set(UUID_LIBRARIES "uuid")
+
 
 if (DISABLE_CURL)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_CURL")

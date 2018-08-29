@@ -32,7 +32,6 @@ add_library(
     isnull.c
     pack.c
     parse.c
-    tst_uuid.c
     unpack.c
     unparse.c
     uuid_time.c

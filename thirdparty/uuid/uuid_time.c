@@ -55,7 +55,7 @@
 
 #include "uuidP.h"
 
-time_t m_uuidime(const m_uuid uu, struct timeval *ret_tv)
+time_t m_uuidime(const UUID_FIELD uu, struct timeval *ret_tv)
 {
 	struct timeval		tv;
 	struct uuid		uuid;
@@ -77,7 +77,7 @@ time_t m_uuidime(const m_uuid uu, struct timeval *ret_tv)
 	return tv.tv_sec;
 }
 
-int m_uuidype(const m_uuid uu)
+int m_uuidype(const UUID_FIELD uu)
 {
 	struct uuid		uuid;
 
@@ -85,7 +85,7 @@ int m_uuidype(const m_uuid uu)
 	return ((uuid.time_hi_and_version >> 12) & 0xF);
 }
 
-int uuid_variant(const m_uuid uu)
+int uuid_variant(const UUID_FIELD uu)
 {
 	struct uuid		uuid;
 	int			var;
@@ -121,7 +121,7 @@ static const char *variant_string(int variant)
 int
 main(int argc, char **argv)
 {
-	m_uuid		buf;
+	UUID_FIELD		buf;
 	time_t		time_reg;
 	struct timeval	tv;
 	int		type, variant;

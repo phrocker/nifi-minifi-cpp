@@ -62,9 +62,14 @@ typedef unsigned char m_uuid[16];
 	static const m_uuid name = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
 #endif
 
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define UUID_FIELD m_uuid
 
 /* clear.c */
 void uuid_clear(m_uuid uu);

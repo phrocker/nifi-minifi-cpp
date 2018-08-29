@@ -28,7 +28,7 @@ ProcessorNode::ProcessorNode(const std::shared_ptr<Connectable> &processor)
     : processor_(processor),
       Connectable(processor->getName(), 0),
       ConfigurableComponent() {
-  m_uuid copy;
+  utils::Identifier copy;
   processor->getUUID(copy);
   setUUID(copy);
 }
@@ -36,7 +36,7 @@ ProcessorNode::ProcessorNode(const std::shared_ptr<Connectable> &processor)
 ProcessorNode::ProcessorNode(const ProcessorNode &other)
     : processor_(other.processor_),
       Connectable(other.getName(), 0) {
-  m_uuid copy;
+  utils::Identifier copy;
   processor_->getUUID(copy);
   setUUID(copy);
 }

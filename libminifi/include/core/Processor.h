@@ -32,6 +32,7 @@
 #include <functional>
 
 #include "Core.h"
+#include <utils/Id.h>
 #include "Connectable.h"
 #include "ConfigurableComponent.h"
 #include "io/StreamFactory.h"
@@ -65,7 +66,10 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   /*!
    * Create a new processor
    */
-  Processor(std::string name, m_uuid uuid = NULL);
+
+  Processor(std::string name, utils::Identifier &uuid);
+
+  Processor(std::string name);
   // Destructor
   virtual ~Processor() {
     notifyStop();

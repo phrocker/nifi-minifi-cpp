@@ -45,11 +45,11 @@ namespace sitetosite {
 
 class Peer {
  public:
-  explicit Peer(m_uuid port_id, const std::string &host, uint16_t port, bool secure = false)
+  explicit Peer(utils::Identifier &port_id, const std::string &host, uint16_t port, bool secure = false)
       : host_(host),
         port_(port),
         secure_(secure) {
-    uuid_copy(port_id_, port_id);
+    port_id_ = port_id;
   }
 
   explicit Peer(const std::string &host, uint16_t port, bool secure = false)
@@ -62,14 +62,14 @@ class Peer {
       : host_(other.host_),
         port_(other.port_),
         secure_(other.secure_) {
-    uuid_copy(port_id_, other.port_id_);
+    port_id_ = other.port_id_;
   }
 
   explicit Peer(const Peer &&other)
       : host_(std::move(other.host_)),
         port_(std::move(other.port_)),
         secure_(std::move(other.secure_)) {
-    uuid_copy(port_id_, other.port_id_);
+    port_id_ = other.port_id_;
   }
 
   uint16_t getPort() const {
@@ -84,8 +84,8 @@ class Peer {
     return secure_;
   }
 
-  void getPortId(m_uuid other) const {
-    uuid_copy(other, port_id_);
+  void getPortId(utils::Identifier &other) const {
+    other = port_id_;
   }
 
  protected:
@@ -93,7 +93,7 @@ class Peer {
 
   uint16_t port_;
 
-  m_uuid port_id_;
+  utils::Identifier port_id_;
 
   // secore comms
 

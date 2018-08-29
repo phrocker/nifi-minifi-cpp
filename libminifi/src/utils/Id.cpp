@@ -38,7 +38,8 @@ namespace utils {
 uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 NonRepeatingStringGenerator::NonRepeatingStringGenerator()
-    : prefix_((std::to_string(timestamp) + "-")), incrementor_(0) {
+    : prefix_((std::to_string(timestamp) + "-")),
+      incrementor_(0) {
 }
 
 IdGenerator::IdGenerator()
@@ -122,14 +123,21 @@ void IdGenerator::initialize(const std::shared_ptr<Properties> & properties) {
     } else if ("time" == implementation_str) {
       logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
     } else {
-      logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation ("  << implementation_str << "). Using uuid_generate_time implementation for uids.";
+      logging::LOG_DEBUG(logger_) << "Invalid value for uid.implementation (" << implementation_str << "). Using uuid_generate_time implementation for uids.";
     }
   } else {
     logging::LOG_DEBUG(logger_) << "Using uuid_generate_time implementation for uids.";
   }
 }
 
-void IdGenerator::generate(m_uuid output) {
+Identifier IdGenerator::generate() {
+  Identifier ident;
+  generate(ident);
+  return ident;
+}
+
+void IdGenerator::generate(Identifier &ident) {
+  UUID_FIELD output;
   switch (implementation_) {
     case UUID_RANDOM_IMPL:
       uuid_generate_random(output);
@@ -149,6 +157,7 @@ void IdGenerator::generate(m_uuid output) {
       uuid_generate_time(output);
       break;
   }
+  ident = output;
 }
 
 } /* namespace utils */
