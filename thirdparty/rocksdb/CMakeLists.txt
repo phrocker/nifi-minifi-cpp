@@ -594,8 +594,8 @@ else()
   set(SYSTEM_LIBS ${CMAKE_THREAD_LIBS_INIT})
   set(LIBS ${ROCKSDB_SHARED_LIB} ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
   add_library(${ROCKSDB_SHARED_LIB} SHARED ${SOURCES})
-  target_link_libraries(${ROCKSDB_SHARED_LIB}
-    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
+ # target_link_libraries(${ROCKSDB_SHARED_LIB}
+#    ${THIRDPARTY_LIBS} ${SYSTEM_LIBS})
   set_target_properties(${ROCKSDB_SHARED_LIB} PROPERTIES
                         LINKER_LANGUAGE CXX
                         VERSION ${ROCKSDB_VERSION}
