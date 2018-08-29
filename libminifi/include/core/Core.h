@@ -25,7 +25,9 @@
 #include <uuid/uuid.h>
 
 
-using uuid_t = m_uuid;
+#ifndef WIN32
+	using uuid_t = m_uuid;
+#endif
 
 
 #if defined _WIN32 || defined __CYGWIN__
