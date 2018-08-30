@@ -42,14 +42,14 @@ namespace response {
 class StateMonitorNode : public DeviceInformation {
  public:
 
-  StateMonitorNode(std::string name, m_uuid uuid)
+  StateMonitorNode(std::string name, utils::Identifier &uuid)
       : DeviceInformation(name, uuid),
         monitor_(nullptr) {
 
   }
 
   StateMonitorNode(const std::string &name)
-      : DeviceInformation(name, 0),
+      : DeviceInformation(name),
         monitor_(nullptr) {
   }
 

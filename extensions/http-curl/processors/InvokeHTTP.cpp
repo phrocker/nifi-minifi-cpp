@@ -238,11 +238,9 @@ InvokeHTTP::~InvokeHTTP() {
 }
 
 std::string InvokeHTTP::generateId() {
-  m_uuid txId;
+  utils::Identifier txId;
   id_generator_->generate(txId);
-  char uuidStr[37];
-  uuid_unparse_lower(txId, uuidStr);
-  return uuidStr;
+  return txId.to_string();
 }
 
 bool InvokeHTTP::emitFlowFile(const std::string &method) {

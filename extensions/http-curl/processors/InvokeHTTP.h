@@ -49,7 +49,7 @@ class InvokeHTTP : public core::Processor {
   /*!
    * Create a new processor
    */
-  InvokeHTTP(std::string name, m_uuid uuid = NULL)
+  InvokeHTTP(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         ssl_context_service_(nullptr),
         date_header_include_(true),

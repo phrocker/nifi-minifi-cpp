@@ -65,7 +65,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   /*!
    * Create a new http protocol
    */
-  HttpSiteToSiteClient(std::string name, m_uuid uuid = 0)
+  HttpSiteToSiteClient(std::string name, utils::Identifier uuid = utils::Identifier())
       : SiteToSiteClient(),
         current_code(UNRECOGNIZED_RESPONSE_CODE),
         logger_(logging::LoggerFactory<HttpSiteToSiteClient>::getLogger()) {

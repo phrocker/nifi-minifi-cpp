@@ -40,7 +40,7 @@ public:
     /*!
      * Create a new processor
      */
-    explicit ExtractText(std::string name, m_uuid uuid = nullptr)
+    explicit ExtractText(std::string name,  utils::Identifier uuid = utils::Identifier())
     : Processor(name, uuid)
     {
         logger_ = logging::LoggerFactory<ExtractText>::getLogger();

@@ -40,7 +40,7 @@ namespace c2 {
  */
 class AgentPrinter : public RESTProtocol, public HeartBeatReporter {
  public:
-  AgentPrinter(std::string name, m_uuid uuid = nullptr);
+  AgentPrinter(std::string name, utils::Identifier uuid = utils::Identifier());
 
   /**
    * Initialize agent printer.

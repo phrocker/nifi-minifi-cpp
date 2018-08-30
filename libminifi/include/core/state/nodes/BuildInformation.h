@@ -66,12 +66,12 @@ namespace response {
 class BuildInformation : public DeviceInformation {
  public:
 
-  BuildInformation(std::string name, m_uuid uuid)
+  BuildInformation(std::string name, utils::Identifier &uuid)
       : DeviceInformation(name, uuid) {
   }
 
   BuildInformation(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
   }
 
   std::string getName() const {

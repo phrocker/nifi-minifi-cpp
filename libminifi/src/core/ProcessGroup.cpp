@@ -77,7 +77,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, std::string name)
   transmitting_ = false;
   transport_protocol_ = "RAW";
 
-  logger_->log_debug("ProcessGroup %s created", name_)
+  logger_->log_debug("ProcessGroup %s created", name_);
 }
 
 ProcessGroup::~ProcessGroup() {
@@ -190,7 +190,7 @@ void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, Eve
   }
 }
 
-std::shared_ptr<Processor> ProcessGroup::findProcessor(utils::Identifier uuid) {
+std::shared_ptr<Processor> ProcessGroup::findProcessor(utils::Identifier &uuid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<Processor> ret = NULL;
   for (auto processor : processors_) {

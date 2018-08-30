@@ -67,12 +67,12 @@ namespace response {
 
 class ComponentManifest : public DeviceInformation {
  public:
-  ComponentManifest(std::string name, m_uuid uuid)
+  ComponentManifest(std::string name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
   }
 
   ComponentManifest(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
   }
 
   std::string getName() const {
@@ -243,13 +243,13 @@ class ComponentManifest : public DeviceInformation {
 
 class Bundles : public DeviceInformation {
  public:
-  Bundles(std::string name, m_uuid uuid)
+  Bundles(std::string name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
     setArray(true);
   }
 
   Bundles(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     setArray(true);
   }
 
@@ -278,7 +278,7 @@ class Bundles : public DeviceInformation {
       bundle.children.push_back(artifact);
       bundle.children.push_back(version);
 
-      ComponentManifest compMan(group, nullptr);
+      ComponentManifest compMan(group);
       // serialize the component information.
       for (auto component : compMan.serialize()) {
         bundle.children.push_back(component);
@@ -297,13 +297,13 @@ class Bundles : public DeviceInformation {
 class AgentStatus : public StateMonitorNode {
  public:
 
-  AgentStatus(std::string name, m_uuid uuid)
+  AgentStatus(std::string name, utils::Identifier &  uuid)
       : StateMonitorNode(name, uuid) {
 
   }
 
   AgentStatus(const std::string &name)
-      : StateMonitorNode(name, 0) {
+      : StateMonitorNode(name) {
   }
 
   std::string getName() const {
@@ -426,13 +426,13 @@ class AgentMonitor {
 class AgentManifest : public DeviceInformation {
  public:
 
-  AgentManifest(std::string name, m_uuid uuid)
+  AgentManifest(std::string name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
     //setArray(true);
   }
 
   AgentManifest(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     //  setArray(true);
   }
 
@@ -488,7 +488,7 @@ class AgentManifest : public DeviceInformation {
     buildInfo.children.push_back(build_rev);
     buildInfo.children.push_back(build_date);
 
-    Bundles bundles("bundles", nullptr);
+    Bundles bundles("bundles");
 
     serialized.push_back(ident);
     serialized.push_back(type);
@@ -498,7 +498,7 @@ class AgentManifest : public DeviceInformation {
       serialized.push_back(bundle);
     }
 
-    SchedulingDefaults defaults("schedulingDefaults", nullptr);
+    SchedulingDefaults defaults("schedulingDefaults");
 
     for (auto defaultNode : defaults.serialize()) {
       serialized.push_back(defaultNode);
@@ -514,13 +514,13 @@ class AgentManifest : public DeviceInformation {
 class AgentInformation : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
  public:
 
-  AgentInformation(std::string name, m_uuid uuid)
+  AgentInformation(std::string name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
     setArray(false);
   }
 
   AgentInformation(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     setArray(false);
   }
 
@@ -540,7 +540,7 @@ class AgentInformation : public DeviceInformation, public AgentMonitor, public A
     agentClass.name = "agentClass";
     agentClass.value = agent_class_;
 
-    AgentManifest manifest("manifest", nullptr);
+    AgentManifest manifest("manifest");
 
     SerializedResponseNode agentManifest;
     agentManifest.name = "agentManifest";

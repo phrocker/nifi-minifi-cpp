@@ -128,7 +128,7 @@ void RemoteProcessorGroupPort::initialize() {
 void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   std::string value;
   if (context->getProperty(portUUID.getName(), value)) {
-    uuid_parse(value.c_str(), protocol_uuid_);
+    protocol_uuid_ = value;
   }
 
   std::string context_name;

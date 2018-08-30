@@ -46,17 +46,17 @@ class FlowVersion : public DeviceInformation {
  public:
 
   explicit FlowVersion()
-      : DeviceInformation("FlowVersion", nullptr) {
+      : DeviceInformation("FlowVersion") {
     setFlowVersion("", "", getUUIDStr());
   }
 
   explicit FlowVersion(const std::string &registry_url, const std::string &bucket_id, const std::string &flow_id)
-      : DeviceInformation("FlowVersion", nullptr) {
+      : DeviceInformation("FlowVersion") {
     setFlowVersion(registry_url, bucket_id, flow_id.empty() ? getUUIDStr() : flow_id);
   }
 
   explicit FlowVersion(FlowVersion &&fv)
-      : DeviceInformation("FlowVersion", nullptr),
+      : DeviceInformation("FlowVersion"),
         identifier(std::move(fv.identifier)) {
   }
 
@@ -132,12 +132,12 @@ class FlowVersion : public DeviceInformation {
 class FlowMonitor : public StateMonitorNode {
  public:
 
-  FlowMonitor(std::string name, m_uuid uuid)
+  FlowMonitor(const std::string &name, utils::Identifier &uuid)
       : StateMonitorNode(name, uuid) {
   }
 
   FlowMonitor(const std::string &name)
-      : StateMonitorNode(name, 0) {
+      : StateMonitorNode(name) {
   }
 
   void addConnection(const std::shared_ptr<minifi::Connection> &connection) {
@@ -161,12 +161,12 @@ class FlowMonitor : public StateMonitorNode {
 class FlowInformation : public FlowMonitor {
  public:
 
-  FlowInformation(std::string name, m_uuid uuid)
+  FlowInformation(const std::string &name, utils::Identifier &uuid)
       : FlowMonitor(name, uuid) {
   }
 
   FlowInformation(const std::string &name)
-      : FlowMonitor(name, 0) {
+      : FlowMonitor(name) {
   }
 
   std::string getName() const {

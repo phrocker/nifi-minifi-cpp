@@ -258,7 +258,7 @@ class Device {
 class DeviceInfoNode : public DeviceInformation {
  public:
 
-  DeviceInfoNode(std::string name, m_uuid uuid)
+  DeviceInfoNode(std::string name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
     static Device device;
     hostname_ = device.canonical_hostname_;
@@ -267,7 +267,7 @@ class DeviceInfoNode : public DeviceInformation {
   }
 
   DeviceInfoNode(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
     static Device device;
     hostname_ = device.canonical_hostname_;
     ip_ = device.ip_;

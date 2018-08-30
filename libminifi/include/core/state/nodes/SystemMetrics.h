@@ -41,16 +41,16 @@ namespace response {
 class SystemInformation : public DeviceInformation {
  public:
 
-  SystemInformation(const std::string &name, m_uuid uuid)
+  SystemInformation(const std::string &name, utils::Identifier &  uuid)
       : DeviceInformation(name, uuid) {
   }
 
   SystemInformation(const std::string &name)
-      : DeviceInformation(name, 0) {
+      : DeviceInformation(name) {
   }
 
   SystemInformation()
-      : DeviceInformation("systeminfo", 0) {
+      : DeviceInformation("systeminfo") {
   }
 
   virtual std::string getName() const {

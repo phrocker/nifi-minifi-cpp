@@ -549,7 +549,7 @@ void FlowController::loadC2ResponseConfiguration(const std::string &prefix) {
         std::string name;
 
         if (configuration_->get(nameOption.str(), name)) {
-          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name, nullptr);
+          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
 
           if (configuration_->get(classOption.str(), class_definitions)) {
             std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
@@ -610,7 +610,7 @@ std::shared_ptr<state::response::ResponseNode> FlowController::loadC2ResponseCon
         std::string name;
 
         if (configuration_->get(nameOption.str(), name)) {
-          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name, nullptr);
+          std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
           if (name.find(",") != std::string::npos) {
             std::vector<std::string> sub_classes = utils::StringUtils::split(name, ",");
             for (std::string subClassStr : classes) {

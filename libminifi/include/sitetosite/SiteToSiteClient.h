@@ -56,7 +56,7 @@ class SiteToSiteClient : public core::Connectable {
  public:
 
   SiteToSiteClient()
-      : core::Connectable("SitetoSiteClient", 0),
+      : core::Connectable("SitetoSiteClient"),
         peer_state_(IDLE),
         _batchSendNanos(5000000000),
         ssl_context_service_(nullptr),
@@ -145,11 +145,9 @@ class SiteToSiteClient : public core::Connectable {
   virtual bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
                                std::map<std::string, std::string> attributes) = 0;
 
-  void setPortId(m_uuid id) {
-    uuid_copy(port_id_, id);
-    char idStr[37];
-    uuid_unparse_lower(id, idStr);
-    port_id_str_ = idStr;
+  void setPortId(utils::Identifier &id) {
+    port_id_ = id;
+    port_id_str_ = port_id_.to_string();
   }
 
   /**
@@ -250,7 +248,7 @@ class SiteToSiteClient : public core::Connectable {
   std::string port_id_str_;
 
   // portId
-  m_uuid port_id_;
+  utils::Identifier port_id_;
 
   // Peer Connection
   std::unique_ptr<SiteToSitePeer> peer_;

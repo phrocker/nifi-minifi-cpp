@@ -54,7 +54,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
         logger_(logging::LoggerFactory<NetworkPrioritizerService>::getLogger()) {
   }
 
-  explicit NetworkPrioritizerService(const std::string &name, m_uuid uuid = 0)
+  explicit NetworkPrioritizerService(const std::string &name, utils::Identifier uuid = utils::Identifier())
       : ControllerService(name, uuid),
         enabled_(false),
         max_throughput_((std::numeric_limits<uint64_t>::max)()),
@@ -68,7 +68,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   }
 
   explicit NetworkPrioritizerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : NetworkPrioritizerService(name, nullptr) {
+      : NetworkPrioritizerService(name) {
     setConfiguration(configuration);
     initialize();
   }

@@ -64,7 +64,7 @@ class ListenSyslog : public core::Processor {
   /*!
    * Create a new processor
    */
-  ListenSyslog(std::string name, m_uuid uuid = NULL)
+  ListenSyslog(std::string name,  utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ListenSyslog>::getLogger()) {
     _eventQueueByteSize = 0;

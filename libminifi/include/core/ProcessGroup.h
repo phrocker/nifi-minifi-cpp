@@ -144,16 +144,16 @@ class ProcessGroup {
     return (yield_period_msec_);
   }
   // Set UUID
-  void setUUID(m_uuid uuid) {
-    uuid_copy(uuid_, uuid);
+  void setUUID(utils::Identifier &uuid) {
+    uuid_ = uuid;
   }
   // Get UUID
-  bool getUUID(m_uuid uuid) {
-    if (uuid) {
-      uuid_copy(uuid, uuid_);
-      return true;
-    } else
+  bool getUUID(utils::Identifier &uuid) {
+    if (uuid_ == nullptr){
       return false;
+    }
+    uuid = uuid_;
+    return true;
   }
   // getVersion
   int getVersion() {

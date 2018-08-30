@@ -70,7 +70,7 @@ uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int num
 
 uint64_t IdGenerator::getRandomDeviceSegment(int numBits) {
   uint64_t deviceSegment = 0;
-  m_uuid random_uuid;
+  UUID_FIELD random_uuid;
   for (int word = 0; word < 2; word++) {
     uuid_generate_random(random_uuid);
     for (int i = 0; i < 4; i++) {

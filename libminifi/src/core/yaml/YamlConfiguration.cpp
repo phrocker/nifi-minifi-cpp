@@ -35,7 +35,7 @@ namespace core {
 std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node rootFlowNode) {
-  m_uuid uuid;
+  utils::Identifier uuid;
   int version = 0;
 
   checkRequiredField(&rootFlowNode, "name",
@@ -50,7 +50,7 @@ core::ProcessGroup *YamlConfiguration::parseRootProcessGroupYaml(YAML::Node root
   }
 
   std::string id = getOrGenerateId(&rootFlowNode);
-  uuid_parse(id.c_str(), uuid);
+  uuid = id;
 
   if (rootFlowNode["version"]) {
     version = rootFlowNode["version"].as<int>();
@@ -69,7 +69,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
   int64_t penalizationPeriod = -1;
   int64_t yieldPeriod = -1;
   int64_t runDurationNanos = -1;
-  m_uuid uuid;
+  utils::Identifier uuid;
   std::shared_ptr<core::Processor> processor = nullptr;
 
   if (!parentGroup) {
@@ -97,7 +97,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
           registerResource(lib_location_str, lib_function_str);
         }
 
-        uuid_parse(procCfg.id.c_str(), uuid);
+        uuid = procCfg.id.c_str();
         logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
         checkRequiredField(&procNode, "class", CONFIG_YAML_PROCESSORS_KEY);
         procCfg.javaClass = procNode["class"].as<std::string>();
@@ -236,7 +236,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
 }
 
 void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::ProcessGroup *parentGroup) {
-  m_uuid uuid;
+  utils::Identifier uuid;
   std::string id;
 
   if (!parentGroup) {
@@ -268,7 +268,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
         core::TimeUnit unit;
         int64_t timeoutValue = -1;
         int64_t yieldPeriodValue = -1;
-        uuid_parse(id.c_str(), uuid);
+        uuid = id;
         group = this->createRemoteProcessGroup(name.c_str(), uuid).release();
         group->setParent(parentGroup);
         parentGroup->addProcessGroup(group);
@@ -359,7 +359,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(YAML::Node *rpgNode, core::P
 }
 
 void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, core::ProcessGroup *parentGroup) {
-  m_uuid port_uuid;
+  utils::Identifier port_uuid;
   int64_t schedulingPeriod = -1;
 
   if (!parentGroup) {
@@ -423,7 +423,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(YAML::Node *reportNode, cor
   auto batchSizeStr = node["batch size"].as<std::string>();
 
   logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr);
-  uuid_parse(portUUIDStr.c_str(), port_uuid);
+  port_uuid = portUUIDStr;
   reportTask->setPortUUID(port_uuid);
 
   if (core::Property::StringToInt(batchSizeStr, lvalue)) {
@@ -454,8 +454,8 @@ void YamlConfiguration::parseControllerServices(YAML::Node *controllerServicesNo
           auto id = controllerServiceNode["id"].as<std::string>();
           auto type = controllerServiceNode["class"].as<std::string>();
 
-          m_uuid uuid;
-          uuid_parse(id.c_str(), uuid);
+          utils::Identifier uuid;
+          uuid = id;
           auto controller_service_node = createControllerService(type, name, uuid);
           if (nullptr != controller_service_node) {
             logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
@@ -492,7 +492,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
         std::shared_ptr<minifi::Connection> connection = nullptr;
 
         // Configure basic connection
-        m_uuid uuid;
+        utils::Identifier uuid;
         std::string id = getOrGenerateId(&connectionNode);
 
         // Default name to be same as ID
@@ -503,7 +503,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           name = connectionNode["name"].as<std::string>();
         }
 
-        uuid_parse(id.c_str(), uuid);
+        uuid = id;
         connection = this->createConnection(name, uuid);
         logger_->log_debug("Created connection with UUID %s and name %s", id, name);
 
@@ -530,7 +530,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           }
         }
 
-        m_uuid srcUUID;
+        utils::Identifier srcUUID;
 
         if (connectionNode["max work queue size"]) {
           auto max_work_queue_str = connectionNode["max work queue size"].as<std::string>();
@@ -552,7 +552,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 
         if (connectionNode["source id"]) {
           std::string connectionSrcProcId = connectionNode["source id"].as<std::string>();
-          uuid_parse(connectionSrcProcId.c_str(), srcUUID);
+          srcUUID=connectionSrcProcId;
           logger_->log_debug("Using 'source id' to match source with same id for "
                              "connection '%s': source id => [%s]",
                              name, connectionSrcProcId);
@@ -561,10 +561,11 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           checkRequiredField(&connectionNode, "source name",
           CONFIG_YAML_CONNECTIONS_KEY);
           std::string connectionSrcProcName = connectionNode["source name"].as<std::string>();
-          m_uuid tmpUUID;
-          if (!uuid_parse(connectionSrcProcName.c_str(), tmpUUID) && NULL != parent->findProcessor(tmpUUID)) {
+          utils::Identifier tmpUUID;
+          tmpUUID = connectionSrcProcName;
+          if (NULL != parent->findProcessor(tmpUUID)) {
             // the source name is a remote port id, so use that as the source id
-            uuid_copy(srcUUID, tmpUUID);
+            srcUUID = tmpUUID;
             logger_->log_debug("Using 'source name' containing a remote port id to match the source for "
                                "connection '%s': source name => [%s]",
                                name, connectionSrcProcName);
@@ -586,10 +587,10 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
         connection->setSourceUUID(srcUUID);
 
         // Configure connection destination
-        m_uuid destUUID;
+        utils::Identifier destUUID;
         if (connectionNode["destination id"]) {
           std::string connectionDestProcId = connectionNode["destination id"].as<std::string>();
-          uuid_parse(connectionDestProcId.c_str(), destUUID);
+          destUUID = connectionDestProcId;
           logger_->log_debug("Using 'destination id' to match destination with same id for "
                              "connection '%s': destination id => [%s]",
                              name, connectionDestProcId);
@@ -599,11 +600,11 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
           checkRequiredField(&connectionNode, "destination name",
           CONFIG_YAML_CONNECTIONS_KEY);
           std::string connectionDestProcName = connectionNode["destination name"].as<std::string>();
-          m_uuid tmpUUID;
-          if (!uuid_parse(connectionDestProcName.c_str(), tmpUUID) &&
-          NULL != parent->findProcessor(tmpUUID)) {
+          utils::Identifier tmpUUID;
+          tmpUUID = connectionDestProcName;
+          if (parent->findProcessor(tmpUUID)) {
             // the destination name is a remote port id, so use that as the dest id
-            uuid_copy(destUUID, tmpUUID);
+            destUUID = tmpUUID;
             logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for "
                                "connection '%s': destination name => [%s]",
                                name, connectionDestProcName);
@@ -633,7 +634,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 }
 
 void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *parent, sitetosite::TransferDirection direction) {
-  m_uuid uuid;
+  utils::Identifier uuid;
   std::shared_ptr<core::Processor> processor = NULL;
   std::shared_ptr<minifi::RemoteProcessorGroupPort> port = NULL;
 
@@ -656,7 +657,7 @@ void YamlConfiguration::parsePortYaml(YAML::Node *portNode, core::ProcessGroup *
                          "id should match the corresponding id specified in the NiFi configuration. "
                          "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
   auto portId = inputPortsObj["id"].as<std::string>();
-  uuid_parse(portId.c_str(), uuid);
+  uuid = portId;
 
   port = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, nameStr, parent->getURL(), this->configuration_, uuid);
 
@@ -849,11 +850,9 @@ std::string YamlConfiguration::getOrGenerateId(YAML::Node *yamlNode, const std::
                                   "of YAML::NodeType::Scalar.");
     }
   } else {
-    m_uuid uuid;
+    utils::Identifier uuid;
     id_generator_->generate(uuid);
-    char uuid_str[37];
-    uuid_unparse(uuid, uuid_str);
-    id = uuid_str;
+    id = uuid.to_string();
     logger_->log_debug("Generating random ID: id => [%s]", id);
   }
   return id;

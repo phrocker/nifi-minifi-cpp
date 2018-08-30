@@ -113,6 +113,7 @@ class ExecutionPlan {
 
  private:
 
+  static std::shared_ptr<utils::IdGenerator> id_generator_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

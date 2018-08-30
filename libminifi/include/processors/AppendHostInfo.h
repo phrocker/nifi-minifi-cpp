@@ -41,7 +41,7 @@ class AppendHostInfo : public core::Processor {
   /*!
    * Create a new processor
    */
-  AppendHostInfo(std::string name, m_uuid uuid = NULL)
+  AppendHostInfo(std::string name, utils::Identifier uuid = utils::Identifier())
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()) {
   }

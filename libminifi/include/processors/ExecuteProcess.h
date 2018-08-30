@@ -55,7 +55,7 @@ class ExecuteProcess : public core::Processor {
   /*!
    * Create a new processor
    */
-  ExecuteProcess(std::string name, m_uuid uuid = NULL)
+  ExecuteProcess(std::string name,  utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
     _redirectErrorStream = false;

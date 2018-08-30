@@ -41,11 +41,10 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-
 class static_initializers {
-public:
-		std::vector<std::string> statics_sl_funcs_;
-		std::mutex atomic_initialization_;
+ public:
+  std::vector<std::string> statics_sl_funcs_;
+  std::mutex atomic_initialization_;
 };
 
 extern static_initializers &get_static_functions();
@@ -79,25 +78,25 @@ class FlowConfiguration : public CoreComponent {
   virtual ~FlowConfiguration();
 
   // Create Processor (Node/Input/Output Port) based on the name
-  std::shared_ptr<core::Processor> createProcessor(std::string name, m_uuid uuid);
+  std::shared_ptr<core::Processor> createProcessor(std::string name, utils::Identifier &uuid);
   // Create Root Processor Group
 
-  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, m_uuid uuid, int version);
+  std::unique_ptr<core::ProcessGroup> createRootProcessGroup(std::string name, utils::Identifier & uuid, int version);
 
-  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &name, m_uuid uuid);
+  std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &name, utils::Identifier & uuid);
 
   // Create Remote Processor Group
-  std::unique_ptr<core::ProcessGroup> createRemoteProcessGroup(std::string name, m_uuid uuid);
+  std::unique_ptr<core::ProcessGroup> createRemoteProcessGroup(std::string name, utils::Identifier & uuid);
   // Create Connection
-  std::shared_ptr<minifi::Connection> createConnection(std::string name, m_uuid uuid);
+  std::shared_ptr<minifi::Connection> createConnection(std::string name, utils::Identifier & uuid);
   // Create Provenance Report Task
   std::shared_ptr<core::Processor> createProvenanceReportTask(void);
 
-  std::shared_ptr<state::response::FlowVersion> getFlowVersion() const{
+  std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
     return flow_version_;
   }
 
-  std::shared_ptr<Configure> getConfiguration() { // cannot be const as getters mutate the underlying map
+  std::shared_ptr<Configure> getConfiguration() {  // cannot be const as getters mutate the underlying map
     return configuration_;
   }
 
@@ -133,21 +132,21 @@ class FlowConfiguration : public CoreComponent {
   }
 
   static bool add_static_func(std::string functor) {
-	std::lock_guard<std::mutex> lock(get_static_functions().atomic_initialization_);
-	get_static_functions().statics_sl_funcs_.push_back(functor);
-	std::cout << "add " << functor << std::endl;
-	std::cout << "enter " << get_static_functions().statics_sl_funcs_.size() << std::endl;
+    std::lock_guard<std::mutex> lock(get_static_functions().atomic_initialization_);
+    get_static_functions().statics_sl_funcs_.push_back(functor);
+    std::cout << "add " << functor << std::endl;
+    std::cout << "enter " << get_static_functions().statics_sl_funcs_.size() << std::endl;
     return true;
   }
 
   static void initialize_static_functions() {
-	  std::cout << "enter " << get_static_functions().statics_sl_funcs_.size() << std::endl;
-	  std::lock_guard<std::mutex> lock(get_static_functions().atomic_initialization_);
+    std::cout << "enter " << get_static_functions().statics_sl_funcs_.size() << std::endl;
+    std::lock_guard<std::mutex> lock(get_static_functions().atomic_initialization_);
     for (auto sl_func : get_static_functions().statics_sl_funcs_) {
-		std::cout << "register " << sl_func << std::endl;
+      std::cout << "register " << sl_func << std::endl;
       core::ClassLoader::getDefaultClassLoader().registerResource("", sl_func);
     }
-	//get_static_functions().statics_sl_funcs_.clear();
+    //get_static_functions().statics_sl_funcs_.clear();
   }
 
  protected:
@@ -176,9 +175,8 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<state::response::FlowVersion> flow_version_;
  private:
   std::shared_ptr<logging::Logger> logger_;
-  
-};
 
+};
 
 } /* namespace core */
 } /* namespace minifi */
