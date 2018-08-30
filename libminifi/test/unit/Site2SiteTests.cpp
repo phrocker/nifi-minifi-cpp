@@ -40,7 +40,7 @@ TEST_CASE("TestSetPortId", "[S2S1]") {
 
   utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 
@@ -57,7 +57,7 @@ TEST_CASE("TestSetPortIdUppercase", "[S2S2]") {
 
   utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 
@@ -102,7 +102,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 
   utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 
@@ -171,7 +171,7 @@ TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
 
   utils::Identifier fakeUUID;
 
-  uuid_parse(uuid_str.c_str(), fakeUUID);
+  fakeUUID = uuid_str;
 
   protocol.setPortId(fakeUUID);
 

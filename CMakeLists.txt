@@ -215,8 +215,8 @@ include(Extensions)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uuid/dummy")
 include_directories("thirdparty/uuid/include")
 add_subdirectory("thirdparty/uuid")
-set(UUID_FOUND "YES")
-set(UUID_LIBRARIES "uuid")
+set(UUID_FOUND "YES" CACHE STRING "" FORCE)
+set(UUID_LIBRARIES "uuid" CACHE STRING "" FORCE)
 
 
 if (DISABLE_CURL)

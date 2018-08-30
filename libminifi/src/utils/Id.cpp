@@ -35,6 +35,31 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+#ifndef WIN32
+void uuid_to_string(uuid_t u, std::string &id) {
+  if (u != nullptr) {
+    char uuidStr[37] = { 0 };
+    uuid_unparse_lower(u, uuidStr);
+    id = uuidStr;
+  }
+}
+
+bool is_null(uuid_t u) {
+  return u == nullptr || uuid_is_null(u);
+}
+
+void copy_ids(uuid_t dst, const uuid_t src) {
+ /* if (uuid_is_null(src)) {
+    dst = nullptr;
+    return;
+  }
+  if (uuid_is_null(dst)){
+    dst = src;
+    return;
+  }*/
+  uuid_copy(dst, src);
+}
+#endif
 uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 NonRepeatingStringGenerator::NonRepeatingStringGenerator()

@@ -45,20 +45,17 @@ void CoreComponent::setUUIDStr(const std::string uuidStr) {
 }
 // Get UUID
 bool CoreComponent::getUUID(utils::Identifier &uuid) {
-  uuid = uuid_;
-  /*
-  if (uuid == nullptr) {
-    uuid_copy(uuid, uuid_);
-    return true;
-  } else {
+  if (uuid_ == nullptr)
     return false;
-  }*/
+  uuid = uuid_;
+  return true;
 }
 
 // Get UUID
+/*
 unsigned const char *CoreComponent::getUUID() {
   return uuid_.getIdentifier();
-}
+}*/
 
 // Set Processor Name
 void CoreComponent::setName(const std::string name) {

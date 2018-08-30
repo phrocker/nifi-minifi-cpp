@@ -61,6 +61,6 @@ class __attribute__((visibility("default"))) TemplateFactory : public core::Obje
 };
 
 extern "C" {
-void *createTemplateFactory(void);
+DLL_EXPORT void *createTemplateFactory(void);
 }
 #endif /* EXTENSION_TEMPLATELOADER_H */

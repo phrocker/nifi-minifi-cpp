@@ -38,12 +38,11 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-template<typename T, void (*F)(T, std::string&), bool (*N)(T), void (*C)(T, T)>
+template<typename T, void (*F)(T, std::string&), bool (*N)(T), void (*C)(T, const T)>
 class IdentifierBase {
  public:
 
   IdentifierBase(T myid){
-    id_ = myid;
     C(id_, myid);
     F(myid, idString);
   }
@@ -77,8 +76,8 @@ class IdentifierBase {
     return *this;
   }
 
-  T getIdentifier() const {
-    return id_;
+  void getIdentifier(T other) const {
+    C(other,id_);
   }
 
   std::string to_string() const {
@@ -90,7 +89,6 @@ class IdentifierBase {
   std::string idString;
 
   T id_;
-
 };
 
 #ifdef WIN32
@@ -100,33 +98,23 @@ class Identifier : IdentifierBase<m_uuid> {
 };
 #else
 
-void uuid_to_string(uuid_t u, std::string &id) {
-  if (u != nullptr) {
-    char uuidStr[37] = { 0 };
-    uuid_unparse_lower(u, uuidStr);
-    id = uuidStr;
-  }
-}
+void uuid_to_string(uuid_t u, std::string &id);
 
-bool is_null(uuid_t u) {
-  return u == nullptr || uuid_is_null(u);
-}
+bool is_null(uuid_t u);
 
-void copy_ids(uuid_t dst, uuid_t src) {
-  uuid_copy(dst, src);
-}
+void copy_ids(uuid_t dst, const uuid_t src);
 
-class Identifier : public IdentifierBase<unsigned char *, uuid_to_string, is_null, copy_ids> {
+class Identifier : public IdentifierBase<uuid_t, uuid_to_string, is_null, copy_ids> {
  public:
   Identifier(uuid_t u)
       : IdentifierBase(u) {
   }
 
   Identifier()
-      : IdentifierBase(nullptr) {
+      : IdentifierBase() {
   }
 
-  Identifier &operator=(const IdentifierBase &other) {
+  Identifier &operator=(const IdentifierBase<uuid_t, uuid_to_string, is_null, copy_ids> &other) {
      IdentifierBase::operator =(other);
      return *this;
    }
@@ -150,6 +138,10 @@ class Identifier : public IdentifierBase<unsigned char *, uuid_to_string, is_nul
   bool operator==(const Identifier &other) {
       return idString == other.idString;
     }
+
+  bool operator==(std::nullptr_t nullp) {
+    return is_null(id_);
+  }
 
 };
 

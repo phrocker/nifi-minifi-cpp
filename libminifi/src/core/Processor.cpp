@@ -44,6 +44,27 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+Processor::Processor(std::string name)
+    : Connectable(name),
+      ConfigurableComponent(),
+      logger_(logging::LoggerFactory<Processor>::getLogger()) {
+  has_work_.store(false);
+  // Setup the default values
+  state_ = DISABLED;
+  strategy_ = TIMER_DRIVEN;
+  loss_tolerant_ = false;
+  _triggerWhenEmpty = false;
+  scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
+  run_duration_nano_ = DEFAULT_RUN_DURATION;
+  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
+  _penalizationPeriodMsec = DEFAULT_PENALIZATION_PERIOD_SECONDS * 1000;
+  max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
+  active_tasks_ = 0;
+  yield_expiration_ = 0;
+  incoming_connections_Iter = this->_incomingConnections.begin();
+  logger_->log_debug("Processor %s created UUID %s", name_, uuidStr_);
+}
+
 Processor::Processor(std::string name, utils::Identifier &uuid)
     : Connectable(name, uuid),
       ConfigurableComponent(),

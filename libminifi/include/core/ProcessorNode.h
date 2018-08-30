@@ -246,10 +246,11 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   bool getUUID(utils::Identifier &uuid) {
     return processor_->getUUID(uuid);
   }
+  /*
 
   unsigned const char *getUUID() {
     return processor_->getUUID();
-  }
+  }*/
   /**
    * Return the UUID string
    * @param constant reference to the UUID str
