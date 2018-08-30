@@ -43,6 +43,7 @@ class LogAttribute : public core::Processor {
   LogAttribute(std::string name,  utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<LogAttribute>::getLogger()) {
+    std::cout << uuid_.to_string() << " " << std::endl;
   }
   // Destructor
   virtual ~LogAttribute() {

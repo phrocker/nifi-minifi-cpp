@@ -82,11 +82,20 @@ class ControllerService : public ConfigurableComponent, public Connectable {
   /**
    * Controller Service constructor.
    */
-  explicit ControllerService(const std::string &name, utils::Identifier &uuid)
+  explicit ControllerService(const std::string &name, utils::Identifier uuid)
       : Connectable(name, uuid),
         configuration_(std::make_shared<Configure>()) {
     current_state_ = DISABLED;
   }
+
+  /**
+     * Controller Service constructor.
+     */
+    explicit ControllerService(const std::string &name)
+        : Connectable(name),
+          configuration_(std::make_shared<Configure>()) {
+      current_state_ = DISABLED;
+    }
 
   virtual void initialize() {
     // set base supported properties

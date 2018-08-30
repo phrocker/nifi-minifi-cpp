@@ -36,15 +36,15 @@ namespace minifi {
 namespace utils {
 
 #ifndef WIN32
-void uuid_to_string(uuid_t u, std::string &id) {
-  if (u != nullptr) {
+void uuid_to_string(const uuid_t u, std::string &id) {
+  if (u != nullptr && !uuid_is_null(u)) {
     char uuidStr[37] = { 0 };
     uuid_unparse_lower(u, uuidStr);
     id = uuidStr;
   }
 }
 
-bool is_null(uuid_t u) {
+bool is_null(const uuid_t u) {
   return u == nullptr || uuid_is_null(u);
 }
 

@@ -24,11 +24,9 @@
 #include <string>
 #include <uuid/uuid.h>
 
-
 #ifdef WIN32
-	#pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "shlwapi.lib")
 #endif
-
 
 #if defined _WIN32 || defined __CYGWIN__
 #ifdef BUILDING_DLL
@@ -55,10 +53,9 @@
 #endif
 #endif
 
-
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
- // can't include cxxabi
+// can't include cxxabi
 #else
 #include <cxxabi.h>
 #endif
@@ -73,7 +70,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
-namespace file{
+namespace file {
 }
 }
 namespace processors {
@@ -144,10 +141,10 @@ class CoreComponent {
 
   explicit CoreComponent(const std::string name, utils::Identifier uuid)
       : name_(name) {
-    if (uuid == nullptr)
+    if (uuid == nullptr) {
       // Generate the global UUID for the flow record
       id_generator_->generate(uuid_);
-    else{
+    } else {
       uuid_ = uuid;
     }
 
@@ -155,31 +152,31 @@ class CoreComponent {
   }
 
   explicit CoreComponent(const std::string name)
-	  : name_(name) {
-	  
-	   // Generate the global UUID for the flow record
-	  id_generator_->generate(uuid_);
+      : name_(name) {
 
-	  uuidStr_ = uuid_.to_string();
+    // Generate the global UUID for the flow record
+    id_generator_->generate(uuid_);
+
+    uuidStr_ = uuid_.to_string();
   }
-/*
-  #ifdef WIN32
-#else
+  /*
+   #ifdef WIN32
+   #else
 
-	 explicit CoreComponent(const std::string name, Identifier uuid = nullptr)
-		 : name_(name) {
-		 if (nullptr == uuid)
-			 // Generate the global UUID for the flow record
-			 id_generator_->generate(uuid_);
-		 else
-			 uuid_copy(uuid_, uuid);
+   explicit CoreComponent(const std::string name, Identifier uuid = nullptr)
+   : name_(name) {
+   if (nullptr == uuid)
+   // Generate the global UUID for the flow record
+   id_generator_->generate(uuid_);
+   else
+   uuid_copy(uuid_, uuid);
 
-		 char uuidStr[37] = { 0 };
-		 uuid_unparse_lower(uuid_, uuidStr);
-		 uuidStr_ = uuidStr;
-	 }
-#endif
-*/
+   char uuidStr[37] = { 0 };
+   uuid_unparse_lower(uuid_, uuidStr);
+   uuidStr_ = uuidStr;
+   }
+   #endif
+   */
   /**
    * Move Constructor.
    */

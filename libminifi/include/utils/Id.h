@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-template<typename T, void (*F)(T, std::string&), bool (*N)(T), void (*C)(T, const T)>
+template<typename T, typename J, void (*F)(J, std::string&), bool (*N)(J), void (*C)(T, J)>
 class IdentifierBase {
  public:
 
@@ -48,19 +48,25 @@ class IdentifierBase {
   }
 
   IdentifierBase(const IdentifierBase &other) {
-    C(id_, other.id_);
-    F(id_, idString);
+    if (other.idString.size() > 0) {
+      C(id_, other.id_);
+      F(id_, idString);
+    }
   }
 
-  IdentifierBase() {
+  IdentifierBase(){
   }
 
   bool operator==(std::nullptr_t nullp) {
-    return N(id_);
+    return idString.length() == 0;
   }
 
   bool operator!=(std::nullptr_t nullp) {
     return !N(id_);
+  }
+
+  bool operator!=(const IdentifierBase &other) {
+    return idString != other.idString;
   }
 
   bool operator==(const IdentifierBase &other) {
@@ -68,7 +74,6 @@ class IdentifierBase {
   }
 
   IdentifierBase &operator=(const IdentifierBase &other) {
-    //id_ = other.id_;
     C(id_, other.id_);
     idString = other.idString;
     return *this;
@@ -89,7 +94,6 @@ class IdentifierBase {
   }
 
  protected:
-
   std::string idString;
 
   T id_;
@@ -102,13 +106,13 @@ class Identifier : IdentifierBase<m_uuid> {
 };
 #else
 
-void uuid_to_string(uuid_t u, std::string &id);
+void uuid_to_string(const uuid_t u, std::string &id);
 
-bool is_null(uuid_t u);
+bool is_null(const uuid_t u);
 
 void copy_ids(uuid_t dst, const uuid_t src);
 
-class Identifier : public IdentifierBase<uuid_t, uuid_to_string, is_null, copy_ids> {
+class Identifier : public IdentifierBase<uuid_t, const uuid_t, uuid_to_string, is_null, copy_ids> {
  public:
   Identifier(uuid_t u)
       : IdentifierBase(u) {
@@ -118,12 +122,7 @@ class Identifier : public IdentifierBase<uuid_t, uuid_to_string, is_null, copy_i
       : IdentifierBase() {
   }
 
-  Identifier &operator=(const IdentifierBase<uuid_t, uuid_to_string, is_null, copy_ids> &other) {
-    IdentifierBase::operator =(other);
-    return *this;
-  }
-
-  Identifier &operator=(const Identifier &other) {
+  Identifier &operator=(const IdentifierBase<uuid_t, const uuid_t, uuid_to_string, is_null, copy_ids> &other) {
     IdentifierBase::operator =(other);
     return *this;
   }
@@ -133,9 +132,18 @@ class Identifier : public IdentifierBase<uuid_t, uuid_to_string, is_null, copy_i
     return *this;
   }
 
+  bool operator==(std::nullptr_t nullp) {
+    return idString.length() == 0;
+  }
+
+  bool operator!=(std::nullptr_t nullp) {
+    return !is_null(id_);
+  }
+
   Identifier &operator=(const std::string &id) {
+
     uuid_parse(id.c_str(), id_);
-    uuid_to_string(id_,idString);
+    uuid_to_string(id_, idString);
     return *this;
   }
 
@@ -143,7 +151,7 @@ class Identifier : public IdentifierBase<uuid_t, uuid_to_string, is_null, copy_i
     return idString == other.idString;
   }
 
-  unsigned char *toArray(){
+  unsigned char *toArray() {
     return id_;
   }
 

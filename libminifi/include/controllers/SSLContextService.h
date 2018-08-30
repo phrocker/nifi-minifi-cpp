@@ -89,7 +89,7 @@ class SSLContextService : public core::controller::ControllerService {
   }
 
   explicit SSLContextService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name, nullptr),
+      : ControllerService(name),
         initialized_(false),
         valid_(false),
         disable_host_verification_(false),

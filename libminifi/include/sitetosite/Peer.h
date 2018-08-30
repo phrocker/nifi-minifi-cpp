@@ -65,7 +65,7 @@ class Peer {
     port_id_ = other.port_id_;
   }
 
-  explicit Peer(const Peer &&other)
+  explicit Peer(Peer &&other)
       : host_(std::move(other.host_)),
         port_(std::move(other.port_)),
         secure_(std::move(other.secure_)) {

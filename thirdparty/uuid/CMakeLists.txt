@@ -21,7 +21,7 @@ if (WIN32)
 	include_directories("include/win32")
 else()
 	include_directories("include/uuid")
-endif(WIN32)
+endif()
 
 add_library(
     uuid

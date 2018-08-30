@@ -48,7 +48,7 @@ class ThreadManagementService : public core::controller::ControllerService {
   }
 
   explicit ThreadManagementService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name, nullptr),
+      : ControllerService(name),
         logger_(logging::LoggerFactory<ThreadManagementService>::getLogger()) {
 
   }
