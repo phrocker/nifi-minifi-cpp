@@ -124,7 +124,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
   collector->get_next_client_response();
   REQUIRE(collector->get_next_client_response() == "PORT_IDENTIFIER");
   collector->get_next_client_response();
-  REQUIRE(collector->get_next_client_response() == "c56a4180-65aa-42ec-a945-5fd21dec0538");
+  REQUIRE(utils::StringUtils::equalsIgnoreCase(collector->get_next_client_response(), "c56a4180-65aa-42ec-a945-5fd21dec0538"));
   collector->get_next_client_response();
   REQUIRE(collector->get_next_client_response() == "REQUEST_EXPIRATION_MILLIS");
   collector->get_next_client_response();

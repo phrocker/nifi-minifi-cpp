@@ -42,7 +42,7 @@ template<typename T, void (*F)(T, std::string&), bool (*N)(T), void (*C)(T, cons
 class IdentifierBase {
  public:
 
-  IdentifierBase(T myid){
+  IdentifierBase(T myid) {
     C(id_, myid);
     F(myid, idString);
   }
@@ -57,6 +57,10 @@ class IdentifierBase {
 
   bool operator==(std::nullptr_t nullp) {
     return N(id_);
+  }
+
+  bool operator!=(std::nullptr_t nullp) {
+    return !N(id_);
   }
 
   bool operator==(const IdentifierBase &other) {
@@ -77,7 +81,7 @@ class IdentifierBase {
   }
 
   void getIdentifier(T other) const {
-    C(other,id_);
+    C(other, id_);
   }
 
   std::string to_string() const {
@@ -115,9 +119,9 @@ class Identifier : public IdentifierBase<uuid_t, uuid_to_string, is_null, copy_i
   }
 
   Identifier &operator=(const IdentifierBase<uuid_t, uuid_to_string, is_null, copy_ids> &other) {
-     IdentifierBase::operator =(other);
-     return *this;
-   }
+    IdentifierBase::operator =(other);
+    return *this;
+  }
 
   Identifier &operator=(const Identifier &other) {
     IdentifierBase::operator =(other);
@@ -129,18 +133,18 @@ class Identifier : public IdentifierBase<uuid_t, uuid_to_string, is_null, copy_i
     return *this;
   }
 
-  Identifier &operator=(const std::string &id){
+  Identifier &operator=(const std::string &id) {
     uuid_parse(id.c_str(), id_);
-    idString = id;
+    uuid_to_string(id_,idString);
     return *this;
   }
 
   bool operator==(const Identifier &other) {
-      return idString == other.idString;
-    }
+    return idString == other.idString;
+  }
 
-  bool operator==(std::nullptr_t nullp) {
-    return is_null(id_);
+  unsigned char *toArray(){
+    return id_;
   }
 
 };

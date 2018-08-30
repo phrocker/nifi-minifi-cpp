@@ -49,14 +49,9 @@ bool is_null(uuid_t u) {
 }
 
 void copy_ids(uuid_t dst, const uuid_t src) {
- /* if (uuid_is_null(src)) {
-    dst = nullptr;
+  if (uuid_is_null(src)) {
     return;
   }
-  if (uuid_is_null(dst)){
-    dst = src;
-    return;
-  }*/
   uuid_copy(dst, src);
 }
 #endif

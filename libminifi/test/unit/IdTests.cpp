@@ -102,13 +102,13 @@ TEST_CASE("Test Hex Device Segment 16 bits correct digits", "[id]") {
 
   utils::Identifier uuid;
   generator->generate(uuid);
-  auto uid = uuid.getIdentifier();
+  auto uid = uuid.toArray();
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
   REQUIRE(0 == uid[15]);
 
   generator->generate(uuid);
-  uid = uuid.getIdentifier();
+  uid = uuid.toArray();
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
   REQUIRE(1 == uid[15]);
@@ -130,13 +130,14 @@ TEST_CASE("Test Hex Device Segment 16 bits too many digits", "[id]") {
 
   utils::Identifier uuid;
   generator->generate(uuid);
-  auto uid = uuid.getIdentifier();
+  auto uid = uuid.toArray();
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
   REQUIRE(0 == (uid[2] & 128));
   REQUIRE(0 == uid[15]);
 
   generator->generate(uuid);
+  uid = uuid.toArray();
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
   REQUIRE(0 == (uid[2] & 128));
@@ -160,14 +161,14 @@ TEST_CASE("Test Hex Device Segment 18 bits", "[id]") {
 
   utils::Identifier uuid;
   generator->generate(uuid);
-  auto uid = uuid.getIdentifier();
+  auto uid = uuid.toArray();
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
   REQUIRE(128 == (uid[2] & 192));
   REQUIRE(0 == uid[15]);
 
   generator->generate(uuid);
-  uid = uuid.getIdentifier();
+  uid = uuid.toArray();
   REQUIRE(0x09 == uid[0]);
   REQUIRE(0xaf == uid[1]);
   REQUIRE(128 == (uid[2] & 192));
