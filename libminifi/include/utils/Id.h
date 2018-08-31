@@ -38,19 +38,19 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-template<typename T, typename J, void (*F)(J, std::string&), bool (*N)(J), void (*C)(T, J)>
+template<typename T, typename J, void (*F)(J, std::string*), bool (*N)(J), void (*C)(T, J)>
 class IdentifierBase {
  public:
 
   IdentifierBase(T myid) {
     C(id_, myid);
-    F(myid, idString);
+    F(myid, &idString);
   }
 
   IdentifierBase(const IdentifierBase &other) {
     if (other.idString.size() > 0) {
       C(id_, other.id_);
-      F(id_, idString);
+      F(id_, &idString);
     }
   }
 
@@ -81,7 +81,7 @@ class IdentifierBase {
 
   IdentifierBase &operator=(T o) {
     C(id_, o);
-    F(id_, idString);
+    F(id_, &idString);
     return *this;
   }
 
@@ -106,7 +106,7 @@ class Identifier : IdentifierBase<m_uuid> {
 };
 #else
 
-void uuid_to_string(const uuid_t u, std::string &id);
+void uuid_to_string(const uuid_t u, std::string *id);
 
 bool is_null(const uuid_t u);
 
@@ -143,7 +143,7 @@ class Identifier : public IdentifierBase<uuid_t, const uuid_t, uuid_to_string, i
   Identifier &operator=(const std::string &id) {
 
     uuid_parse(id.c_str(), id_);
-    uuid_to_string(id_, idString);
+    uuid_to_string(id_, &idString);
     return *this;
   }
 

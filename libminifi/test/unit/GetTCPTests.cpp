@@ -36,7 +36,6 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 
 TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
-
   utils::Identifier ident = utils::Identifier();
 
   std::cout << (ident == nullptr) << std::endl;

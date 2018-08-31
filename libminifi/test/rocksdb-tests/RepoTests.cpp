@@ -47,8 +47,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
 
   REQUIRE(true == record.Serialize());
 
-
-  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY,true);
+  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
   repository->stop();
 }
@@ -72,7 +71,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
 
   REQUIRE(true == record.Serialize());
 
-  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY,true);
+  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
   repository->stop();
 }
@@ -123,7 +122,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   REQUIRE(true == record2.getAttribute("keyB", value));
   REQUIRE("" == value);
 
-  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY,true);
+  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 }
 
 TEST_CASE("Test Delete Content ", "[TestFFR4]") {
@@ -175,18 +174,17 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
   std::ifstream fileopen(ss.str());
   REQUIRE(false == fileopen.good());
 
-  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY,true);
+  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
   LogTestController::getInstance().reset();
 }
 
 TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
   TestController testController;
-  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY,true);
+  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
   char format[] = "/tmp/testRepo.XXXXXX";
   LogTestController::getInstance().setDebug<core::ContentRepository>();
   LogTestController::getInstance().setTrace<core::repository::FileSystemRepository>();
-  LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
   LogTestController::getInstance().setTrace<minifi::ResourceClaim>();
   LogTestController::getInstance().setTrace<minifi::FlowFileRecord>();
 
@@ -211,44 +209,35 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
   {
-  minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
+    minifi::FlowFileRecord record(repository, content_repo, attributes, claim);
 
-  record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
+    record.addAttribute("keyA", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
+    record.addAttribute("", "hasdgasdgjsdgasgdsgsadaskgasd");
 
-  REQUIRE(true == record.Serialize());
+    REQUIRE(true == record.Serialize());
 
-  repository->flush();
+    repository->flush();
 
-  repository->stop();
+    repository->stop();
 
-  repository->loadComponent(content_repo);
+    repository->loadComponent(content_repo);
 
-  repository->start();
+    repository->start();
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    repository->stop();
+    claim = nullptr;
+    // sleep for 100 ms to let the delete work.
 
-  repository->stop();
-  claim = nullptr;
-  // sleep for 100 ms to let the delete work.
-  std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
   std::ifstream fileopen(ss.str());
 
-  if (false == fileopen.good()){
-    std::cout << ss.str() << " is not there" << std::endl;
-  }
-  else{
-    std::cout << ss.str() << " is still there" << std::endl;
-  }
   REQUIRE(true == fileopen.fail());
 
-  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY,true);
+  utils::file::FileUtils::delete_dir(FLOWFILE_CHECKPOINT_DIRECTORY, true);
 
   LogTestController::getInstance().reset();
 }

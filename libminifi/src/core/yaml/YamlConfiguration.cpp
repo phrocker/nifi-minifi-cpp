@@ -552,7 +552,7 @@ void YamlConfiguration::parseConnectionYaml(YAML::Node *connectionsNode, core::P
 
         if (connectionNode["source id"]) {
           std::string connectionSrcProcId = connectionNode["source id"].as<std::string>();
-          srcUUID=connectionSrcProcId;
+          srcUUID = connectionSrcProcId;
           logger_->log_debug("Using 'source id' to match source with same id for "
                              "connection '%s': source id => [%s]",
                              name, connectionSrcProcId);

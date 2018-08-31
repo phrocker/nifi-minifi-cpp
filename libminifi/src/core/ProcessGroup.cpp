@@ -198,7 +198,7 @@ std::shared_ptr<Processor> ProcessGroup::findProcessor(utils::Identifier &uuid) 
     utils::Identifier processorUUID;
 
     if (processor->getUUID(processorUUID)) {
-      if (uuid == processorUUID){
+      if (uuid == processorUUID) {
         return processor;
       }
     }

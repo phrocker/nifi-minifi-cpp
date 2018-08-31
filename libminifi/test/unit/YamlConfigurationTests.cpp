@@ -33,7 +33,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
 
-  SECTION("loading YAML without optional component IDs works"){
+  SECTION("loading YAML without optional component IDs works") {
   static const std::string CONFIG_YAML_WITHOUT_IDS = ""
   "MiNiFi Config Version: 1\n"
   "Flow Controller:\n"
@@ -165,7 +165,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   }
 }
 
-  SECTION("missing required field in YAML throws exception"){
+  SECTION("missing required field in YAML throws exception") {
   static const std::string CONFIG_YAML_NO_RPG_PORT_ID = ""
   "MiNiFi Config Version: 1\n"
   "Flow Controller:\n"
@@ -531,13 +531,12 @@ TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
-  std::shared_ptr<core::ContentRepository>
-  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", {}, { {"Prop A", "^abcd.*$"}}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^abcd.*$" } }));
   component->setSupportedProperties(std::move(props));
   yamlConfig.validateComponentProperties(component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
@@ -552,13 +551,12 @@ TEST_CASE("Test Regex Property", "[YamlConfigurationRegexProperty]") {
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
-  std::shared_ptr<core::ContentRepository>
-  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "^val.*$", {}, {}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "^val.*$", { }, { }));
   component->setSupportedProperties(std::move(props));
   yamlConfig.validateComponentProperties(component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
@@ -574,13 +572,12 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") 
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
-  std::shared_ptr<core::ContentRepository>
-  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", {}, { {"Prop A", "^val.*$"}}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^val.*$" } }));
   component->setSupportedProperties(std::move(props));
   bool config_failed = false;
   try {
@@ -603,13 +600,12 @@ TEST_CASE("Test Regex Property 2", "[YamlConfigurationRegexProperty2]") {
   std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
-  std::shared_ptr<core::ContentRepository>
-  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
   std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", {}, {}));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "^notval.*$", {}, {}));
+  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
+  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "^notval.*$", { }, { }));
   component->setSupportedProperties(std::move(props));
   bool config_failed = false;
   try {
