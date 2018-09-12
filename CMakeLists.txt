@@ -447,7 +447,10 @@ endif()
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
 add_subdirectory(main)
-add_subdirectory(LibExample)
+if (NOT DISABLE_CURL)
+  add_subdirectory(LibExample)
+  add_subdirectory(python/library)
+endif()
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 

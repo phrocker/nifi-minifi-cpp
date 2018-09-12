@@ -54,6 +54,23 @@ class DirectoryConfiguration {
   }
 };
 
+nifi_port *create_port(char *port) {
+  if (nullptr == port)
+    return nullptr;
+  nifi_port *p = new nifi_port();
+  p->port_id = new char[strlen(port)];
+  strncpy(p->port_id, port, strlen(port));
+  return p;
+}
+
+int free_port(nifi_port *port) {
+  if (port == nullptr)
+    return -1;
+  delete[] port->port_id;
+  delete port;
+  return 0;
+}
+
 /**
  * Creates a NiFi Instance from the url and output port.
  * @param url http URL for NiFi instance
@@ -242,6 +259,17 @@ void transmit_flowfile(flow_file_record *ff, nifi_instance *instance) {
   minifi_instance_ref->transfer(ffr);
 }
 
+flow *create_new_flow(nifi_instance *instance) {
+  auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
+  flow *new_flow = new flow;
+
+  auto execution_plan = new ExecutionPlan(minifi_instance_ref->getContentRepository(), minifi_instance_ref->getNoOpRepository(), minifi_instance_ref->getNoOpRepository());
+
+  new_flow->plan = execution_plan;
+
+  return new_flow;
+}
+
 flow *create_flow(nifi_instance *instance, const char *first_processor) {
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
   flow *new_flow = new flow;
@@ -254,6 +282,15 @@ flow *create_flow(nifi_instance *instance, const char *first_processor) {
   execution_plan->addProcessor(first_processor, first_processor);
 
   return new_flow;
+}
+
+processor *add_processor(flow *flow, const char *processor_name) {
+  ExecutionPlan *plan = static_cast<ExecutionPlan*>(flow->plan);
+  // automatically adds it with success
+  auto proc = plan->addProcessor(processor_name, processor_name);
+  processor *new_processor = new processor();
+  new_processor->processor_ptr = proc.get();
+  return new_processor;
 }
 
 flow *create_getfile(nifi_instance *instance, flow *parent_flow, GetFileConfig *c) {

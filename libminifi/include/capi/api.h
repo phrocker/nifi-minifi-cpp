@@ -45,6 +45,10 @@ typedef struct {
   char *port_id;
 } nifi_port;
 
+nifi_port *create_port(char *port);
+
+int free_port(nifi_port *port);
+
 /**
  * Nifi instance struct
  */
@@ -134,9 +138,13 @@ typedef struct {
   void *plan;
 } flow;
 
+flow *create_new_flow(nifi_instance *);
+
 flow *create_flow(nifi_instance *, const char *);
 
 flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
+
+processor *add_processor(flow *, const char *);
 
 void free_flow(flow *);
 
