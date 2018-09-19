@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include "core/Core.h"
+#include "core/ClassLoader.h"
 #include "PropertyValidation.h"
 #include <sstream>
 #include <typeindex>
@@ -553,7 +554,31 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
 
   template<typename T>
   std::shared_ptr<PropertyBuilder> asType() {
-    prop.types_.push_back(core::getClassName<T>());
+    utils::Identifier id;
+    for (const auto &g : core::ClassLoader::getDefaultClassLoader().getClasses()) {
+
+      std::string className = g;
+      auto lastOfIdx = className.find_last_of("::");
+      if (lastOfIdx != std::string::npos) {
+        lastOfIdx++;  // if a value is found, increment to move beyond the ::
+        int nameLength = className.length() - lastOfIdx;
+        className = className.substr(lastOfIdx, nameLength);
+      }
+      // look at both types. could depend on how they are stored.
+      auto obj = core::ClassLoader::getDefaultClassLoader().instantiate(className, id);
+      if (obj == nullptr) {
+        obj = core::ClassLoader::getDefaultClassLoader().instantiate(g, id);
+        if (obj == nullptr) {
+        }
+      }
+      auto clazz = std::dynamic_pointer_cast<T>(obj);
+      if (clazz != nullptr) {
+        prop.types_.emplace_back(std::move(g));
+      } else {
+      }
+
+    }
+
     return shared_from_this();
   }
 
