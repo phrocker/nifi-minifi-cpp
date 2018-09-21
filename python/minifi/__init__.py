@@ -55,7 +55,7 @@ class RPG(object):
 
 class FlowFile(object):
     def __init__(self, ff):
-        super(RPG, self).__init__()
+        super(FlowFile, self).__init__()
         self._ff = ff
 
     def get_instance(self):
@@ -95,7 +95,7 @@ class MiNiFi(object):
 
     def __open_rpg(self, url, port):
          rpgPort = self._minifi.create_port(port)
-         self._rpg = self._minifi.create_instance(url, rpgPort)
+         rpg = self._minifi.create_instance(url, rpgPort)
          ret = RPG(rpg)
          return ret
 
@@ -107,7 +107,7 @@ class MiNiFi(object):
     	return Processor(proc,self._minifi)
     
     def get_next_flowfile(self):
-    	ff = self._minifi.get_next_flow_file(self._rpg, self._flow)
+    	ff = self._minifi.get_next_flow_file(self._instance.get_instance(), self._flow)
     	return FlowFile(ff)
 
 class GetFile(object):

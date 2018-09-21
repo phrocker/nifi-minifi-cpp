@@ -26,6 +26,6 @@ minifi = MiNiFi(dll_file=args.dll_file,url = args.nifi_instance.encode('utf-8'),
 
 processor = minifi.add_processor( GetFile() )
 
-processor.set_property("Directory", args.dir)
+processor.set_property("Input Directory", args.dir)
 
 minifi.get_next_flowfile()
