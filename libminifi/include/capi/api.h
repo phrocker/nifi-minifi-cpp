@@ -62,8 +62,6 @@ typedef struct {
 
 nifi_instance *create_instance(char *url, nifi_port *port);
 
-void set_property(nifi_instance *, char *, char *);
-
 void initialize_instance(nifi_instance *);
 
 void free_instance(nifi_instance*);
@@ -145,6 +143,8 @@ flow *create_flow(nifi_instance *, const char *);
 flow *create_getfile(nifi_instance *instance, flow *parent, GetFileConfig *c);
 
 processor *add_processor(flow *, const char *);
+
+int set_property(processor *, const char *, const char *);
 
 void free_flow(flow *);
 

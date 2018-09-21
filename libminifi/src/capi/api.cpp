@@ -293,6 +293,15 @@ processor *add_processor(flow *flow, const char *processor_name) {
   return new_processor;
 }
 
+int set_property(processor *proc, const char *name, const char *value){
+  if (name != nullptr && value != nullptr && proc != nullptr){
+    core::Processor *p = static_cast<core::Processor*>(proc->processor_ptr);
+    p->setProperty(name,value);
+    return 0;
+  }
+  return -1;
+}
+
 flow *create_getfile(nifi_instance *instance, flow *parent_flow, GetFileConfig *c) {
   std::string first_processor = "GetFile";
   auto minifi_instance_ref = static_cast<minifi::Instance*>(instance->instance_ptr);
