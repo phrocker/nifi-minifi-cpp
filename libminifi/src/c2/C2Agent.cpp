@@ -62,7 +62,7 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
     auto time_since = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_run_).count();
 
     // place priority on messages to send to the c2 server
-      if ( request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
+      if ( protocol_ != nullptr && request_mutex.try_lock_until(now + std::chrono::seconds(1)) ) {
         if (requests.size() > 0) {
           int count = 0;
           do {
@@ -79,6 +79,8 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
         last_run_ = now;
         performHeartBeat();
       }
+
+      checkTriggers();
 
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
       return state::Update(state::UpdateStatus(state::UpdateState::READ_COMPLETE, false));
@@ -102,6 +104,19 @@ C2Agent::C2Agent(const std::shared_ptr<core::controller::ControllerServiceProvid
   functions_.push_back(c2_consumer_);
 }
 
+void C2Agent::checkTriggers(){
+  logger_->log_info("Checking triggers");
+  for(const auto &trigger : triggers_){
+    if (trigger->triggered()){
+      C2Payload &&triggerAction = trigger->getAction();
+      logger_->log_info("Action triggered");
+      // handle the response the same way. This means that
+      // acknowledgements will be sent to the c2 server for every trigger action.
+      // this is expected
+      enqueue_c2_server_response(std::move(triggerAction));
+    }
+  }
+}
 void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconfigure) {
   std::string clazz, heartbeat_period, device;
 
@@ -186,6 +201,22 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       }
     }
   }
+
+  std::string trigger_classes;
+    if (configure->get("c2.agent.trigger.classes", trigger_classes)) {
+      std::vector<std::string> triggers = utils::StringUtils::split(trigger_classes, ",");
+      std::lock_guard<std::mutex> lock(heartbeat_mutex);
+      for (auto trigger : triggers) {
+        auto trigger_obj = core::ClassLoader::getDefaultClassLoader().instantiate(trigger, trigger);
+        if (trigger_obj == nullptr) {
+          logger_->log_debug("Could not instantiate %s", trigger);
+        } else {
+          std::shared_ptr<C2Trigger> trg_impl = std::static_pointer_cast<C2Trigger>(trigger_obj);
+          trg_impl->initialize(configuration_);
+          triggers_.push_back(trg_impl);
+        }
+      }
+    }
 
   auto base_reporter = "ControllerSocketProtocol";
   auto heartbeat_reporter_obj = core::ClassLoader::getDefaultClassLoader().instantiate(base_reporter, base_reporter);
@@ -514,16 +545,21 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       // just get the raw data.
       C2Payload payload(Operation::TRANSFER, false, true);
 
-      C2Payload &&response = protocol_.load()->consumePayload(url->second.to_string(), payload, RECEIVE, false);
+      auto urlStr = url->second.to_string();
 
-      auto raw_data = response.getRawData();
-      std::string file_path = std::string(raw_data.data(), raw_data.size());
+      std::string file_path = urlStr;
+      if (nullptr != protocol_ || file_path.find("http") == std::string::npos) {
+        C2Payload &&response = protocol_.load()->consumePayload(urlStr, payload, RECEIVE, false);
+
+        auto raw_data = response.getRawData();
+        file_path = std::string(raw_data.data(), raw_data.size());
+      }
 
       std::ifstream new_conf(file_path);
       std::string raw_data_str((std::istreambuf_iterator<char>(new_conf)), std::istreambuf_iterator<char>());
       unlink(file_path.c_str());
       // if we can apply the update, we will acknowledge it and then backup the configuration file.
-      if (update_sink_->applyUpdate(url->second.to_string(), raw_data_str)) {
+      if (update_sink_->applyUpdate(urlStr, raw_data_str)) {
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, false, true);
         enqueue_c2_response(std::move(response));
 

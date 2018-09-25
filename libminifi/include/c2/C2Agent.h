@@ -30,6 +30,7 @@
 #include "controllers/UpdatePolicyControllerService.h"
 #include "core/state/Value.h"
 #include "C2Payload.h"
+#include "C2Trigger.h"
 #include "C2Protocol.h"
 #include "io/validation.h"
 #include "HeartBeatReporter.h"
@@ -93,6 +94,8 @@ class C2Agent : public state::UpdateController, public state::response::Response
   void restart_agent();
 
   void update_agent();
+
+  void checkTriggers();
 
   /**
    * Configure the C2 agent
@@ -212,6 +215,8 @@ class C2Agent : public state::UpdateController, public state::response::Response
 
   std::vector<std::shared_ptr<HeartBeatReporter>> heartbeat_protocols_;
 
+  std::vector<std::shared_ptr<C2Trigger>> triggers_;
+
   std::atomic<C2Protocol*> protocol_;
 
   bool allow_updates_;
@@ -223,8 +228,7 @@ class C2Agent : public state::UpdateController, public state::response::Response
   std::string bin_location_;
 
   std::shared_ptr<logging::Logger> logger_;
-}
-;
+};
 
 } /* namesapce c2 */
 } /* namespace minifi */
