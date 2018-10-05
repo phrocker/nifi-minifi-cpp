@@ -12,10 +12,6 @@
       "buildCommandArgs": "-v:minimal -m:8",
       "variables": [
         {
-          "name": "OPENSSL_OFF",
-          "value": "ON"
-        },
-        {
           "name": "USE_SYSTEM_ZLIB",
           "value": "OFF"
         },
@@ -57,10 +53,6 @@
         },
         {
           "name": "DISABLE_EXPRESSION_LANGUAGE",
-          "value": "TRUE"
-        },
-        {
-          "name": "SKIP_TESTS",
           "value": "TRUE"
         }
 
@@ -78,10 +70,6 @@
       "buildCommandArgs": "-v",
       "variables": [
         {
-          "name": "OPENSSL_OFF",
-          "value": "ON"
-        },
-        {
           "name": "USE_SYSTEM_ZLIB",
           "value": "OFF"
         },
@@ -123,10 +111,6 @@
         },
         {
           "name": "DISABLE_EXPRESSION_LANGUAGE",
-          "value": "TRUE"
-        },
-        {
-          "name": "SKIP_TESTS",
           "value": "TRUE"
         }
 
