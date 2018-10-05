@@ -21,6 +21,8 @@
 
 #ifdef WIN32
 #define FILE_SEPARATOR "\\"
+#pragma warning (disable : 4367)
+#pragma warning (disable : 4244)
 #else
 #define FILE_SEPARATOR "/"
 #endif
