@@ -52,6 +52,7 @@ ENDIF()
 
 include(CheckCXXCompilerFlag)
 if (WIN32)
+  add_definitions(-DWIN32_LEAN_AND_MEAN)
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
 	    CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
 	    if (_cpp_latest_flag_supported)
