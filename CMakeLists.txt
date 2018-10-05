@@ -71,7 +71,7 @@ endif(CCACHE_FOUND)
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
 if (WIN32)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4267 /wd4820 /wd4061 /wd4100 /wd4365 /wd4710 /wd4265 /wd4571 /wd5026 /wd4625 /wd4626 /wd4514 /wd4668")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4267 /wd4820 /wd4061 /wd4100 /wd4365 /wd4710 /wd4265 /wd4571 /wd5026 /wd4625 /wd4626 /wd4514 /wd4668 /wd4458 /wd4774 /wd4464 ")
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
     CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
@@ -317,7 +317,7 @@ include_directories(thirdparty/rapidjson-1.1.0/include)
 ## Expression language extensions
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
 include_directories("extensions/expression-language/common")
-if (DISABLE_EXPRESSION_LANGUAGE)
+if (DISABLE_EXPRESSION_LANGUAGE STREQUAL "ON")
     # Build expression language NoOp implementation, if necessary
     include_directories("extensions/expression-language/noop")
     add_subdirectory(extensions/expression-language/noop)
