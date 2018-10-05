@@ -94,7 +94,7 @@ void Socket::closeStream() {
     freeaddrinfo(addr_info_);
     addr_info_ = 0;
   }
-  if (socket_file_descriptor_ >= 0 && socket_file_descriptor_ != INVALID_SOCKET) {
+  if (socket_file_descriptor_ != INVALID_SOCKET) {
     logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
 #ifdef WIN32
     closesocket(socket_file_descriptor_);
