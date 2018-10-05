@@ -308,7 +308,7 @@ private:
 		SocketInitializer() {
 			#ifdef WIN32
 			static WSADATA s_wsaData;
-			int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
+			WSAStartup(MAKEWORD(2, 2), &s_wsaData);
 			#endif
 		}
 		~SocketInitializer() {

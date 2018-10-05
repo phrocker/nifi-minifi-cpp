@@ -169,7 +169,7 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
   /**
    * Cleanly relinquish a resource claim
    */
-  virtual void releaseClaim(std::shared_ptr<ResourceClaim> claim);
+  virtual void releaseClaim(const std::shared_ptr<ResourceClaim> claim);
 
   FlowFileRecord &operator=(const FlowFileRecord &);
 

@@ -53,10 +53,7 @@
 #endif
 #endif
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-// can't include cxxabi
-#else
+#ifndef _WIN32
 #include <cxxabi.h>
 #endif
 

@@ -17,20 +17,23 @@
 #ifndef __TIME_UTIL_H__
 #define __TIME_UTIL_H__
 
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <time.h>
 #include <string.h>
 #include <iomanip>
 #include <sstream>
 #include <chrono>
+#include "capi/expect.h"
 
-#define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
-/**
- * Gets the current time in milliseconds
- * @returns milliseconds since epoch
- */
+#define TIME_FORMAT "%Y-%m-%d %H:%M:%S" // should be the same as %T
+
+ /**
+  * Gets the current time in milliseconds
+  * @returns milliseconds since epoch
+  */
 inline uint64_t getTimeMillis() {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 /**
@@ -39,9 +42,10 @@ inline uint64_t getTimeMillis() {
  */
 inline uint64_t getTimeNano() {
 
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 }
+
 
 /**
  * Returns a string based on TIME_FORMAT, converting
@@ -50,17 +54,32 @@ inline uint64_t getTimeNano() {
  * @returns string representing the time
  */
 inline std::string getTimeStr(uint64_t msec, bool enforce_locale = false) {
-  char date[120];
-  time_t second = (time_t) (msec / 1000);
-  msec = msec % 1000;
-  strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT, (enforce_locale == true ? gmtime(&second) : localtime(&second)));
+	char date[120];
+	time_t second = (time_t)(msec / 1000);
+	msec = msec % 1000;
 
-  std::string ret = date;
-  date[0] = '\0';
-  sprintf(date, ".%03llu", (unsigned long long) msec);
+	if (UNLIKELY(enforce_locale)) {
+		strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT, localtime(&second));
+	}
+	else {
+#if defined(__STDC_LIB_EXT1__) || defined(WIN32)
+		struct tm timeinfo;
+#ifdef WIN32
+		_gmtime64_s(&timeinfo, &second);
+#else
+		gmtime_s(&timeinfo, &second);
+#endif
+		strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT, &timeinfo);
+#else
+		strftime(date, sizeof(date) / sizeof(*date), TIME_FORMAT, gmtime(&second));
+#endif
+	}
+	std::string ret = date;
+	date[0] = '\0';
+	sprintf(date, ".%03llu", (unsigned long long) msec);
 
-  ret += date;
-  return ret;
+	ret += date;
+	return ret;
 }
 
 #endif

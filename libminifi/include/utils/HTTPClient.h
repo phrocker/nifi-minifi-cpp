@@ -38,6 +38,7 @@ struct HTTPUploadCallback {
     ptr = nullptr;
     pos = 0;
   }
+  HTTPUploadCallback(HTTPUploadCallback &&other) = delete;
   std::mutex mutex;
   std::atomic<bool> stop;
   ByteInputCallBack *ptr;

@@ -41,6 +41,8 @@ class LoggerControl {
 
   }
 
+  LoggerControl(const LoggerControl &&other) = delete;
+
   bool is_enabled(){
     return is_enabled_;
   }
