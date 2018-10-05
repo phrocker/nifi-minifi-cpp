@@ -71,7 +71,7 @@ endif(CCACHE_FOUND)
 # Enable usage of the VERSION specifier
 include(CheckCXXCompilerFlag)
 if (WIN32)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4267 /wd4820 /wd4061 /wd4100 /wd4365 /wd4710 /wd4265 /wd4571 /wd5026 /wd4626 /wd4514 /wd4668")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4267 /wd4820 /wd4061 /wd4100 /wd4365 /wd4710 /wd4265 /wd4571 /wd5026 /wd4625 /wd4514 /wd4668")
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
     CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
