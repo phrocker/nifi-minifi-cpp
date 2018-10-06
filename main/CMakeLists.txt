@@ -27,6 +27,7 @@ include_directories(../libminifi/include ../thirdparty/spdlog-20170710/include .
 
 
 if(WIN32)
+	add_definitions( -DNOMINMAX )
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 	include_directories(../libminifi/opsys/win)
 else()

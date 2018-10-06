@@ -32,6 +32,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (WIN32)
+	add_definitions( -DNOMINMAX )
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
 	include_directories("thirdparty/uuid/include/win32/")
 else()
