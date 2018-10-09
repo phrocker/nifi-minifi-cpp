@@ -20,12 +20,14 @@
 
 
 #ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN 1
+#endif
 #define FILE_SEPARATOR "\\"
 #else
 #define FILE_SEPARATOR "/"
 #endif
 
-#define WIN32_LEAN_AND_MEAN
 //! Main thread sleep interval 1 second
 #define SLEEP_INTERVAL 1
 //! Main thread stop wait time
