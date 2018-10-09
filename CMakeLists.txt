@@ -72,6 +72,7 @@ endif(CCACHE_FOUND)
 include(CheckCXXCompilerFlag)
 if (WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4267 /wd4820 /wd4061 /wd4100 /wd4365 /wd4388 /wd4710 /wd4265 /wd4571 /wd5026 /wd4101 /wd4625 /wd4626 /wd4127 /wd4242 /wd4245 /wd4266 /wd4355 /wd4514 /wd4668 /wd4458 /wd4774 /wd4464 /wd4996 /wd5027")
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
     CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
     if (_cpp_latest_flag_supported)
@@ -148,7 +149,7 @@ if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
 	set(OPENSSL_FOUND "YES")
 	set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
 	set(OPENSSL_LIBRARIES tls ssl crypto)
-else()
+else(USE_SYSTEM_OPENSSL STREQUAL "OFF")
 	# Set the right openssl root path
 	if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
@@ -178,8 +179,11 @@ endif()
 if(USE_SYSTEM_ZLIB STREQUAL "OFF")
   message("Using bundled zlib")
 
-  if (WIN32)
-  set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstaticd.lib")
+ if (WIN32)
+
+  set(BYPRODUCT "thirdparty/zlib-install/lib/zlibstatic.lib")
+
+  
   else()
   set(BYPRODUCT "thirdparty/zlib-install/lib/libz.a")
   endif()
@@ -202,7 +206,6 @@ if(USE_SYSTEM_ZLIB STREQUAL "OFF")
   set(ZLIB_LIBRARIES z CACHE STRING "" FORCE)
   set(ZLIB_LIBRARY z CACHE STRING "" FORCE)
   set(ZLIB_LIBRARY z CACHE STRING "" FORCE)
-  message("ZLIBV LIBR is ${ZLIB_LIBRARIES}")
 else()
   find_package (ZLIB REQUIRED)
 endif()
@@ -226,38 +229,43 @@ set(UUID_FOUND "YES" CACHE STRING "" FORCE)
 set(UUID_LIBRARIES "uuid" CACHE STRING "" FORCE)
 
 
-if (DISABLE_CURL)
+if (DISABLE_CURL STREQUAL "TRUE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDISABLE_CURL")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDISABLE_CURL")
-endif(DISABLE_CURL)
-if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
+endif(DISABLE_CURL STREQUAL "TRUE")
+if(DISABLE_CURL STREQUAL "OFF" AND (NOT USE_SYSTEM_CURL))
   message("Using bundled cURL")
   
   set(CURL_C_FLAGS "-I${OPENSSL_INCLUDE_DIR}")
   set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
 
   if (WIN32)
-  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
+  IF(CMAKE_BUILD_TYPE MATCHES DEBUG)
+    set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
+	else()
+	set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.lib")
+  ENDIF(CMAKE_BUILD_TYPE MATCHES DEBUG)
   else()
   set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.a")
   endif()
 
   if (WIN32)
   set (PC "PATCH_COMMAND ./buildconf.bat")
-  else()
   endif()
 
   ExternalProject_Add(
     curl-external
     GIT_REPOSITORY "https://github.com/curl/curl.git"
-    GIT_TAG "4d6bd91ab33328c6d27eddc32e064defc02dc4fd"  # Version 7.59.0
+    GIT_TAG "4d6bd91ab33328c6d27eddc32e064defc02dc4fd"  # Version 7.61.1
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
                 -DBUILD_CURL_EXE=OFF
                 -DBUILD_TESTING=OFF
                 -DCURL_STATICLIB=ON
+				-DHAVE_WINDOWS_H=ON
                 -DHTTP_ONLY=ON
+				-DHAVE_LIBWS2_32=ON
                 -DCURL_DISABLE_CRYPTO_AUTH=ON
                 -DHAVE_GLIBC_STRERROR_R=1
                 -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
@@ -284,8 +292,8 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   set_target_properties(curl PROPERTIES INTERFACE_LINK_LIBRARIES ${OPENSSL_LIBRARIES})
   endif(OPENSSL_FOUND)
   add_dependencies(curl curl-external)
-  set(CURL_FOUND "YES")
-  set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
+  set(CURL_FOUND "YES" CACHE STRING "" FORCE)
+  set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include" CACHE STRING "" FORCE)
   set(CURL_LIBRARY curl CACHE STRING "" FORCE)
   set(CURL_LIBRARIES ${CURL_LIBRARY} CACHE STRING "" FORCE)
 endif()
@@ -316,7 +324,7 @@ include_directories(thirdparty/rapidjson-1.1.0/include)
 ## Expression language extensions
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
 include_directories("extensions/expression-language/common")
-if (DISABLE_EXPRESSION_LANGUAGE)
+if (DISABLE_EXPRESSION_LANGUAGE STREQUAL "TRUE")
     # Build expression language NoOp implementation, if necessary
     include_directories("extensions/expression-language/noop")
     add_subdirectory(extensions/expression-language/noop)

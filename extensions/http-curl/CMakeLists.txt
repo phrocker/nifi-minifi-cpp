@@ -41,6 +41,8 @@ endif()
 if (CURL_FOUND)
   include_directories(${CURL_INCLUDE_DIRS})
   target_link_libraries(minifi-http-curl ${CURL_LIBRARIES})
+else()
+   message(FATAL_ERROR "CURL NOT FOUND")
 endif ()
 
 # Include UUID
@@ -48,9 +50,11 @@ find_package(UUID REQUIRED)
 #set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
 
 # Include OpenSSL
-find_package(OpenSSL REQUIRED)
-include_directories(${OPENSSL_INCLUDE_DIR})
-target_link_libraries(minifi-http-curl ${CMAKE_DL_LIBS} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifi-http-curl ${CMAKE_DL_LIBS} $)
+if(OPENSSL_FOUND)
+	include_directories(${OPENSSL_INCLUDE_DIR})
+	target_link_libraries(minifi-http-curl ${CMAKE_DL_LIBS} ${OPENSSL_LIBRARIES})
+endif()
 target_link_libraries(minifi-http-curl minifi-civet-extensions)
 
 find_package(ZLIB REQUIRED)

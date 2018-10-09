@@ -17,7 +17,7 @@
  */
 #ifndef LIBMINIFI_INCLUDE_CORE_CORE_H_
 #define LIBMINIFI_INCLUDE_CORE_CORE_H_
-#define WIN32_LEAN_AND_MEAN 1
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -54,7 +54,9 @@
 #endif
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN 1
+#endif
 // can't include cxxabi
 #else
 #include <cxxabi.h>
