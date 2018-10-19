@@ -38,6 +38,7 @@ option(ENABLE_PYTHON "Instructs the build system to enable building shared objec
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 
+include(CheckIncludeFile)
 include(FeatureSummary)
 include(ExternalProject)
 
@@ -66,6 +67,12 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     message("-- Found ccache: ${CCACHE_FOUND}")
 endif(CCACHE_FOUND)
+
+# check for exec info before we enable the backtrace features.
+CHECK_INCLUDE_FILE("execinfo.h" HAS_EXECINFO)
+if (HAS_EXECINFO)
+  add_definitions("-DHAS_EXECINFO=1")
+endif(HAS_EXECINFO)
 
 #### Establish Project Configuration ####
 # Enable usage of the VERSION specifier
