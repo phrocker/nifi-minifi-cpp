@@ -1,0 +1,18 @@
+## ApplyTemplate
+
+### Description 
+
+Applies the mustache template specified by the "Template" property and writes the output to the flow file content. FlowFile attributes are used as template parameters.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Template|||Path to the input mustache template file|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|success operational on the flow record|
+

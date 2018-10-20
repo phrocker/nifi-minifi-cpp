@@ -1,0 +1,22 @@
+## CompressContent
+
+### Description 
+
+Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Compression Format|use mime.type attribute||The compression format to use.|
+|Compression Level|1||The compression level to use; this is valid only when using GZIP compression.|
+|Mode|compress||Indicates whether the processor should compress content or decompress content.|
+|Update Filename|false||Determines if filename extension need to be updated|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|FlowFiles will be transferred to the failure relationship if they fail to compress/decompress|
+|success|FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed|
+

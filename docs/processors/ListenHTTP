@@ -1,0 +1,25 @@
+## ListenHTTP
+
+### Description 
+
+Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service will be http://{hostname}:{port}/contentListener. Only HEAD, POST, and GET requests are supported. PUT, and DELETE will result in an error and the HTTP response status code 405. The response body text for all requests, by default, is empty (length of 0). A static response body can be set for a given URI by sending input files to ListenHTTP with the http.type attribute set to response_body. The response body FlowFile filename attribute is appended to the Base Path property (separated by a /) when mapped to incoming requests. The mime.type attribute of the response body FlowFile is used for the Content-type header in responses. Response body content can be cleared by sending an empty (size 0) FlowFile for a given URI mapping.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Authorized DN Pattern|.*||A Regular Expression to apply against the Distinguished Name of incoming connections. If the Pattern does not match the DN, the connection will be refused.|
+|Base Path|contentListener||Base path for incoming connections|
+|HTTP Headers to receive as Attributes (Regex)|||Specifies the Regular Expression that determines the names of HTTP Headers that should be passed along as FlowFile attributes|
+|**Listening Port**|80||The Port to listen on for incoming connections. 0 means port is going to be selected randomly.|
+|SSL Certificate|||File containing PEM-formatted file including TLS/SSL certificate and key|
+|SSL Certificate Authority|||File containing trusted PEM-formatted certificates|
+|SSL Minimum Version|SSL2|SSL2<br>SSL3<br>TLS1.0<br>TLS1.1<br>TLS1.2<br>|Minimum TLS/SSL version allowed (SSL2, SSL3, TLS1.0, TLS1.1, TLS1.2)|
+|SSL Verify Peer|no|no<br>yes<br>|Whether or not to verify the client's certificate (yes/no)|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|All files are routed to success|
+

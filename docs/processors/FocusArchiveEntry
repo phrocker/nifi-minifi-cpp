@@ -1,0 +1,18 @@
+## FocusArchiveEntry
+
+### Description 
+
+Allows manipulation of entries within an archive (e.g. TAR) by focusing on one entry within the archive at a time. When an archive entry is focused, that entry is treated as the content of the FlowFile and may be manipulated independently of the rest of the archive. To restore the FlowFile to its original state, use UnfocusArchiveEntry.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Path|||The path within the archive to focus ("/" to focus the total archive)|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|success operational on the flow record|
+

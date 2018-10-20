@@ -1,0 +1,20 @@
+## ConvertUpdate
+
+### Description 
+
+onverts update messages into the appropriate RESTFul call
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Listening Topic|||Name of topic to listen to|
+|MQTT Controller Service|||Name of controller service that will be used for MQTT interactivity|
+|SSL Context Service|||The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|All files are routed to success|
+

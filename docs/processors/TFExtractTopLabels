@@ -1,0 +1,34 @@
+## TFExtractTopLabels
+
+### Description
+
+Extracts the top 5 labels for categorical inference models.
+
+Labels are fed as newline (`\n`) -delimited files where each line is a label
+for the tensor index equivalent to the line number. Label files must be fed in
+with the `tf.type` property set to `labels`.
+
+The top 5 labels are written to the following attributes:
+
+- `top_label_0`
+- `top_label_1`
+- `top_label_2`
+- `top_label_3`
+- `top_label_4`
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional. The table also indicates any
+default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+
+### Relationships
+
+| Name | Description |
+| - | - |
+| success | Successful FlowFiles are sent here with labels as attributes |
+| retry | Failures which might work if retried |
+| failure | Failures which will not work if retried |

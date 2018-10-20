@@ -117,6 +117,8 @@ class PropertyValue : public state::response::ValueNode {
     throw std::runtime_error("Invalid conversion to bool");
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const PropertyValue& dt);
+
   PropertyValue &operator=(PropertyValue &&o) = default;
   PropertyValue &operator=(const PropertyValue &o) = default;
 
@@ -204,6 +206,7 @@ class PropertyValue : public state::response::ValueNode {
   std::type_index type_id;
   std::shared_ptr<PropertyValidator> validator_;
 };
+
 
 inline char const* conditional_conversion(const PropertyValue &v) {
   return v.getValue()->getStringValue().c_str();

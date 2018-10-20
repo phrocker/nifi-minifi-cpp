@@ -1,0 +1,24 @@
+## ExtractText
+
+### Description 
+
+Extracts the content of a FlowFile and places it into an attribute.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Attribute|||Attribute to set from content|
+|Enable Case-insensitive Matching|false||Indicates that two characters match even if they are in a different case. |
+|Enable repeating capture group|false||f set to true, every string matching the capture groups will be extracted. Otherwise, if the Regular Expression matches more than once, only the first match will be extracted.|
+|Include Capture Group 0|true||Indicates that Capture Group 0 should be included as an attribute. Capture Group 0 represents the entirety of the regular expression match, is typically not used, and could have considerable length.|
+|Maximum Capture Group Length|1024||Specifies the maximum number of characters a given capture group value can have. Any characters beyond the max will be truncated.|
+|Regex Mode|false||Set this to extract parts of flowfile content using regular experssions in dynamic properties|
+|Size Limit|2097152||Maximum number of bytes to read into the attribute. 0 for no limit. Default is 2MB.|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|success operational on the flow record|
+

@@ -1,0 +1,41 @@
+## PublishKafka
+
+### Description 
+
+This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. The content of a FlowFile becomes the contents of a Kafka message. This message is optionally assigned a key by using the <Kafka Key> Property.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Attributes to Send as Headers|||Any attribute whose name matches the regex will be added to the Kafka messages as a Header|
+|Batch Size|||Maximum number of messages batched in one MessageSet|
+|**Client Name**|||Client Name to use when communicating with Kafka<br/>**Supports Expression Language: true**|
+|Compress Codec|none||compression codec to use for compressing message sets|
+|Delivery Guarantee|DELIVERY_ONE_NODE||TSpecifies the requirement for guaranteeing that a message is sent to Kafka<br/>**Supports Expression Language: true**|
+|Kerberos Keytab Path|||The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.|
+|Kerberos Principal|||Keberos Principal|
+|Kerberos Service Name|||Kerberos Service Name|
+|**Known Brokers**|||A comma-separated list of known Kafka Brokers in the format <host>:<port><br/>**Supports Expression Language: true**|
+|Max Flow Segment Size|||Maximum flow content payload segment size for the kafka record|
+|Max Request Size|||Maximum Kafka protocol request message size|
+|Message Key Field|||The name of a field in the Input Records that should be used as the Key for the Kafka message.
+Supports Expression Language: true (will be evaluated using flow file attributes)|
+|Queue Buffering Max Time|||Delay to wait for messages in the producer queue to accumulate before constructing message batches|
+|Queue Max Buffer Size|||Maximum total message size sum allowed on the producer queue|
+|Queue Max Message|||Maximum number of messages allowed on the producer queue|
+|Request Timeout|||The ack timeout of the producer request in milliseconds<br/>**Supports Expression Language: true**|
+|Security CA|||File or directory path to CA certificate(s) for verifying the broker's key|
+|Security Cert|||Path to client's public key (PEM) used for authentication|
+|Security Pass Phrase|||Private key passphrase|
+|Security Private Key|||Path to client's private key (PEM) used for authentication|
+|Security Protocol|||Protocol used to communicate with brokers|
+|**Topic Name**|||The Kafka Topic of interest<br/>**Supports Expression Language: true**|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|Any FlowFile that cannot be sent to Kafka will be routed to this Relationship|
+|success|Any FlowFile that is successfully sent to Kafka will be routed to this Relationship|
+

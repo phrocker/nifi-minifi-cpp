@@ -1,0 +1,102 @@
+### Python Notes
+
+- ExecuteScript uses native Python bindings, which means that any environment packages (e.g. those installed by pip) can be referenced.
+- Virtual environments do work.
+- It is possible to build MiNiFi - C++ against implementations which are compatible with CPython. CPython v2.7 as well as v3.4 do work, but only one version can be used at a time for a build.
+- We recommend building multiple MiNiFi - C++ executables if there is a requirement for operating multiple Python versions or implmentations concurrently.
+- Be mindful of the Global Interpreter Lock (GIL); While Python scripts will execute concurrently, execution is multiplexed from a single thread. Generally speaking, Python input/output and library calls with native implementations will release the GIL and enable concurrency, but long-running Python code such as loops will block other threads.
+
+### Lua Notes
+
+- Take care to use the `local` keyword where appropriate (such as inside of onTrigger functions and read/write callbacks) as scripts are long-running and this will help to avoid memory leaks.
+- The following Lua packages are enabled/available for scripts:
+  - `base`
+  - `os`
+  - `coroutine`
+  - `math`
+  - `io`
+  - `string`
+  - `table`
+  - `utf8`
+  - `package`
+
+#### Python Example: Reading a File
+
+```python
+import codecs
+
+class ReadCallback(object):
+  def process(self, input_stream):
+    content = codecs.getreader('utf-8')(input_stream).read()
+    log.info('file content: %s' % content)
+    return len(content)
+
+def onTrigger(context, session):
+  flow_file = session.get()
+
+  if flow_file is not None:
+    log.info('got flow file: %s' % flow_file.getAttribute('filename'))
+    session.read(flow_file, ReadCallback())
+    session.transfer(flow_file, REL_SUCCESS)
+```
+
+#### Python Example: Writing a File
+
+```python
+class WriteCallback(object):
+  def process(self, output_stream):
+    new_content = 'hello 2'.encode('utf-8')
+    output_stream.write(new_content)
+    return len(new_content)
+
+def onTrigger(context, session):
+  flow_file = session.get()
+  if flow_file is not None:
+    log.info('got flow file: %s' % flow_file.getAttribute('filename'))
+    session.write(flow_file, WriteCallback())
+    session.transfer(flow_file, REL_SUCCESS)
+```
+
+#### Lua Example: Reading a File
+
+```lua
+read_callback = {}
+
+function read_callback.process(self, input_stream)
+    local content = input_stream:read()
+    log:info('file content: ' .. content)
+    return #content
+end
+
+function onTrigger(context, session)
+  local flow_file = session:get()
+
+  if flow_file ~= nil then
+    log:info('got flow file: ' .. flow_file:getAttribute('filename'))
+    session:read(flow_file, read_callback)
+    session:transfer(flow_file, REL_SUCCESS)
+  end
+end
+```
+
+#### Lua Example: Writing a File
+
+```lua
+write_callback = {}
+
+function write_callback.process(self, output_stream)
+  local new_content = 'hello 2'
+  output_stream:write(new_content)
+  return #new_content
+end
+
+function onTrigger(context, session)
+  local flow_file = session:get()
+
+  if flow_file ~= nil then
+    log:info('got flow file: ' .. flow_file:getAttribute('filename'))
+    session:write(flow_file, write_callback)
+    session:transfer(flow_file, REL_SUCCESS)
+  end
+end
+```

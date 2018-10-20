@@ -1,0 +1,23 @@
+## ManipulateArchive
+
+### Description 
+
+Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|After|||For operations which result in new entries, places the new entry after the entry specified by this property.|
+|Before|||For operations which result in new entries, places the new entry before the entry specified by this property.|
+|Destination|||Destination for operations (touch, move or copy) which result in new entries.|
+|Operation|||Operation to perform on the archive (touch, remove, copy, move).|
+|Target|||An existing entry within the archive to perform the operation on.|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|FlowFiles will be transferred to the failure relationship if the operation fails.|
+|success|FlowFiles will be transferred to the success relationship if the operation succeeds.|
+

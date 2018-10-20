@@ -1,0 +1,33 @@
+## MergeContent
+
+### Description 
+
+Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile. MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files.This processor updates the mime.type attribute as appropriate.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Correlation Attribute Name|||Correlation Attribute Name|
+|Delimiter Strategy|Filename||Determines if Header, Footer, and Demarcator should point to files|
+|Demarcator File|||Filename specifying the demarcator to use|
+|Footer File|||Filename specifying the footer to use|
+|Header File|||Filename specifying the header to use|
+|Keep Path|false||If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry|
+|Max Bin Age|||The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>|
+|Maximum Group Size|||The maximum size for the bundle. If not specified, there is no maximum.|
+|Maximum Number of Entries|||The maximum number of files to include in a bundle. If not specified, there is no maximum.|
+|Maximum number of Bins|100||Specifies the maximum number of bins that can be held in memory at any one time|
+|Merge Format|Binary Concatenation||Merge Format|
+|Merge Strategy|Defragment||Defragment or Bin-Packing Algorithm|
+|Minimum Group Size|0||The minimum size of for the bundle|
+|Minimum Number of Entries|1||The minimum number of files to include in a bundle|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|If the bundle cannot be created, all FlowFiles that would have been used to created the bundle will be transferred to failure|
+|merged|The FlowFile containing the merged content|
+|original|The FlowFiles that were used to create the bundle|
+

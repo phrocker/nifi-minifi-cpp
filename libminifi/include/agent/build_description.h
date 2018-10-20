@@ -19,7 +19,13 @@
 #define BUILD_DESCRPTION_H
 
 #include <vector>
+#include "io/validation.h"
+#include "core/Property.h"
+#include "core/ConfigurableComponent.h"
+#include "core/Relationship.h"
 #include "core/expect.h"
+#include "core/ClassLoader.h"
+#include "core/Processor.h"
 
 namespace org {
 namespace apache {

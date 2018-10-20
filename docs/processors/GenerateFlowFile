@@ -1,0 +1,21 @@
+## GenerateFlowFile
+
+### Description 
+
+This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Batch Size|1||The number of FlowFiles to be transferred in each invocation|
+|Data Format|Binary|Text<br>Binary<br>|Specifies whether the data should be Text or Binary|
+|File Size|1 kB||The size of the file that will be used|
+|Unique FlowFiles|true||If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|success operational on the flow record|
+

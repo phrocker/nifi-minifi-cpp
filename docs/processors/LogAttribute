@@ -1,0 +1,23 @@
+## LogAttribute
+
+### Description 
+
+Logs attributes of flow files in the MiNiFi application log.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Attributes to Ignore|||A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.|
+|Attributes to Log|||A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.|
+|FlowFiles To Log|1||Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.|
+|Log Level||debug<br>error<br>info<br>trace<br>warn<br>|The Log Level to use when logging the Attributes|
+|Log Payload|false||If true, the FlowFile's payload will be logged, in addition to its attributes.otherwise, just the Attributes will be logged|
+|Log Prefix|||Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|success operational on the flow record|
+

@@ -1,0 +1,20 @@
+## HashContent
+
+### Description 
+
+HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. Configuration options exist to select hashing algorithm and set the name of the attribute.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Hash Algorithm|SHA256||Name of the algorithm used to generate checksum|
+|Hash Attribute|Checksum||Attribute to store checksum to|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|failure operational on the flow record|
+|success|success operational on the flow record|
+

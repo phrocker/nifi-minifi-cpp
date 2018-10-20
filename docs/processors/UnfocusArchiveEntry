@@ -1,0 +1,17 @@
+## UnfocusArchiveEntry
+
+### Description 
+
+Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|success operational on the flow record|
+

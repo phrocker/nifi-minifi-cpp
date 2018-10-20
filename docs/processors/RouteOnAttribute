@@ -1,0 +1,18 @@
+## RouteOnAttribute
+
+### Description 
+
+Routes FlowFiles based on their Attributes using the Attribute Expression Language.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|Failed files are transferred to failure|
+|unmatched|Files which do not match any expression are routed here|
+

@@ -1,0 +1,33 @@
+## InvokeHTTP
+
+### Description 
+
+An HTTP client processor which can interact with a configurable HTTP Endpoint. The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Always Output Response|false||Will force a response FlowFile to be generated and routed to the 'Response' relationship regardless of what the server status code received is |
+|Attributes to Send|||Regular expression that defines which attributes to send as HTTP headers in the request. If not defined, no attributes are sent as headers.|
+|Connection Timeout|5 secs||Max wait time for connection to remote service.|
+|Content-type|application/octet-stream||The Content-Type to specify for when content is being transmitted through a PUT, POST or PATCH. In the case of an empty value after evaluating an expression language expression, Content-Type defaults to|
+|Disable Peer Verification|false||Disables peer verification for the SSL session|
+|HTTP Method|GET||HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.|
+|Include Date Header|true||Include an RFC-2616 Date header in the request.|
+|Proxy Host|||The fully qualified hostname or IP address of the proxy server|
+|Proxy Port|||The port of the proxy server|
+|Read Timeout|15 secs||Max wait time for response from remote service.|
+|Remote URL|||Remote URL which will be connected to, including scheme, host, port, path.<br/>**Supports Expression Language: true**|
+|SSL Context Service|||The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.|
+|Use Chunked Encoding|false||When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header and instead send 'Transfer-Encoding' with a value of 'chunked'. This will enable the data transfer mechanism which was introduced in HTTP 1.1 to pass data of unknown lengths in chunks.|
+|invokehttp-proxy-password|||Password to set when authenticating against proxy|
+|invokehttp-proxy-username|||Username to set when authenticating against proxy|
+|send-message-body|true||If true, sends the HTTP message body on POST/PUT/PATCH requests (default).  If false, suppresses the message body and content-type header for these requests.|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|All files are routed to success|
+

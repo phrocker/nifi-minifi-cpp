@@ -378,11 +378,13 @@ class FileUtils {
   static void list_dir(const std::string& dir, std::function<bool (const std::string&, const std::string&)> callback,
                        const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
 
-    logger->log_debug("Performing file listing against %s", dir);
+    if (logger)
+      logger->log_debug("Performing file listing against %s", dir);
 #ifndef WIN32
     DIR *d = opendir(dir.c_str());
     if (!d) {
-      logger->log_warn("Failed to open directory: %s", dir.c_str());
+      if (logger)
+        logger->log_warn("Failed to open directory: %s", dir.c_str());
       return;
     }
 
@@ -394,6 +396,7 @@ class FileUtils {
 
       struct stat statbuf;
       if (stat(path.c_str(), &statbuf) != 0) {
+        if (logger)
         logger->log_warn("Failed to stat %s", path);
         continue;
       }
@@ -418,6 +421,7 @@ class FileUtils {
     hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData);
 
     if(hFind == INVALID_HANDLE_VALUE) {
+      if (logger)
       logger->log_warn("Failed to open directory: %s", dir.c_str());
       return;
     }
@@ -426,7 +430,8 @@ class FileUtils {
       struct _stat statbuf {};
       if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
         std::string path = dir + get_separator() + FindFileData.cFileName;
-        if (_stat(path.c_str(), &statbuf) != 0) {
+        if (stat(path.c_str(), &statbuf) != 0) {
+          if (logger)
           logger->log_warn("Failed to stat %s", path);
           continue;
         }

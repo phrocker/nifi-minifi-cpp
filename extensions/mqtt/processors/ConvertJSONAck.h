@@ -96,6 +96,7 @@ class ConvertJSONAck : public ConvertBase {
   std::shared_ptr<logging::Logger> logger_;
 };
 
+REGISTER_RESOURCE(ConvertJSONAck, "Converts JSON acks into an MQTT consumable by MQTTC2Protocol")
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

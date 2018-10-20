@@ -1,0 +1,19 @@
+## ConvertJSONAck
+
+### Description 
+
+Converts JSON acks into an MQTT consumable by MQTTC2Protocol
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Listening Topic|||Name of topic to listen to|
+|MQTT Controller Service|||Name of controller service that will be used for MQTT interactivity|
+### Properties 
+
+| Name | Description |
+| - | - |
+|success|All files are routed to success|
+

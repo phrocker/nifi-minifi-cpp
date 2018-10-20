@@ -1,0 +1,29 @@
+## PublishMQTT
+
+### Description 
+
+PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|Broker URI|||The URI to use to connect to the MQTT broker|
+|Client ID|||MQTT client ID to use|
+|Connection Timeout|30 sec||Maximum time interval the client will wait for the network connection to the MQTT server|
+|Keep Alive Interval|60 sec||Defines the maximum time interval between messages sent or received|
+|Max Flow Segment Size|||Maximum flow content payload segment size for the MQTT record|
+|Password|||Password to use when connecting to the broker|
+|Quality of Service|MQTT_QOS_0||The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'|
+|Retain|false||Retain MQTT published record in broker|
+|Session state|true||Whether to start afresh or resume previous flows. See the allowable value descriptions for more details|
+|Topic|||The topic to publish the message to|
+|Username|||Username to use when connecting to the broker|
+### Properties 
+
+| Name | Description |
+| - | - |
+|failure|FlowFiles that failed to send to the destination are transferred to this relationship|
+|success|FlowFiles that are sent successfully to the destination are transferred to this relationship|
+

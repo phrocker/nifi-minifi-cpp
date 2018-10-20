@@ -1,0 +1,42 @@
+## FetchSFTP
+
+### Description 
+
+Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|**Completion Strategy**|None|Delete File<br>Move File<br>None<br>|Specifies what to do with the original file on the server once it has been pulled into NiFi. If the Completion Strategy fails, a warning will be logged but the data will still be transferred.|
+|**Connection Timeout**|30 sec||Amount of time to wait before timing out while creating a connection|
+|**Create Directory**|false||Specifies whether or not the remote directory should be created if it does not exist.|
+|**Data Timeout**|30 sec||When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems|
+|Disable Directory Listing|false||Control how 'Move Destination Directory' is created when 'Completion Strategy' is 'Move File' and 'Create Directory' is enabled. If set to 'true', directory listing is not performed prior to create missing directories. By default, this processor executes a directory listing command to see target directory existence before creating missing directories. However, there are situations that you might need to disable the directory listing such as the following. Directory listing might fail with some permission setups (e.g. chmod 100) on a directory. Also, if any other SFTP client created the directory after this processor performed a listing and before a directory creation request by this processor is finished, then an error is returned because the directory already exists.|
+|Host Key File|||If supplied, the given file will be used as the Host Key; otherwise, no use host key file will be used|
+|**Hostname**|||The fully qualified hostname or IP address of the remote system<br/>**Supports Expression Language: true**|
+|Http Proxy Password|||Http Proxy Password<br/>**Supports Expression Language: true**|
+|Http Proxy Username|||Http Proxy Username<br/>**Supports Expression Language: true**|
+|Move Destination Directory|||The directory on the remote server to move the original file to once it has been ingested into NiFi. This property is ignored unless the Completion Strategy is set to 'Move File'. The specified directory must already exist on the remote system if 'Create Directory' is disabled, or the rename will fail.<br/>**Supports Expression Language: true**|
+|Password|||Password for the user account<br/>**Supports Expression Language: true**|
+|**Port**|||The port that the remote system is listening on for file transfers<br/>**Supports Expression Language: true**|
+|Private Key Passphrase|||Password for the private key<br/>**Supports Expression Language: true**|
+|Private Key Path|||The fully qualified path to the Private Key file<br/>**Supports Expression Language: true**|
+|Proxy Host|||The fully qualified hostname or IP address of the proxy server<br/>**Supports Expression Language: true**|
+|Proxy Port|||The port of the proxy server<br/>**Supports Expression Language: true**|
+|Proxy Type|DIRECT|DIRECT<br>HTTP<br>SOCKS<br>|Specifies the Proxy Configuration Controller Service to proxy network requests. If set, it supersedes proxy settings configured per component. Supported proxies: HTTP + AuthN, SOCKS + AuthN|
+|**Remote File**|||The fully qualified filename on the remote system<br/>**Supports Expression Language: true**|
+|**Send Keep Alive On Timeout**|true||Indicates whether or not to send a single Keep Alive message when SSH socket times out|
+|**Strict Host Key Checking**|false||Indicates whether or not strict enforcement of hosts keys should be applied|
+|**Use Compression**|false||Indicates whether or not ZLIB compression should be used when transferring files|
+|**Username**|||Username<br/>**Supports Expression Language: true**|
+### Properties 
+
+| Name | Description |
+| - | - |
+|comms.failure|Any FlowFile that could not be fetched from the remote server due to a communications failure will be transferred to this Relationship.|
+|not.found|Any FlowFile for which we receive a 'Not Found' message from the remote server will be transferred to this Relationship.|
+|permission.denied|Any FlowFile that could not be fetched from the remote server due to insufficient permissions will be transferred to this Relationship.|
+|success|All FlowFiles that are received are routed to success|
+

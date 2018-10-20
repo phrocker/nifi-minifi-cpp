@@ -82,6 +82,8 @@ private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
+REGISTER_RESOURCE(ConvertUpdate, "onverts update messages into the appropriate RESTFul call")
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

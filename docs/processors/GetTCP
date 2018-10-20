@@ -1,0 +1,25 @@
+## GetTCP
+
+### Description 
+
+Establishes a TCP Server that defines and retrieves one or more byte messages from clients
+### Properties 
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description | 
+| - | - | - | - | 
+|SSL Context Service|||SSL Context Service Name|
+|Stay Connected|true||Determines if we keep the same socket despite having no data|
+|concurrent-handler-count|1||Number of concurrent handlers for this session|
+|connection-attempt-timeout|3||Maximum number of connection attempts before attempting backup hosts, if configured|
+|end-of-message-byte|13||Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'.|
+|**endpoint-list**|||A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.|
+|receive-buffer-size|16 MB||The size of the buffer to receive data in. Default 16384 (16MB).|
+### Properties 
+
+| Name | Description |
+| - | - |
+|partial|Indicates an incomplete message as a result of encountering the end of message byte trigger|
+|success|All files are routed to success|
+
