@@ -25,7 +25,6 @@
 #include <vector>
 #include <mutex>
 #include <iostream>
-#include <string>
 #include <sstream>
 
 #define TRACE_BUFFER_SIZE 128
@@ -109,7 +108,12 @@ class TraceResolver {
    * @returns BackTrace instance
    */
   BackTrace &&getBackTrace(const std::string &thread_name) {
+#ifdef WIN32
+	  // currrently not supported in windows
+	  return BackTrace(thread_name);
+#else
     return std::move(getBackTrace(thread_name, pthread_self()));
+#endif
   }
 
   /**
