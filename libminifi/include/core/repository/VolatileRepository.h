@@ -27,6 +27,7 @@
 #include "Connection.h"
 #include "utils/StringUtils.h"
 #include "AtomicRepoEntries.h"
+#include "concurrentqueue.h"
 
 namespace org {
 namespace apache {
@@ -133,8 +134,9 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
  protected:
 
   virtual void emplace(RepoValue<T> &old_value) {
-    std::lock_guard<std::mutex> lock(purge_mutex_);
-    purge_list_.push_back(old_value.getKey());
+    //std::lock_guard<std::mutex> lock(purge_mutex_);
+//    purge_list_.push_back(old_value.getKey());
+    purge_queue_.enqueue(old_value.getKey());
   }
 
   /**
@@ -165,9 +167,11 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
 
   bool purge_required_;
 
-  std::mutex purge_mutex_;
+//  std::mutex purge_mutex_;
   // purge list
-  std::vector<T> purge_list_;
+
+  moodycamel::ConcurrentQueue<T> purge_queue_;
+
 
  private:
   std::shared_ptr<logging::Logger> logger_;

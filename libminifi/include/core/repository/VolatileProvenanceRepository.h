@@ -47,7 +47,8 @@ class VolatileProvenanceRepository : public VolatileRepository<std::string> {
   }
  protected:
   virtual void emplace(RepoValue<std::string> &old_value) {
-    purge_list_.push_back(old_value.getKey());
+    purge_queue_.enqueue(old_value.getKey());
+   // purge_list_.push_back(old_value.getKey());
   }
  private:
 

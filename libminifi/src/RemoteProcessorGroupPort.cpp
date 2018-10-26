@@ -240,6 +240,7 @@ void RemoteProcessorGroupPort::onTrigger(const std::shared_ptr<core::ProcessCont
     if (!protocol_->transfer(direction_, context, session)) {
       logger_->log_warn("protocol transmission failed, yielding");
       context->yield();
+      return;
     }
 
     returnProtocol(std::move(protocol_));
