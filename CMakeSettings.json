@@ -2,7 +2,7 @@
   // See https://go.microsoft.com//fwlink//?linkid=834763 for more information about this file.
   "configurations": [
        {
-      "name": "x64-Debug",
+      "name": "x64-Debug2",
       "generator": "Visual Studio 14 2015 Win64",
       "configurationType": "Debug",
       "inheritEnvironments": [ "msvc_x64_x64" ],
@@ -45,6 +45,10 @@
           },
           {
             "name": "ENABLE_WEL",
+            "value": "TRUE"
+          },
+          {
+            "name": "ENABLE_SQL",
             "value": "TRUE"
           },
           {
@@ -115,6 +119,10 @@
         },
         {
           "name": "ENABLE_WEL",
+          "value": "TRUE"
+        },
+        {
+          "name": "ENABLE_SQL",
           "value": "TRUE"
         },
         {

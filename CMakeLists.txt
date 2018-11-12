@@ -415,6 +415,11 @@ option(ENABLE_WEL "Enables the suite of Windows Event Log extensions." OFF)
 if (ENABLE_ALL OR ENABLE_WEL)
 	createExtension(WEL-EXTENSION "WEL EXTENSIONS" "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log" "${TEST_DIR}/windows-event-log-tests")
 endif()
+option(ENABLE_SQL "Enables the SQL Extensions." OFF)
+if (ENABLE_ALL OR ENABLE_SQL)
+	createExtension(MSSQL-EXTENSION "MSSQL EXTENSIONS" "Enables the SQL Extensions." "extensions/windows-mssql" "${TEST_DIR}/windows-event-log-tests")
+endif()
+
 endif(WIN32)
 
 ## Create MQTT Extension
