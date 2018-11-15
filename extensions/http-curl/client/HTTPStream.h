@@ -59,6 +59,7 @@ class HttpStream : public io::BaseStream {
 
   void forceClose() {
     if (started_) {
+    	std::lock_guard<std::mutex> lock(mutex_);
     	std::cout << "Force close" << std::endl;
       closeStream();
       http_client_->forceClose();
