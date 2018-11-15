@@ -113,7 +113,7 @@ int HttpStream::readData(uint8_t *buf, int buflen) {
         started_ = true;
       }
     }
-
+    std::cout << "call" << std::addressof(http_read_callback_) << std::endl;
     return http_read_callback_.readFully((char*) buf, buflen);
 
   } else {
