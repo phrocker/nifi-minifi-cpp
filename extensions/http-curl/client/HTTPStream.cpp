@@ -45,6 +45,7 @@ HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
 
 void HttpStream::closeStream() {
   http_callback_.close();
+  std::cout << "closing " << std::addressof(http_read_callback_) << std::endl;
   http_read_callback_.close();
 }
 
