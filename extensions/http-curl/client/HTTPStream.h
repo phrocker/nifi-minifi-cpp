@@ -63,6 +63,7 @@ class HttpStream : public io::BaseStream {
     	std::cout << "Force close" << std::endl;
       closeStream();
       http_client_->forceClose();
+      std::cout << "forceClosing " << std::addressof(http_client_future_) << std::endl;
       if (http_client_future_.valid()) {
         http_client_future_.get();
       } else {

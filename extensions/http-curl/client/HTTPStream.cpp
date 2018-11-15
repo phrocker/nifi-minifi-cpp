@@ -112,6 +112,7 @@ int HttpStream::readData(uint8_t *buf, int buflen) {
         read_callback_.pos = 0;
         http_client_->setReadCallback(&read_callback_);
         http_client_future_ = std::async(submit_read_client, http_client_, &http_read_callback_);
+        std::cout << "creating " << std::addressof(http_client_future_) << std::endl;
         started_ = true;
       }
     }
