@@ -129,7 +129,7 @@ void IntegrationBase::run(std::string test_file_location) {
   controller->start();
   waitToVerifyProcessor();
 
-  controller->waitUnload(wait_time_);
+  controller->unload();
 
   runAssertions();
 
