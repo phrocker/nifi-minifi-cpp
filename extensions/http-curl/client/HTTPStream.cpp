@@ -71,7 +71,7 @@ int HttpStream::writeData(uint8_t *value, int size) {
         callback_.ptr = &http_callback_;
         callback_.pos = 0;
         http_client_->setUploadCallback(&callback_);
-        http_client_future_ = std::async(submit_client, http_client_);
+        http_client_future_ = std::async( std::launch::async ,submit_client, http_client_);
         started_ = true;
       }
     }
@@ -111,7 +111,7 @@ int HttpStream::readData(uint8_t *buf, int buflen) {
         read_callback_.ptr = &http_read_callback_;
         read_callback_.pos = 0;
         http_client_->setReadCallback(&read_callback_);
-        http_client_future_ = std::async(submit_read_client, http_client_, &http_read_callback_);
+        http_client_future_ = std::async( std::launch::async , submit_read_client, http_client_, &http_read_callback_);
         std::cout << "creating " << std::addressof(http_client_future_) << std::endl;
         started_ = true;
       }
