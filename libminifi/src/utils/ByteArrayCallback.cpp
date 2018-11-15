@@ -151,6 +151,7 @@ bool ByteOutputCallback::preload_next_str() {
     std::unique_lock<std::recursive_mutex> lock(vector_lock_);
     if (queue_.size_approx() == 0 && current_str.length() == 0) {
       spinner_.wait(lock, [&] {
+    	  std::cout << "is awake" << is_alive_.load() << std::endl;
         return queue_.size_approx() > 0 || !is_alive_;});
     }
 
