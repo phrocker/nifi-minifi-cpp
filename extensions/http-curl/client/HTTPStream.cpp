@@ -107,6 +107,7 @@ int HttpStream::readData(uint8_t *buf, int buflen) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
       if (!started_) {
+    	  std::cout << "posj" << std::endl;
         read_callback_.ptr = &http_read_callback_;
         read_callback_.pos = 0;
         http_client_->setReadCallback(&read_callback_);
