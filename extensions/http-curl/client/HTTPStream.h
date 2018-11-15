@@ -59,6 +59,7 @@ class HttpStream : public io::BaseStream {
 
   void forceClose() {
     if (started_) {
+    	std::cout << "Force close" << std::endl;
       closeStream();
       http_client_->forceClose();
       if (http_client_future_.valid()) {
@@ -128,6 +129,7 @@ class HttpStream : public io::BaseStream {
     if (client == nullptr)
       return false;
     bool submit_status = client->submit();
+    std::cout << "close" << std::addressof(callback) << std::endl;
     callback->close();
     return submit_status;
   }
