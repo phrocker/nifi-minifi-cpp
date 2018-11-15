@@ -59,6 +59,7 @@ const std::vector<char> ByteOutputCallback::to_string() {
 }
 
 void ByteOutputCallback::close() {
+  std::unique_lock<std::recursive_mutex> lock(vector_lock_);
   is_alive_ = false;
   spinner_.notify_all();
 }
