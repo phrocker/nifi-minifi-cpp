@@ -44,6 +44,10 @@ class IntegrationBase {
 
   virtual void testSetup() = 0;
 
+  virtual void shutdownBeforeFlowController(){
+
+  }
+
   virtual void cleanup() = 0;
 
   virtual void runAssertions() = 0;
@@ -129,6 +133,7 @@ void IntegrationBase::run(std::string test_file_location) {
   controller->start();
   waitToVerifyProcessor();
 
+  shutdownBeforeFlowController();
   controller->unload();
 
   runAssertions();
