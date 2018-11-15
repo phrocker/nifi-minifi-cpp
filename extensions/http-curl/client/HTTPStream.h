@@ -126,6 +126,7 @@ class HttpStream : public io::BaseStream {
   }
 
   static bool submit_read_client(std::shared_ptr<utils::HTTPClient> client, utils::ByteOutputCallback *callback) {
+	  std::cout << "ahh" << std::endl;
     if (client == nullptr)
       return false;
     std::cout << "submit for" << std::addressof(callback) << std::endl;
