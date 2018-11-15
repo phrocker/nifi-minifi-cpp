@@ -31,7 +31,7 @@
 
 class IntegrationBase {
  public:
-  IntegrationBase();
+  IntegrationBase(uint64_t waitTime=60000);
 
   virtual ~IntegrationBase();
 
@@ -60,12 +60,13 @@ class IntegrationBase {
 
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
+  uint64_t wait_time_;
   std::string port, scheme, path;
   std::string key_dir;
 };
 
-IntegrationBase::IntegrationBase() 
-  : configuration(std::make_shared<minifi::Configure>()) {
+IntegrationBase::IntegrationBase(uint64_t waitTime)
+  : configuration(std::make_shared<minifi::Configure>()), wait_time_(waitTime) {
   mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
@@ -128,7 +129,7 @@ void IntegrationBase::run(std::string test_file_location) {
   controller->start();
   waitToVerifyProcessor();
 
-  controller->waitUnload(60000);
+  controller->waitUnload(wait_time_);
 
   runAssertions();
 

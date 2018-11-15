@@ -34,7 +34,7 @@ int ssl_enable(void *ssl_context, void *user_data) {
 
 class HTTPIntegrationBase : public IntegrationBase {
  public:
-  HTTPIntegrationBase() : IntegrationBase(), server(nullptr) {}
+  HTTPIntegrationBase(uint64_t waitTime = 60000) : IntegrationBase(waitTime), server(nullptr) {}
 
   void setUrl(std::string url, CivetHandler *handler);
 
