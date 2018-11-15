@@ -99,6 +99,7 @@ HTTPClient::~HTTPClient() {
     curl_easy_cleanup(http_session_);
     http_session_ = nullptr;
   }
+  forceClose();
   read_callback_.close();
   logger_->log_trace("Closing HTTPClient for %s", url_);
 }
