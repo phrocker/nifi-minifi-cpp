@@ -23,7 +23,7 @@ namespace nifi {
 namespace minifi {
 namespace coap {
 
-
+std::map<coap_resource_t*, std::function<int(CoapQuery)>> CoapServer::functions_;
 CoapServer::~CoapServer() {
   if(server_){
     free_server(server_);

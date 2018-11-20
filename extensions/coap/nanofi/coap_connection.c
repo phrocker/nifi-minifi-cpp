@@ -19,6 +19,7 @@
 
 
 CoAPPDU *create_connection(uint8_t type, const char * const server, const char * const endpoint, int port, const CoAPMessage * const message) {
+  printf("ahhh0");
   CoAPPDU *pdu = (CoAPPDU*)malloc(sizeof(CoAPPDU));
 
   pdu->ctx = NULL;
@@ -100,11 +101,12 @@ CoAPPDU *create_connection(uint8_t type, const char * const server, const char *
 
   // send the PDU using the session.
   coap_send(pdu->session, request);
-
+  printf("ahhh2");
   return pdu;
 }
 
 int8_t send_pdu(const CoAPPDU * const pdu) {
+  printf("ahhh");
   uint64_t wait_ms = 1 * 1000;
   // run once will attempt to send the first time
   int runResponse = coap_run_once(pdu->ctx, wait_ms);

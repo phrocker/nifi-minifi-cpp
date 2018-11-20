@@ -164,8 +164,9 @@ CoAPResponse CoapConnectorService::sendPayload(uint8_t type, const std::string &
    }
    */
   auto pdu = create_connection(type, host_.c_str(), endpoint.c_str(), port_, message);
-
+  std::cout << "167" << std::endl;
   send_pdu(pdu);
+  std::cout << "169" << std::endl;
 /*
   CoAPResponse response(-1);
   std::lock_guard<std::mutex> lock(connector_mutex_);

@@ -182,7 +182,7 @@ class CoapMessaging {
   /**
    * Determines if the pointer is present in the internal map.
    */
-  bool hasResponse(coap_context_t *ctx) {
+  bool hasResponse(coap_context_t *ctx) const {
     std::lock_guard<std::mutex> lock(connector_mutex_);
     return messages_.find(ctx) != messages_.end();
   }
@@ -218,19 +218,18 @@ class CoapMessaging {
  private:
   CoapMessaging() {
     callback_pointers ptrs;
-        ptrs.data_received = receiveMessage;
-        ptrs.received_error = receiveError;
-        init_coap_api(&CoapMessaging::getInstance(), &ptrs);
+    ptrs.data_received = receiveMessage;
+    ptrs.received_error = receiveError;
+    init_coap_api(this, &ptrs);
 
   }
   // connector
-  std::mutex connector_mutex_;
+  mutable std::mutex connector_mutex_;
   // map of messages based on the context. We only allow a single message per context
   // at any given time.
   std::unordered_map<coap_context_t*, CoAPResponse> messages_;
 
 };
-
 
 } /* namespace controllers */
 } /* namespace coap */

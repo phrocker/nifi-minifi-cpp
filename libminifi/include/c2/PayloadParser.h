@@ -110,11 +110,14 @@ class PayloadParser {
 
   inline PayloadParser in(const std::string &payload) {
     for (const auto &pl : ref_.getNestedPayloads()) {
+      std::cout << "payload is " << pl.getLabel() << std::endl;
       if (pl.getLabel() == payload) {
-        return PayloadParser(ref_);
+        return PayloadParser(pl);
       }
     }
-    throw ParseException("Invalid payload");
+    std::stringstream ss;
+    ss << "Invalid payload. Could not find " << payload;
+    throw ParseException(ss.str());
   }
 
   template<typename Functor>
@@ -132,7 +135,9 @@ class PayloadParser {
         return convert_if<T>(exists->second.getValue())();
       }
     }
-    throw ParseException("Invalid payload");
+    std::stringstream ss;
+    ss << "Invalid Field. Could not find " << field << " in " << ref_.getLabel();
+    throw ParseException(ss.str());
   }
 
   template<typename T>

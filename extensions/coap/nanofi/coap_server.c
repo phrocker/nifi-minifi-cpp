@@ -38,7 +38,7 @@ CoAPEndpoint *const create_endpoint(CoAPServer * const server, const char * cons
   memset(endpoint,0x00, sizeof(CoAPEndpoint));
   endpoint->server = server;
   endpoint->resource = coap_resource_init(coap_make_str_const(resource_path), COAP_RESOURCE_FLAGS_NOTIFY_CON);
-  add_endpoint(endpoint,method,handler);
+  assert( !add_endpoint(endpoint,method,handler) );
   return endpoint;
 
 }

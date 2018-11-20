@@ -45,11 +45,12 @@
 #include "RemoteProcessorGroupPort.h"
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
-#include "TestServer.h"
 #include "c2/C2Agent.h"
 #include "protocols/RESTReceiver.h"
 #include "HTTPIntegrationBase.h"
 #include "processors/LogAttribute.h"
+#include "CoapC2Protocol.h"
+#include "CoapServer.h"
 
 class Responder : public CivetHandler {
  public:
@@ -80,11 +81,12 @@ class VerifyCoAPServer : public HTTPIntegrationBase {
 
   void testSetup() {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
+    LogTestController::getInstance().setOff<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
-    LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
+    LogTestController::getInstance().setTrace<minifi::coap::c2::CoapProtocol>();
+    LogTestController::getInstance().setOff<processors::LogAttribute>();
+    LogTestController::getInstance().setOff<minifi::core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
@@ -114,17 +116,27 @@ class VerifyCoAPServer : public HTTPIntegrationBase {
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
     std::string port, scheme, path;
+
     parse_http_components(url, port, scheme, path);
+    std::cout << "created port " << port << std::endl;
+    server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1",std::stoi(port)));
+    server->add_endpoint("heartbeat",minifi::coap::METHOD::POST, [](minifi::coap::CoapQuery)->int{
+      std::cout << "got heartbeat!" << std::endl;
+      return 0;
+
+    });
     configuration->set("c2.enable", "true");
     configuration->set("c2.agent.class", "test");
+    configuration->set("nifi.c2.root.classes","DeviceInfoNode,AgentInformation,FlowInformation,RepositoryMetrics");
     configuration->set("nifi.c2.agent.protocol.class", "CoapProtocol");
-    configuration->set("nifi.c2.agent.coap.host","localhost");
+    configuration->set("nifi.c2.agent.coap.host","127.0.0.1");
     configuration->set("nifi.c2.agent.coap.port", port);
     configuration->set("c2.agent.heartbeat.period", "10");
     configuration->set("c2.rest.listener.heartbeat.rooturi", path);
   }
 
  protected:
+  std::unique_ptr<minifi::coap::CoapServer> server;
   bool isSecure;
   char *dir;
   std::stringstream ss;
@@ -142,6 +154,7 @@ int main(int argc, char **argv) {
   if (url.find("https") != std::string::npos) {
     isSecure = true;
   }
+
 
   VerifyCoAPServer harness(isSecure);
 

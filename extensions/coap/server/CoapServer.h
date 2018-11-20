@@ -35,6 +35,25 @@ enum METHOD {
   PUT,
   DELETE
 };
+
+class CoapQuery {
+ public:
+  CoapQuery(const std::string &query, CoAPMessage * const message)
+      : query_(query),
+        message_(message) {
+
+  }
+  virtual ~CoapQuery() {
+    free_coap_message(message_);
+  }
+  CoapQuery(const CoapQuery &qry) = delete;
+  CoapQuery(CoapQuery &&qry) = default;
+
+ protected:
+  std::string query_;
+  CoAPMessage * const message_;
+};
+
 class CoapServer : public core::Connectable {
  public:
   explicit CoapServer(const std::string &name, const utils::Identifier &uuid)
@@ -55,7 +74,7 @@ class CoapServer : public core::Connectable {
 
   virtual ~CoapServer();
 
-  void add_endpoint(const std::string &path, METHOD method, std::function<int(CoAPMessage*)> functor) {
+  void add_endpoint(const std::string &path, METHOD method, std::function<int(CoapQuery)> functor) {
     unsigned char mthd = 0;
     switch (method) {
       case GET:
@@ -71,25 +90,53 @@ class CoapServer : public core::Connectable {
         mthd = COAP_REQUEST_DELETE;
         break;
     }
-    coap_method_handler_t ptr = CoapServer::hnd_get_time;
-    endpoints_.emplace_back(create_endpoint(server_, path.c_str(), mthd, ptr));
+    CoAPEndpoint * const endpoint = create_endpoint(server_, path.c_str(), mthd, hnd_get_time);
+    functions_.insert(std::make_pair(endpoint->resource, functor));
+    endpoints_.emplace_back(endpoint);
   }
+
+
+  /**
+   * Determines if we are connected and operating
+   */
+  virtual bool isRunning() {
+    return true;
+  }
+
+  /**
+   * Block until work is available on any input connection, or the given duration elapses
+   * @param timeoutMs timeout in milliseconds
+   */
+  void waitForWork(uint64_t timeoutMs);
+
+  virtual void yield() {
+
+  }
+
+  /**
+   * Determines if work is available by this connectable
+   * @return boolean if work is available.
+   */
+  virtual bool isWorkAvailable() {
+    return true;
+  }
+
 
  protected:
 
-  static void hnd_get_time(coap_context_t  *ctx ,
-               struct coap_resource_t *resource,
-               coap_session_t *session,
-               coap_pdu_t *request,
-               coap_binary_t *token,
-               coap_string_t *query,
-               coap_pdu_t *response){
-
+  static void hnd_get_time(coap_context_t *ctx, struct coap_resource_t *resource, coap_session_t *session, coap_pdu_t *request, coap_binary_t *token, coap_string_t *query, coap_pdu_t *response) {
+    std::cout << "get" << std::endl;
+    auto fx = functions_.find(resource);
+    if (fx != functions_.end()) {
+      auto message = create_coap_message(response);
+      // call the UDF
+      fx->second(CoapQuery(std::string((const char*)query->s, query->length), message));
+    }
   }
 
   std::string hostname_;
   CoAPServer *server_;
-  std::map<CoAPEndpoint*,std::function<int(CoAPMessage*)>> functions_;
+  static std::map<coap_resource_t*, std::function<int(CoapQuery)>> functions_;
   std::vector<CoAPEndpoint*> endpoints_;
   uint16_t port_;
 };

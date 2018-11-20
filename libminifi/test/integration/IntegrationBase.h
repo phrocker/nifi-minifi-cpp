@@ -123,7 +123,7 @@ void IntegrationBase::run(std::string test_file_location) {
 
   shutdownBeforeFlowController();
   controller->unload();
-
+  // removed controller->waitUnload(wait_time_);
   runAssertions();
 
   cleanup();

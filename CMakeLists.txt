@@ -412,7 +412,7 @@ endif()
 
 option(ENABLE_COAP "Enables the GPS extension." ON)
 if (ENABLE_ALL OR ENABLE_COAP)
-	createExtension(COAP-EXTENSION "COAP EXTENSIONS" "Enables LibCOAP Functionality." "extensions/coap" ""extensions/coap/tests/"")
+	createExtension(COAP-EXTENSION "COAP EXTENSIONS" "Enables LibCOAP Functionality." "extensions/coap" "extensions/coap/tests/")
 endif()
 
 if (WIN32)

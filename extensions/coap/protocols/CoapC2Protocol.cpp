@@ -322,6 +322,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       payload_type = 1;
       stream.write(&payload_type, 1);
       if (writeHeartbeat(&stream, payload) != 0) {
+        logger_->log_error("Could not write heartbeat");
         return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR, true);
       }
       break;
