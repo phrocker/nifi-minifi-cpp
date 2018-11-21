@@ -26,7 +26,6 @@ TEST_CASE("Test Valid Payload", "[tv1]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  //C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
   minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
@@ -41,7 +40,6 @@ TEST_CASE("Test Invalid not found", "[tv2]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  //C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
   minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
@@ -57,7 +55,6 @@ TEST_CASE("Test Invalid coercion", "[tv3]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  //C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
   minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
@@ -72,7 +69,6 @@ TEST_CASE("Test Invalid not there", "[tv4]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  //C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
   minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
@@ -89,7 +85,6 @@ TEST_CASE("Test typed conversions", "[tv5]") {
   std::string chips = "chips";
   uint64_t size = 233;
   bool isvalid = false;
-  //C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
   minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
@@ -109,7 +104,6 @@ TEST_CASE("Test Invalid not there deep", "[tv6]") {
   std::string ident = "identifier";
   std::string cheese = "cheese";
   std::string chips = "chips";
-  //C2Payload(Operation op, std::string identifier, bool resp = false, bool isRaw = false);
   minifi::c2::C2Payload payload(minifi::c2::Operation::ACKNOWLEDGE, ident);
   minifi::c2::C2Payload payload2(minifi::c2::Operation::ACKNOWLEDGE, minifi::state::UpdateState::FULLY_APPLIED, cheese);
   minifi::c2::C2ContentResponse response(minifi::c2::Operation::ACKNOWLEDGE);
