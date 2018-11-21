@@ -99,6 +99,9 @@ class VerifyCoAPServer : public HTTPIntegrationBase {
   }
 
   void runAssertions() {
+
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
     assert(LogTestController::getInstance().contains("Import offset 0") == true);
 
     assert(LogTestController::getInstance().contains("Outputting success and response") == true);
@@ -118,19 +121,44 @@ class VerifyCoAPServer : public HTTPIntegrationBase {
     std::string port, scheme, path;
 
     parse_http_components(url, port, scheme, path);
-    std::cout << "created port " << port << std::endl;
-    server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1",std::stoi(port)));
+    auto new_port_str = std::to_string(std::stoi(port)+1);
+    std::cout << "created port " << new_port_str << std::endl;
+    server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1",std::stoi(port)+1));
+
+    server->add_endpoint(minifi::coap::METHOD::POST, [](minifi::coap::CoapQuery)->int{
+        std::cout << "got heartbeat!" << std::endl;
+        return 0;
+
+      });
+
+
+    server->add_endpoint("heartbeat",minifi::coap::METHOD::GET, [](minifi::coap::CoapQuery)->int{
+      std::cout << "got heartbeat!" << std::endl;
+      return 0;
+
+    });
+
+
     server->add_endpoint("heartbeat",minifi::coap::METHOD::POST, [](minifi::coap::CoapQuery)->int{
       std::cout << "got heartbeat!" << std::endl;
       return 0;
 
     });
+
+
+    server->add_endpoint("acknowledge",minifi::coap::METHOD::POST, [](minifi::coap::CoapQuery)->int{
+      std::cout << "got acknowledge!" << std::endl;
+      return 0;
+
+    });
+
+    server->start();
     configuration->set("c2.enable", "true");
     configuration->set("c2.agent.class", "test");
     configuration->set("nifi.c2.root.classes","DeviceInfoNode,AgentInformation,FlowInformation,RepositoryMetrics");
     configuration->set("nifi.c2.agent.protocol.class", "CoapProtocol");
     configuration->set("nifi.c2.agent.coap.host","127.0.0.1");
-    configuration->set("nifi.c2.agent.coap.port", port);
+    configuration->set("nifi.c2.agent.coap.port", new_port_str);
     configuration->set("c2.agent.heartbeat.period", "10");
     configuration->set("c2.rest.listener.heartbeat.rooturi", path);
   }

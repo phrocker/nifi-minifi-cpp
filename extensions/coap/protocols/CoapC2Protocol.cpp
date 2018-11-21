@@ -146,9 +146,11 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
         }
         stream->write(running);
       });
-
+      size = queueParser.getSize();
+      stream->write(size);
       queueParser.foreach([this, stream](const minifi::c2::C2Payload &component) {
         auto myParser = minifi::c2::PayloadParser::getInstance(component);
+        std::cout << "writing queue "  <<  component.getLabel() << std::endl;
         stream->writeUTF(component.getLabel());
         uint64_t datasize = 0, datasizemax = 0, qsize = 0, sizemax = 0;
         try {
@@ -337,7 +339,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   msg.data_ = const_cast<uint8_t *>(stream.getBuffer());
   msg.size_ = bsize;
 
-  coap::controllers::CoAPResponse message(coap_service_->sendPayload(COAP_REQUEST_POST, endpoint, &msg));
+  coap::controllers::CoAPResponse message = coap_service_->sendPayload(COAP_REQUEST_POST, endpoint, &msg);
 
   if (isRegistrationMessage(message)) {
     require_registration_ = true;

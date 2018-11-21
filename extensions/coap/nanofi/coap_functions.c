@@ -78,8 +78,15 @@ int create_endpoint_context(coap_context_t **ctx, const char *node, const char *
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;  // ipv4 or ipv6
-  hints.ai_socktype = COAP_PROTO_RELIABLE(proto) ? SOCK_STREAM : SOCK_DGRAM;
-  hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST | AI_NUMERICSERV | AI_ALL;
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST ;
+
+  coap_address_t   serv_addr;
+  coap_address_init(&serv_addr);
+    serv_addr.addr.sin.sin_family      = AF_INET;
+    serv_addr.addr.sin.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.addr.sin.sin_port        = htons(9889); //default port
+
 
   int getaddrres = getaddrinfo(node, port, &hints, &result);
   if (getaddrres != 0) {
@@ -95,9 +102,9 @@ int create_endpoint_context(coap_context_t **ctx, const char *node, const char *
       addr.size = rp->ai_addrlen;
       memcpy(&addr.addr, rp->ai_addr, rp->ai_addrlen);
 
-      *ctx = coap_new_context(0x00);
+      *ctx = coap_new_context(&serv_addr);
 
-      coap_endpoint_t * ep_udp = coap_new_endpoint(ctx, &addr, COAP_PROTO_UDP);
+      coap_endpoint_t * ep_udp = coap_new_endpoint(ctx, &serv_addr, COAP_PROTO_UDP);
 
       if (*ctx && ep_udp) {
         freeaddrinfo(result);
