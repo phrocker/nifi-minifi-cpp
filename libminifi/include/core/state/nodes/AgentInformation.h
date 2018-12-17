@@ -390,7 +390,7 @@ class AgentStatus : public StateMonitorNode {
 
       for (auto &repo : repositories_) {
         SerializedResponseNode repoNode;
-
+        repoNode.collapsible = false;
         repoNode.name = repo.first;
 
         SerializedResponseNode queuesize;
@@ -415,7 +415,7 @@ class AgentStatus : public StateMonitorNode {
 
       for (auto component : components) {
         SerializedResponseNode componentNode;
-
+        componentNode.collapsible = false; // these may have the same name.
         componentNode.name = component->getComponentName();
 
         SerializedResponseNode componentStatusNode;

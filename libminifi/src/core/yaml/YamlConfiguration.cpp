@@ -119,6 +119,7 @@ void YamlConfiguration::parseProcessorNodeYaml(YAML::Node processorsNode, core::
           logger_->log_error("Could not create a processor %s with id %s", procCfg.name, procCfg.id);
           throw std::invalid_argument("Could not create processor " + procCfg.name);
         }
+
         processor->setName(procCfg.name);
 
         processor->setFlowIdentifier(flow_version_->getFlowIdentifier());

@@ -187,11 +187,12 @@ class FlowInformation : public FlowMonitor {
 
     if (!connections_.empty()) {
       SerializedResponseNode queues;
-
+      queues.collapsible = false;
       queues.name = "queues";
 
       for (auto &queue : connections_) {
         SerializedResponseNode repoNode;
+        repoNode.collapsible = false;
         repoNode.name = queue.first;
 
         SerializedResponseNode queuesize;
@@ -224,12 +225,12 @@ class FlowInformation : public FlowMonitor {
     if (nullptr != monitor_) {
       auto components = monitor_->getAllComponents();
       SerializedResponseNode componentsNode;
-
+      componentsNode.collapsible = false;
       componentsNode.name = "components";
 
       for (auto component : components) {
         SerializedResponseNode componentNode;
-
+        componentNode.collapsible = false;
         componentNode.name = component->getComponentName();
 
         SerializedResponseNode componentStatusNode;

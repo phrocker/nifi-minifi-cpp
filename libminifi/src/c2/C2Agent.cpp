@@ -325,7 +325,8 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
       C2ContentResponse response(metric_payload.getOperation());
       response.name = name;
       response.operation_arguments[metric.name] = metric.value;
-      metric_payload.addContent(std::move(response));
+      std::cout << name << " is collapsible ? " << metric.collapsible << std::endl;
+      metric_payload.addContent(std::move(response), metric.collapsible);
     }
   }
 }

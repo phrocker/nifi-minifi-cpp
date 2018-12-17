@@ -146,21 +146,13 @@ const std::vector<C2ContentResponse> &C2Payload::getContent() const {
   return content_;
 }
 
-void C2Payload::addContent(const C2ContentResponse &&content) {
-  for (auto &existing_content : content_) {
-    if (existing_content.name == content.name) {
-      for (auto subcontent : existing_content.operation_arguments) {
+void C2Payload::addContent(const C2ContentResponse &&content, bool collapsible) {
+  if (collapsible) {
+    for (auto &existing_content : content_) {
+      if (existing_content.name == content.name) {
+        existing_content.operation_arguments.insert(content.operation_arguments.begin(), content.operation_arguments.end());
+        return;
       }
-
-      for (auto subcontent : content.operation_arguments) {
-      }
-
-      existing_content.operation_arguments.insert(content.operation_arguments.begin(), content.operation_arguments.end());
-
-      for (auto subcontent : existing_content.operation_arguments) {
-      }
-
-      return;
     }
   }
   content_.push_back(std::move(content));
@@ -179,11 +171,10 @@ void C2Payload::setRawData(const std::vector<char> &data) {
 }
 
 void C2Payload::setRawData(const std::vector<uint8_t> &data) {
-  std::transform(std::begin(data), std::end(data), std::back_inserter(raw_data_), [](uint8_t c){
+  std::transform(std::begin(data), std::end(data), std::back_inserter(raw_data_), [](uint8_t c) {
     return static_cast<char>(c);
   });
 }
-
 
 std::vector<char> C2Payload::getRawData() const {
   return raw_data_;

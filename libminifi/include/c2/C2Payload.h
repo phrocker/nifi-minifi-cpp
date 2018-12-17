@@ -148,7 +148,7 @@ class C2Payload : public state::Update {
   /**
    * Add a content response to this payload.
    */
-  void addContent(const C2ContentResponse &&content);
+  void addContent(const C2ContentResponse &&content, bool collapsible = true);
 
   /**
    * Determines if this object contains raw data.

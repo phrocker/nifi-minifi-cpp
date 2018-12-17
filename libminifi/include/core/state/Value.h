@@ -403,19 +403,18 @@ struct SerializedResponseNode {
   std::string name;
   ValueNode value;
   bool array;
+  bool collapsible;
+  std::vector<SerializedResponseNode> children;
 
   SerializedResponseNode()
-      : array(false) {
+      : array(false),
+        collapsible(true) {
   }
 
-  std::vector<SerializedResponseNode> children;
-  SerializedResponseNode &operator=(const SerializedResponseNode &other) {
-    name = other.name;
-    value = other.value;
-    children = other.children;
-    array = other.array;
-    return *this;
-  }
+  SerializedResponseNode(const SerializedResponseNode &other) = default;
+
+
+  SerializedResponseNode &operator=(const SerializedResponseNode &other) = default;
 };
 
 } /* namespace metrics */
