@@ -53,6 +53,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Connectable.h"
 #include "utils/HTTPClient.h"
+#include "io/NetworkPrioritizer.h"
 
 #ifdef _MSC_VER
 #ifndef PATH_MAX
@@ -273,6 +274,10 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
       logger_->log_info("Load Flow Controller from provided root");
     } else {
       logger_->log_info("Load Flow Controller from file %s", configuration_filename_.c_str());
+    }
+
+    if (reload) {
+      io::NetworkPrioritizerFactory::getInstance()->clearPrioritizer();
     }
 
     this->root_ = root == nullptr ? std::shared_ptr<core::ProcessGroup>(flow_configuration_->getRoot(configuration_filename_)) : root;
