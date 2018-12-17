@@ -406,13 +406,12 @@ struct SerializedResponseNode {
   bool collapsible;
   std::vector<SerializedResponseNode> children;
 
-  SerializedResponseNode()
+  SerializedResponseNode(bool collapsible = true)
       : array(false),
-        collapsible(true) {
+        collapsible(collapsible) {
   }
 
   SerializedResponseNode(const SerializedResponseNode &other) = default;
-
 
   SerializedResponseNode &operator=(const SerializedResponseNode &other) = default;
 };

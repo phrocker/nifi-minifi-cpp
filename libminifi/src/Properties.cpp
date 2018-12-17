@@ -130,7 +130,7 @@ void Properties::loadConfigureFile(const char *fileName) {
 #else
   path = const_cast<char*>(adjustedFilename.c_str());
 #endif
-  logger_->log_info("Using configuration file located at %s", path);
+  logger_->log_info("Using configuration file located at %s, from %s", path, fileName);
 
   properties_file_ = path;
 

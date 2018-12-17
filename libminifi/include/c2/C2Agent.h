@@ -118,7 +118,7 @@ class C2Agent : public state::UpdateController, public state::response::Response
    * @param name name of this metric
    * @param metrics metrics to include.
    */
-  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false);
+  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false, bool is_collapsible = false);
 
   /**
    * Extract the payload

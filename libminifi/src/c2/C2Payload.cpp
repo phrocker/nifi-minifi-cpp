@@ -155,6 +155,7 @@ void C2Payload::addContent(const C2ContentResponse &&content, bool collapsible) 
       }
     }
   }
+  std::cout << "not collapsible, so adding " << content.name << std::endl;
   content_.push_back(std::move(content));
 }
 

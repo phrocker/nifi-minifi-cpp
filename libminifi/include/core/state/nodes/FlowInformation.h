@@ -224,13 +224,11 @@ class FlowInformation : public FlowMonitor {
 
     if (nullptr != monitor_) {
       auto components = monitor_->getAllComponents();
-      SerializedResponseNode componentsNode;
-      componentsNode.collapsible = false;
+      SerializedResponseNode componentsNode(false);
       componentsNode.name = "components";
 
       for (auto component : components) {
-        SerializedResponseNode componentNode;
-        componentNode.collapsible = false;
+        SerializedResponseNode componentNode(false);
         componentNode.name = component->getComponentName();
 
         SerializedResponseNode componentStatusNode;

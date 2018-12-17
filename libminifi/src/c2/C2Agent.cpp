@@ -311,22 +311,22 @@ void C2Agent::performHeartBeat() {
   }
 }
 
-void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container) {
-  for (auto metric : metrics) {
+void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container,  bool is_collapsible) {
+  for (const auto &metric : metrics) {
     if (metric.children.size() > 0) {
       C2Payload child_metric_payload(metric_payload.getOperation());
       if (metric.array) {
         child_metric_payload.setContainer(true);
       }
       child_metric_payload.setLabel(metric.name);
-      serializeMetrics(child_metric_payload, metric.name, metric.children, is_container);
+      serializeMetrics(child_metric_payload, metric.name, metric.children, is_container, metric.collapsible ?  metric.collapsible : is_collapsible);
       metric_payload.addPayload(std::move(child_metric_payload));
     } else {
       C2ContentResponse response(metric_payload.getOperation());
       response.name = name;
       response.operation_arguments[metric.name] = metric.value;
-      std::cout << name << " is collapsible ? " << metric.collapsible << std::endl;
-      metric_payload.addContent(std::move(response), metric.collapsible);
+      std::cout << name << " is collapsible ? " << is_collapsible << std::endl;
+      metric_payload.addContent(std::move(response), is_collapsible);
     }
   }
 }

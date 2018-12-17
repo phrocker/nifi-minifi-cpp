@@ -303,6 +303,7 @@ rapidjson::Value RESTProtocol::serializeJsonPayload(const C2Payload &payload, ra
     } else if (child_vector.second.size() == 1) {
       rapidjson::Value* first = child_vector.second.front();
       if (first->IsObject() && first->HasMember(newMemberKey)) {
+        std::cout << "Adding " << child_vector.first << std::endl;
         if (json_payload.IsArray())
           json_payload.PushBack((*first)[newMemberKey].Move(), alloc);
         else
