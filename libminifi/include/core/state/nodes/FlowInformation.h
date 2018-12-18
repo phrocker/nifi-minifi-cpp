@@ -195,6 +195,10 @@ class FlowInformation : public FlowMonitor {
         repoNode.collapsible = false;
         repoNode.name = queue.second->getName();
 
+        SerializedResponseNode queueUUIDNode;
+        queueUUIDNode.name = "uuid";
+        queueUUIDNode.value = queue.second->getUUIDStr();
+
         SerializedResponseNode queuesize;
         queuesize.name = "size";
         queuesize.value = queue.second->getQueueSize();
@@ -215,6 +219,7 @@ class FlowInformation : public FlowMonitor {
         repoNode.children.push_back(queuesizemax);
         repoNode.children.push_back(datasize);
         repoNode.children.push_back(datasizemax);
+        repoNode.children.push_back(queueUUIDNode);
 
         queues.children.push_back(repoNode);
 
@@ -231,12 +236,16 @@ class FlowInformation : public FlowMonitor {
         SerializedResponseNode componentNode(false);
         componentNode.name = component->getComponentName();
 
+        SerializedResponseNode uuidNode;
+        uuidNode.name = "uuid";
+        uuidNode.value = component->getComponentUUID();
+
         SerializedResponseNode componentStatusNode;
         componentStatusNode.name = "running";
         componentStatusNode.value = component->isRunning();
 
         componentNode.children.push_back(componentStatusNode);
-
+        componentNode.children.push_back(uuidNode);
         componentsNode.children.push_back(componentNode);
       }
       serialized.push_back(componentsNode);
