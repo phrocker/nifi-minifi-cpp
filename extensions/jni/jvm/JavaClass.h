@@ -1,0 +1,126 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef EXTENSIONS_JAVACLASS_H
+#define EXTENSIONS_JAVACLASS_H
+
+#include <string>
+#include <vector>
+#include <sstream>
+#include <iterator>
+#include <algorithm>
+#include <jni.h>
+#include "JniProcessContext.h"
+
+class JavaClass {
+
+ public:
+
+  JavaClass()
+      : class_ref_(nullptr),
+        jenv_(nullptr) {
+
+  }
+
+  JavaClass(const JavaClass &ref) = default;
+
+  JavaClass(const std::string &name, jclass classref, JNIEnv* jenv)
+      : name_(name),
+        class_ref_(classref),
+        jenv_(jenv) {
+  }
+
+  jclass getReference() {
+    return class_ref_;
+  }
+
+  JavaClass &operator=(const JavaClass &o) = default;
+
+  /**
+   * Call empty constructor
+   */
+  JNIEXPORT
+  jobject newInstance() {
+    std::string instanceName = "(L" + name_ + ";)V";
+    jmethodID cnstrctr = jenv_->GetMethodID(class_ref_, "<init>", "()V");
+    if (cnstrctr == nullptr) {
+      printf("Find method Failed.\n");
+      return nullptr;
+    } else {
+      printf("Found method.\n");
+    }
+
+    return jenv_->NewObject(class_ref_, cnstrctr);
+  }
+
+  jmethodID getClassMethod(const std::string &methodName, const std::string &type) {
+    jmethodID mid = jenv_->GetMethodID(class_ref_, methodName.c_str(), type.c_str());
+    return mid;
+  }
+
+  void registerMethods(){
+    JNINativeMethod methods[] = {
+         { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue)}};
+
+
+    jenv_->RegisterNatives(class_ref_,methods,sizeof(methods)/sizeof(methods[0]));
+    if (jenv_->ExceptionCheck()) {
+      jenv_->ExceptionDescribe();
+        }
+
+  }
+
+  //clazz.callVoidMethod("onScheduled","(Lorg/apache/nifi/processor/ProcessContext;)V", obj);
+  template<typename ... Args>
+  void callVoidMethod(jobject obj, const std::string &methodName, const std::string &type, Args ... args) {
+
+    jmethodID method = getClassMethod(methodName, type);
+    if (method == nullptr) {
+      throw std::runtime_error("cannot run method");
+    }
+    jobject objects[] = { static_cast<jobject>(args)... };
+    jenv_->CallVoidMethod(obj, method, std::forward<Args>(args)...);
+    if (jenv_->ExceptionOccurred()) {
+      jenv_->ExceptionDescribe();
+    }
+  }
+
+  /**
+   * Call empty constructor
+
+   template<typename T>
+
+   JNIEXPORT jobject newInstance(T* ) {
+   std::string instanceName = "(L" + name_ + ";)V";
+   jmethodID cnstrctr = jenv_->GetMethodID(class_ref_, "<init>", "()V");
+   if (cnstrctr == nullptr) {
+   printf("Find method Failed.\n");
+   return nullptr;
+   } else {
+   printf("Found method.\n");
+   }
+
+   return jenv_->NewObject(class_ref_, cnstrctr);
+   }   */
+
+ private:
+  std::string name_;
+  jclass class_ref_;
+  JNIEnv* jenv_;
+};
+
+#endif /* EXTENSIONS_JAVACLASS_H */

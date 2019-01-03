@@ -41,6 +41,7 @@ option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 
+
 include(CheckIncludeFile)
 include(FeatureSummary)
 include(ExternalProject)
@@ -430,6 +431,11 @@ endif(WIN32)
 option(ENABLE_MQTT "Enables the mqtt extension." OFF)
 if(ENABLE_ALL OR ENABLE_MQTT)
         createExtension(MQTT-EXTENSIONS "MQTT EXTENSIONS" "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "extensions/mqtt" "${TEST_DIR}/mqtt-tests" "TRUE" "thirdparty/paho.mqtt.c")
+endif()
+
+option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
+if(ENABLE_ALL OR ENABLE_JNI)
+	createExtension(JNI-EXTENSION "JNI EXTENSIONS" "Enables JNI capabilities to support loading Java Classes." "extensions/jni" "${TEST_DIR}/jni-tests")
 endif()
 
 option(ENABLE_PCAP "Enables the PCAP extension." OFF)
