@@ -25,7 +25,9 @@
 #include <algorithm>
 #include "JavaClass.h"
 #include <jni.h>
+#ifndef WIN32
 #include <dlfcn.h>
+#endif
 #include "Core.h"
 
 typedef jint (*registerNatives_t)(JNIEnv* env, jclass clazz);
@@ -126,6 +128,145 @@ class JVMLoader {
   }
 
  protected:
+
+#ifdef WIN32
+
+	 // base_object doesn't have a handle
+	 std::map< HMODULE, std::string > resource_mapping_;
+	 std::mutex internal_mutex_;
+
+	 std::string error_str_;
+	 std::string current_error_;
+
+	 void store_error() {
+		 auto error = GetLastError();
+
+		 if (error == 0) {
+			 error_str_ = "";
+			 return;
+		 }
+
+		 LPSTR messageBuffer = nullptr;
+		 size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			 NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+
+		 current_error_ = std::string(messageBuffer, size);
+
+		 //Free the buffer.
+		 LocalFree(messageBuffer);
+	 }
+
+	 void *dlsym(void *handle, const char *name)
+	 {
+		 FARPROC symbol;
+		 HMODULE hModule;
+
+		 symbol = GetProcAddress((HMODULE)handle, name);
+
+		 if (symbol == nullptr) {
+			 store_error();
+
+			 for (auto hndl : resource_mapping_)
+			 {
+				 symbol = GetProcAddress((HMODULE)hndl.first, name);
+				 if (symbol != nullptr) {
+					 break;
+				 }
+			 }
+		 }
+
+#ifdef _MSC_VER
+#pragma warning( suppress: 4054 )
+#endif
+		 return (void*)symbol;
+	 }
+
+	 const char *dlerror(void)
+	 {
+		 std::lock_guard<std::mutex> lock(internal_mutex_);
+
+		 error_str_ = current_error_;
+
+		 current_error_ = "";
+
+		 return error_str_.c_str();
+	 }
+
+	 void *dlopen(const char *file, int mode) {
+		 std::lock_guard<std::mutex> lock(internal_mutex_);
+		 HMODULE object;
+		 char * current_error = NULL;
+		 uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+		 if (nullptr == file)
+		 {
+			 HMODULE allModules[1024];
+			 HANDLE current_process_id = GetCurrentProcess();
+			 DWORD cbNeeded;
+			 object = GetModuleHandle(NULL);
+
+			 if (!object)
+				 store_error();
+			 if (EnumProcessModules(current_process_id, allModules,
+				 sizeof(allModules), &cbNeeded) != 0)
+			 {
+
+				 for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++)
+				 {
+					 TCHAR szModName[MAX_PATH];
+
+					 // Get the full path to the module's file.
+					 resource_mapping_.insert(std::make_pair(allModules[i], "minifi-system"));
+				 }
+			 }
+		 }
+		 else
+		 {
+			 char lpFileName[MAX_PATH];
+			 int i;
+
+			 for (i = 0; i < sizeof(lpFileName) - 1; i++)
+			 {
+				 if (!file[i])
+					 break;
+				 else if (file[i] == '/')
+					 lpFileName[i] = '\\';
+				 else
+					 lpFileName[i] = file[i];
+			 }
+			 lpFileName[i] = '\0';
+			 object = LoadLibraryEx(lpFileName, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+			 if (!object)
+				 store_error();
+			 else if ((mode & RTLD_GLOBAL))
+				 resource_mapping_.insert(std::make_pair(object, lpFileName));
+		 }
+
+		 /* Return to previous state of the error-mode bit flags. */
+		 SetErrorMode(uMode);
+
+		 return (void *)object;
+
+	 }
+
+	 int dlclose(void *handle)
+	 {
+		 std::lock_guard<std::mutex> lock(internal_mutex_);
+
+		 HMODULE object = (HMODULE)handle;
+		 BOOL ret;
+
+		 current_error_ = "";
+		 ret = FreeLibrary(object);
+
+		 resource_mapping_.erase(object);
+
+		 ret = !ret;
+
+		 return (int)ret;
+	 }
+
+#endif
+
 
   void initialize(const std::vector<std::string> &opts) {
     string_options_ = opts;

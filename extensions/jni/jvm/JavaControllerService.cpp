@@ -35,6 +35,14 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
+#ifndef S_ISDIR
+#define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
+#endif
+#define R_OK    4       /* Test for read permission.  */
+#define W_OK    2       /* Test for write permission.  */
+#define F_OK    0       /* Test for existence.  */
+
+
 core::Property JavaControllerService::Paths("Class Paths", "Paths that will be used for java.class.paths", "");
 
 void JavaControllerService::initialize() {
@@ -141,7 +149,7 @@ void JavaControllerService::addPath(std::vector<std::string> &jarFiles, const st
   HANDLE hFind;
   WIN32_FIND_DATA FindFileData;
 
-  if ((hFind = FindFirstFile(dir.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
+  if ((hFind = FindFirstFile(originalPath.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
     do {
       struct stat statbuf {};
       if (stat(FindFileData.cFileName, &statbuf) != 0) {
@@ -149,16 +157,14 @@ void JavaControllerService::addPath(std::vector<std::string> &jarFiles, const st
         break;
       }
 
-      std::string path = dir + "/" + FindFileData.cFileName;
+      std::string path = originalPath + "/" + FindFileData.cFileName;
       if (S_ISDIR(statbuf.st_mode)) {
-        if (request.recursive && strcmp(FindFileData.cFileName, "..") != 0 && strcmp(FindFileData.cFileName, ".") != 0) {
-          performListing(path, request);
-        }
+		  addPath(jarFiles, path);
       } else {
-        if (acceptFile(path, FindFileData.cFileName, request)) {
-          // check whether we can take this file
-          putListing(path);
-        }
+		  if (utils::StringUtils::endsWith(path, ".jar")) {
+			  logger_->log_info("Adding %s to paths", path);
+			  jarFiles.push_back(path);
+		  }
       }
     }while (FindNextFile(hFind, &FindFileData));
     FindClose(hFind);
