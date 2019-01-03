@@ -88,7 +88,6 @@
       "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v -j8",
-      "$" { "env.USERPROFILE" },
       "variables": [
         {
           "name": "OPENSSL_OFF",
@@ -96,6 +95,10 @@
         },
         {
           "name": "USE_SYSTEM_OPENSSL",
+          "value": "ON"
+        },
+        {
+          "name": "PORTABLE",
           "value": "ON"
         },
         {

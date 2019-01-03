@@ -117,9 +117,12 @@ void Properties::loadConfigureFile(const char *fileName) {
   std::string adjustedFilename;
   if (fileName) {
     // perform a naive determination if this is a relative path
-    if (fileName[0] != '/') {
-      adjustedFilename = adjustedFilename + getHome() + "/" + fileName;
+    if (fileName[0] != FILE_SEPARATOR) {
+      adjustedFilename = adjustedFilename + getHome() + FILE_SEPARATOR + fileName;
     } else {
+		if (adjustedFilename.empty()) {
+			adjustedFilename = getHome();
+		}
       adjustedFilename += fileName;
     }
   }
