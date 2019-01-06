@@ -264,6 +264,8 @@ void ListenHTTP::Handler::set_header_attributes(const mg_request_info *req_info,
 
 bool ListenHTTP::Handler::handlePost(CivetServer *server, struct mg_connection *conn) {
   auto req_info = mg_get_request_info(conn);
+  if (!req_info)
+    return false;
   logger_->log_debug("ListenHTTP handling POST request of length %ll", req_info->content_length);
 
   if (!auth_request(conn, req_info)) {
