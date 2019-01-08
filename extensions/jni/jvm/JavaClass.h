@@ -48,24 +48,53 @@ class JavaClass {
     return class_ref_;
   }
 
+  JNIEnv *getEnv(){
+    return jenv_;
+  }
+
   JavaClass &operator=(const JavaClass &o) = default;
 
   /**
    * Call empty constructor
    */
   JNIEXPORT
-  jobject newInstance() {
+  jobject newInstance(JNIEnv *env=nullptr) {
     std::string instanceName = "(L" + name_ + ";)V";
-    jmethodID cnstrctr = jenv_->GetMethodID(class_ref_, "<init>", "()V");
+    JNIEnv *lenv = env;
+    if (lenv == nullptr){
+      lenv = jenv_;
+    }
+    jmethodID cnstrctr = lenv->GetMethodID(class_ref_, "<init>", "()V");
     if (cnstrctr == nullptr) {
-      printf("Find method Failed.\n");
+      printf("Find method Failed. %s\n",name_.c_str());
       return nullptr;
     } else {
       printf("Found method.\n");
     }
 
-    return jenv_->NewObject(class_ref_, cnstrctr);
+    return lenv->NewObject(class_ref_, cnstrctr);
   }
+
+  JNIEXPORT
+    jobject newInstance(const std::string &arg) {
+      std::string instanceName = "(L" + name_ + ";)V";
+      jmethodID cnstrctr = jenv_->GetMethodID(class_ref_, "<init>", "(Ljava/util/String;)V");
+      if (cnstrctr == nullptr) {
+        printf("Find method Failed 5. %s\n",name_.c_str());
+        return nullptr;
+      } else {
+        printf("Found method.\n");
+      }
+
+      auto clazz_name = jenv_->NewStringUTF(arg.c_str());
+
+      return jenv_->NewObject(class_ref_, cnstrctr, clazz_name);
+    }
+
+  jmethodID getClassMethod(JNIEnv *env, const std::string &methodName, const std::string &type) {
+      jmethodID mid = env->GetMethodID(class_ref_, methodName.c_str(), type.c_str());
+      return mid;
+    }
 
   jmethodID getClassMethod(const std::string &methodName, const std::string &type) {
     jmethodID mid = jenv_->GetMethodID(class_ref_, methodName.c_str(), type.c_str());
@@ -88,7 +117,7 @@ class JavaClass {
   template<typename ... Args>
   void callVoidMethod(jobject obj, const std::string &methodName, const std::string &type, Args ... args) {
 
-    jmethodID method = getClassMethod(methodName, type);
+    jmethodID method = getClassMethod( methodName, type);
     if (method == nullptr) {
       throw std::runtime_error("cannot run method");
     }
@@ -96,8 +125,24 @@ class JavaClass {
     jenv_->CallVoidMethod(obj, method, std::forward<Args>(args)...);
     if (jenv_->ExceptionOccurred()) {
       jenv_->ExceptionDescribe();
+      jenv_->ExceptionClear();
     }
   }
+
+  template<typename ... Args>
+    void callVoidMethod(JNIEnv* env, jobject obj, const std::string &methodName, const std::string &type, Args ... args) {
+
+      jmethodID method = getClassMethod(env, methodName, type);
+      if (method == nullptr) {
+        throw std::runtime_error("cannot run method");
+      }
+      jobject objects[] = { static_cast<jobject>(args)... };
+      env->CallVoidMethod(obj, method, std::forward<Args>(args)...);
+      if (env->ExceptionOccurred()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+      }
+    }
 
   /**
    * Call empty constructor

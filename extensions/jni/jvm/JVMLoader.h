@@ -48,11 +48,7 @@ class JVMLoader {
     return initialized_;
   }
 
-  JavaClass load_class(const std::string &name) {
-    auto finder = objects_.find(name);
-    if (finder != objects_.end()) {
-      return finder->second;
-    }
+  JNIEnv *attach(const std::string &name = "") {
     JNIEnv* jenv;
     jint ret = jvm_->GetEnv((void**) &jenv, JNI_VERSION_1_8);
     if (ret == JNI_EDETACHED) {
@@ -65,25 +61,96 @@ class JVMLoader {
     } else if (ret == JNI_OK) {
       std::cout << "got env for " << name << std::endl;
     }
-    jclass classref;
-    classref = jenv->FindClass(name.c_str());
-    if (classref == NULL) {
 
-      std::cout << name << " not found " << std::endl;
-      if (jenv->ExceptionOccurred()) {
+    return jenv;
+  }
+
+  jobject getClassLoader() {
+    return gClassLoader;
+  }
+
+  JavaClass load_class(const std::string &name) {
+    auto finder = objects_.find(name);
+    if (finder != objects_.end()) {
+      return finder->second;
+    }
+    auto env = attach(name);
+    std::cout << "call " << (gClassLoader == nullptr) << std::endl;
+
+    std::string modifiedName = name;
+    modifiedName = utils::StringUtils::replaceAll(modifiedName, "/", ".");
+
+    auto obj = env->CallObjectMethod(gClassLoader, gFindClassMethod, getEnv()->NewStringUTF(modifiedName.c_str()));
+    std::cout << " res nu ? " << (obj == nullptr) << std::endl;
+    auto clazzobj = static_cast<jclass>(obj);
+
+    if (clazzobj == nullptr) {
+      std::cout << "nully " << std::endl;
+      if (env->ExceptionOccurred()) {
         std::cout << "Exception occurred" << std::endl;
-        jenv->ExceptionDescribe();
-        jenv->ExceptionClear();
+        env->ExceptionDescribe();
+        env->ExceptionClear();
       }
     }
-    JavaClass clazz(name, classref, jenv);
+    std::cout << "called" << (gClassLoader == nullptr) << std::endl;
+    JavaClass clazz(name, clazzobj, env);
     objects_.insert(std::make_pair(name, clazz));
     return clazz;
   }
 
-  static JVMLoader *getInstance(const std::vector<std::string> &pathVector, const std::vector<std::string> &otherOptions = std::vector<std::string>()) {
+  /*
+
+   JavaClass load_class(const std::string &name) {
+   auto finder = objects_.find(name);
+   if (finder != objects_.end()) {
+   return finder->second;
+   }
+   JNIEnv* jenv;
+   jint ret = jvm_->GetEnv((void**) &jenv, JNI_VERSION_1_8);
+   if (ret == JNI_EDETACHED) {
+   ret = jvm_->AttachCurrentThread((void**) &jenv, NULL);
+   if (ret != JNI_OK || jenv == NULL) {
+   throw std::runtime_error("Could not find class");
+   } else {
+   std::cout << "got env for " << name << std::endl;
+   }
+   } else if (ret == JNI_OK) {
+   std::cout << "got env for " << name << std::endl;
+   }
+   jclass classref;
+   classref = jenv->FindClass(name.c_str());
+   if (classref == NULL) {
+
+   std::cout << name << " not found " << std::endl;
+   if (jenv->ExceptionOccurred()) {
+   std::cout << "Exception occurred" << std::endl;
+   jenv->ExceptionDescribe();
+   jenv->ExceptionClear();
+   }
+   }
+   JavaClass clazz(name, classref, jenv);
+   objects_.insert(std::make_pair(name, clazz));
+   return clazz;
+   }
+   */
+  JavaClass getObjectClass(const std::string &name, jobject jobj) {
+    auto env = attach();
+    auto jcls = env->GetObjectClass(jobj);
+    return JavaClass(name, jcls, env);
+  }
+
+  static JVMLoader *getInstance() {
     static JVMLoader jvm;
-    if (!jvm.initialized()) {
+    return &jvm;
+  }
+
+  JNIEnv *getEnv() {
+    return env_;
+  }
+
+  static JVMLoader *getInstance(const std::vector<std::string> &pathVector, const std::vector<std::string> &otherOptions = std::vector<std::string>()) {
+    JVMLoader *jvm = getInstance();
+    if (!jvm->initialized()) {
       std::stringstream str;
       std::vector<std::string> options;
       for (const auto &path : pathVector) {
@@ -99,14 +166,19 @@ class JVMLoader {
       options.insert(options.end(), otherOptions.begin(), otherOptions.end());
       std::string classpath = "-Djava.class.path=" + str.str();
       options.push_back(classpath);
-      jvm.initialize(options);
+      jvm->initialize(options);
     }
-    return &jvm;
+    return jvm;
   }
 
   template<typename T>
   void setReference(jobject obj, T *t) {
     setPtr(env_, obj, t);
+  }
+
+  template<typename T>
+  T *getReference(jobject obj) {
+    return getPtr<T>(env_, obj);
   }
 
   static jfieldID getPtrField(JNIEnv *env, jobject obj) {
@@ -131,147 +203,146 @@ class JVMLoader {
 
 #ifdef WIN32
 
-	 // base_object doesn't have a handle
-	 std::map< HMODULE, std::string > resource_mapping_;
-	 std::mutex internal_mutex_;
+  // base_object doesn't have a handle
+  std::map< HMODULE, std::string > resource_mapping_;
+  std::mutex internal_mutex_;
 
-	 std::string error_str_;
-	 std::string current_error_;
+  std::string error_str_;
+  std::string current_error_;
 
-	 void store_error() {
-		 auto error = GetLastError();
+  void store_error() {
+    auto error = GetLastError();
 
-		 if (error == 0) {
-			 error_str_ = "";
-			 return;
-		 }
+    if (error == 0) {
+      error_str_ = "";
+      return;
+    }
 
-		 LPSTR messageBuffer = nullptr;
-		 size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			 NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+    LPSTR messageBuffer = nullptr;
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
 
-		 current_error_ = std::string(messageBuffer, size);
+    current_error_ = std::string(messageBuffer, size);
 
-		 //Free the buffer.
-		 LocalFree(messageBuffer);
-	 }
+    //Free the buffer.
+    LocalFree(messageBuffer);
+  }
 
-	 void *dlsym(void *handle, const char *name)
-	 {
-		 FARPROC symbol;
-		 HMODULE hModule;
+  void *dlsym(void *handle, const char *name)
+  {
+    FARPROC symbol;
+    HMODULE hModule;
 
-		 symbol = GetProcAddress((HMODULE)handle, name);
+    symbol = GetProcAddress((HMODULE)handle, name);
 
-		 if (symbol == nullptr) {
-			 store_error();
+    if (symbol == nullptr) {
+      store_error();
 
-			 for (auto hndl : resource_mapping_)
-			 {
-				 symbol = GetProcAddress((HMODULE)hndl.first, name);
-				 if (symbol != nullptr) {
-					 break;
-				 }
-			 }
-		 }
+      for (auto hndl : resource_mapping_)
+      {
+        symbol = GetProcAddress((HMODULE)hndl.first, name);
+        if (symbol != nullptr) {
+          break;
+        }
+      }
+    }
 
 #ifdef _MSC_VER
 #pragma warning( suppress: 4054 )
 #endif
-		 return (void*)symbol;
-	 }
+    return (void*)symbol;
+  }
 
-	 const char *dlerror(void)
-	 {
-		 std::lock_guard<std::mutex> lock(internal_mutex_);
+  const char *dlerror(void)
+  {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
 
-		 error_str_ = current_error_;
+    error_str_ = current_error_;
 
-		 current_error_ = "";
+    current_error_ = "";
 
-		 return error_str_.c_str();
-	 }
+    return error_str_.c_str();
+  }
 
-	 void *dlopen(const char *file, int mode) {
-		 std::lock_guard<std::mutex> lock(internal_mutex_);
-		 HMODULE object;
-		 char * current_error = NULL;
-		 uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
-		 if (nullptr == file)
-		 {
-			 HMODULE allModules[1024];
-			 HANDLE current_process_id = GetCurrentProcess();
-			 DWORD cbNeeded;
-			 object = GetModuleHandle(NULL);
+  void *dlopen(const char *file, int mode) {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    HMODULE object;
+    char * current_error = NULL;
+    uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+    if (nullptr == file)
+    {
+      HMODULE allModules[1024];
+      HANDLE current_process_id = GetCurrentProcess();
+      DWORD cbNeeded;
+      object = GetModuleHandle(NULL);
 
-			 if (!object)
-				 store_error();
-			 if (EnumProcessModules(current_process_id, allModules,
-				 sizeof(allModules), &cbNeeded) != 0)
-			 {
+      if (!object)
+      store_error();
+      if (EnumProcessModules(current_process_id, allModules,
+              sizeof(allModules), &cbNeeded) != 0)
+      {
 
-				 for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++)
-				 {
-					 TCHAR szModName[MAX_PATH];
+        for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++)
+        {
+          TCHAR szModName[MAX_PATH];
 
-					 // Get the full path to the module's file.
-					 resource_mapping_.insert(std::make_pair(allModules[i], "minifi-system"));
-				 }
-			 }
-		 }
-		 else
-		 {
-			 char lpFileName[MAX_PATH];
-			 int i;
+          // Get the full path to the module's file.
+          resource_mapping_.insert(std::make_pair(allModules[i], "minifi-system"));
+        }
+      }
+    }
+    else
+    {
+      char lpFileName[MAX_PATH];
+      int i;
 
-			 for (i = 0; i < sizeof(lpFileName) - 1; i++)
-			 {
-				 if (!file[i])
-					 break;
-				 else if (file[i] == '/')
-					 lpFileName[i] = '\\';
-				 else
-					 lpFileName[i] = file[i];
-			 }
-			 lpFileName[i] = '\0';
-			 object = LoadLibraryEx(lpFileName, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
-			 if (!object)
-				 store_error();
-			 else if ((mode & RTLD_GLOBAL))
-				 resource_mapping_.insert(std::make_pair(object, lpFileName));
-		 }
+      for (i = 0; i < sizeof(lpFileName) - 1; i++)
+      {
+        if (!file[i])
+        break;
+        else if (file[i] == '/')
+        lpFileName[i] = '\\';
+        else
+        lpFileName[i] = file[i];
+      }
+      lpFileName[i] = '\0';
+      object = LoadLibraryEx(lpFileName, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+      if (!object)
+      store_error();
+      else if ((mode & RTLD_GLOBAL))
+      resource_mapping_.insert(std::make_pair(object, lpFileName));
+    }
 
-		 /* Return to previous state of the error-mode bit flags. */
-		 SetErrorMode(uMode);
+    /* Return to previous state of the error-mode bit flags. */
+    SetErrorMode(uMode);
 
-		 return (void *)object;
+    return (void *)object;
 
-	 }
+  }
 
-	 int dlclose(void *handle)
-	 {
-		 std::lock_guard<std::mutex> lock(internal_mutex_);
+  int dlclose(void *handle)
+  {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
 
-		 HMODULE object = (HMODULE)handle;
-		 BOOL ret;
+    HMODULE object = (HMODULE)handle;
+    BOOL ret;
 
-		 current_error_ = "";
-		 ret = FreeLibrary(object);
+    current_error_ = "";
+    ret = FreeLibrary(object);
 
-		 resource_mapping_.erase(object);
+    resource_mapping_.erase(object);
 
-		 ret = !ret;
+    ret = !ret;
 
-		 return (int)ret;
-	 }
+    return (int)ret;
+  }
 
 #endif
-
 
   void initialize(const std::vector<std::string> &opts) {
     string_options_ = opts;
     // added for testing
-       //string_options_.push_back("-verbose:jni");
+    //string_options_.push_back("-verbose:jni");
 //   string_options_.push_back("-Djava.compiler=NONE");
     jvm_options_ = new JavaVMOption[opts.size()];
     int i = 0;
@@ -290,7 +361,20 @@ class JVMLoader {
 // pointer in env
     JNI_CreateJavaVM(&jvm_, (void**) &env_, &vm_args);
 
-        initialized_ = true;
+    auto randomClass = env_->FindClass("org/apache/nifi/processor/ProcessContext");
+    jclass classClass = env_->GetObjectClass(randomClass);
+    auto classLoaderClass = env_->FindClass("java/lang/ClassLoader");
+    auto getClassLoaderMethod = env_->GetMethodID(classClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
+    gClassLoader = env_->CallObjectMethod(randomClass, getClassLoaderMethod);
+    gFindClassMethod = env_->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+    std::cout << "gClassLoader " << (gClassLoader == nullptr) << std::endl;
+    std::cout << "gFindClassMethod " << (gFindClassMethod == nullptr) << std::endl;
+    if (env_->ExceptionOccurred()) {
+      std::cout << "Exception occurred" << std::endl;
+      env_->ExceptionDescribe();
+      env_->ExceptionClear();
+    }
+    initialized_ = true;
   }
 
  private:
@@ -305,6 +389,9 @@ class JVMLoader {
 
   JavaVM *jvm_;
   JNIEnv *env_;
+
+  jobject gClassLoader;
+  jmethodID gFindClassMethod;
 
   JVMLoader()
       : jvm_options_(nullptr),

@@ -86,10 +86,22 @@ class JavaControllerService : public core::controller::ControllerService {
     return classpaths_;
   }
 
+  JavaClass getObjectClass(const std::string &name, jobject jobj){
+    return loader->getObjectClass(name, jobj);
+  }
+
   JavaClass loadClass(const std::string &class_name_) {
     std::string modifiedName = class_name_;
     modifiedName = utils::StringUtils::replaceAll(modifiedName, ".", "/");
     return loader->load_class(modifiedName);
+  }
+
+  JNIEnv *attach(){
+    return loader->attach();
+  }
+
+  jobject getClassLoader(){
+    return loader->getClassLoader();
   }
 
   template<typename T>

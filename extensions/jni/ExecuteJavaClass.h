@@ -33,6 +33,7 @@
 #include "jvm/JavaControllerService.h"
 #include "jvm/JniProcessContext.h"
 #include "utils/Id.h"
+#include "jvm/NarClassLoader.h"
 
 namespace org {
 namespace apache {
@@ -58,6 +59,7 @@ class ExecuteJavaClass : public core::Processor {
   static const char *ProcessorName;
   static core::Property JVMControllerService;
   static core::Property NiFiProcessor;
+  static core::Property NarDirectory;
 
   // Supported Relationships
   static core::Relationship Success;
@@ -75,10 +77,17 @@ class ExecuteJavaClass : public core::Processor {
   }
 
  private:
+  std::unique_ptr<NarClassLoader> loader_;
+
+  JavaClass narClassLoaderClazz;
 
   JavaClass spn;
 
   JavaClass init;
+
+  JavaClass current_processor_class;
+
+  jobject clazzInstance;
 
   std::shared_ptr<controllers::JavaControllerService> java_servicer_;
 
