@@ -80,7 +80,7 @@ class JVMLoader {
     std::string modifiedName = name;
     modifiedName = utils::StringUtils::replaceAll(modifiedName, "/", ".");
 
-    auto obj = env->CallObjectMethod(gClassLoader, gFindClassMethod, getEnv()->NewStringUTF(modifiedName.c_str()));
+    auto obj = env->CallObjectMethod(gClassLoader, gFindClassMethod, env->NewStringUTF(modifiedName.c_str()));
     std::cout << " res nu ? " << (obj == nullptr) << std::endl;
     auto clazzobj = static_cast<jclass>(obj);
 
@@ -180,6 +180,17 @@ class JVMLoader {
   T *getReference(jobject obj) {
     return getPtr<T>(env_, obj);
   }
+
+  template<typename T>
+    void setReference(jobject obj,JNIEnv *env, T *t) {
+      setPtr(env, obj, t);
+    }
+
+    template<typename T>
+    T *getReference(JNIEnv *env,jobject obj) {
+      return getPtr<T>(env, obj);
+    }
+
 
   static jfieldID getPtrField(JNIEnv *env, jobject obj) {
     jclass c = env->GetObjectClass(obj);

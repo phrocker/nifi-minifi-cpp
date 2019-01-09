@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <jni.h>
 #include "JniProcessContext.h"
+#include "JniFlowFile.h"
+#include "JniProcessSession.h"
 
 class JavaClass {
 
@@ -101,15 +103,22 @@ class JavaClass {
     return mid;
   }
 
-  void registerMethods(){
-    JNINativeMethod methods[] = {
-         { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue)}};
+  void registerMethods(JNINativeMethod *methods, size_t size){
+
+    JNINativeMethod methods2[] = {
+               { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue)}
+
+          };
 
 
-    jenv_->RegisterNatives(class_ref_,methods,sizeof(methods)/sizeof(methods[0]));
+    jenv_->RegisterNatives(class_ref_,methods,size);
     if (jenv_->ExceptionCheck()) {
+      std::cout << "error while registering methods " << std::endl;
       jenv_->ExceptionDescribe();
         }
+    else{
+      std::cout << "registered methods " << std::endl;
+    }
 
   }
 
@@ -119,7 +128,7 @@ class JavaClass {
 
     jmethodID method = getClassMethod( methodName, type);
     if (method == nullptr) {
-      throw std::runtime_error("cannot run method");
+      throw std::runtime_error("cannot run method " + methodName);
     }
     jobject objects[] = { static_cast<jobject>(args)... };
     jenv_->CallVoidMethod(obj, method, std::forward<Args>(args)...);

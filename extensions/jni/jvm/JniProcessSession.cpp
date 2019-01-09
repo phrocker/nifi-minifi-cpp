@@ -30,6 +30,11 @@
 #include "properties/Configure.h"
 #include "JVMLoader.h"
 
+#include "core/Processor.h"
+#include "core/ProcessSession.h"
+//#include "JavaControllerService.h"
+#include "JniFlowFile.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,25 +49,88 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_creat
   core::ProcessSession *session = JVMLoader::getPtr<core::ProcessSession>(env, obj);
 
   auto ff = JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniFlowFile");
+  /*
+   JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj);
+   JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj);
+   JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj);
+   JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj);
+   JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj);
+   JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, jobject obj);
+   JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, jobject obj, jstring key);
+   JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj);
+   */
 
-  auto ff_instance = ff.newInstance();
+  static bool initializedMethods = false;
+  if (!initializedMethods) {
+    static JNINativeMethod methods[] = { { "getAttributes", "()Ljava/util/Map;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getAttributes) }, { "getAttribute",
+        "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getAttribute) }, { "getSize", "()J",
+        reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getSize) }, { "getEntryDate", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getEntryDate) }, {
+        "getLineageStartDate", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate) }, { "getLastQueueDatePrim", "()J",
+        reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim) }, { "getQueueDateIndex", "()J",
+        reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex) }, { "getId", "()J", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniFlowFile_getId) } };
+
+    ff.registerMethods(methods, sizeof(methods) / sizeof(methods[0]));
+    initializedMethods = true;
+  }
+  auto ff_instance = ff.newInstance(env);
 
   auto flow_file = session->create();
 
-  JVMLoader::getInstance()->setReference(ff_instance, &flow_file);
+  auto flow = new JniFlowFile(flow_file);
 
+  JVMLoader::getInstance()->setReference(ff_instance,env, flow);
+
+  std::cout << "Created " << (ff_instance == nullptr) << std::endl;
   return ff_instance;
 }
 
-JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jobject relationship) {
-
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_get(JNIEnv *env, jobject obj) {
   core::ProcessSession *session = JVMLoader::getPtr<core::ProcessSession>(env, obj);
 
-  std::shared_ptr<core::FlowFile> *ptr = JVMLoader::getInstance()->getReference<std::shared_ptr<core::FlowFile>>(ff);
+  auto ff = JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniFlowFile");
+
+  auto ff_instance = ff.newInstance(env);
+
+  auto flow_file = session->get();
+
+  auto flow = new JniFlowFile(flow_file);
+
+  JVMLoader::getInstance()->setReference(ff_instance,env, flow);
+
+  std::cout << "Getted " << (ff_instance == nullptr) << std::endl;
+  return ff_instance;
+}
+
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_putAttribute(JNIEnv *env, jobject obj, jobject ff, jstring key, jstring value) {
+
+  core::ProcessSession *session = JVMLoader::getPtr<core::ProcessSession>(env, obj);
+  std::cout << "transfer!2 " << (ff == nullptr) << std::endl;
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(ff);
+  std::cout << "transfer!3" << (ptr == nullptr) << std::endl;
   core::Relationship success("success", "description");
-  session->transfer(*ptr, success);
+
+  const char *kstr = env->GetStringUTFChars(key, 0);
+  const char *vstr = env->GetStringUTFChars(value, 0);
+  std::string valuestr = vstr;
+  std::string keystr = kstr;
+
+  ptr->ref_->addAttribute(keystr, valuestr);
+  env->ReleaseStringUTFChars(key, kstr);
+  env->ReleaseStringUTFChars(value, vstr);
   return ff;
 
+}
+
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jobject relationship) {
+  std::cout << "transfer!" << std::endl;
+  core::ProcessSession *session = JVMLoader::getPtr<core::ProcessSession>(env, obj);
+  std::cout << "transfer!2 " << (ff == nullptr) << std::endl;
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(ff);
+  std::cout << "transfer!3" << (ptr == nullptr) << std::endl;
+  core::Relationship success("success", "description");
+  session->transfer(ptr->ref_, success);
+  delete ptr;
+  std::cout << "transfer!" << std::endl;
 }
 
 JNIEXPORT jstring JNICALL

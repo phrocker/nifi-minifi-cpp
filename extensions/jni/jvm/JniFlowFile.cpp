@@ -43,38 +43,59 @@ Java_org_apache_nifi_processor_JniFlowFile_initialise(JNIEnv *env, jobject obj)
 
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj) {
 
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
   jlong id = 0;
   return id;
 
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
   jlong entryDate = ff->getEntryDate();
   return entryDate;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
   jlong val = ff->getlineageStartDate();
   return val;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
   jlong val = ff->getlineageStartDate();
   return val;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
+  jlong val = 0;
+  return val;
+}
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex(JNIEnv *env, jobject obj) {
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
   jlong val = 0;
   return val;
 }
 JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, jobject obj) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
   jboolean val = ff->isPenalized();
   return val;
 }
 JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, jobject obj, jstring key) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+    auto ff = ptr->ref_;
   const char *kstr = env->GetStringUTFChars(key, 0);
   std::string value;
   std::string keystr = kstr;
@@ -88,7 +109,10 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEn
   return val;
 }
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttributes(JNIEnv *env, jobject obj) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+
+  auto ff = ptr->ref_;
   jclass mapClass = env->FindClass("java/util/HashMap");
   if (mapClass == NULL) {
     return NULL;

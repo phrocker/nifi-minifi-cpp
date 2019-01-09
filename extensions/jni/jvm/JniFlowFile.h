@@ -31,6 +31,17 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 
+class JniFlowFile {
+ public:
+  JniFlowFile(const std::shared_ptr<core::FlowFile> &ref)
+      : ref_(ref) {
+
+  }
+
+  std::shared_ptr<core::FlowFile> ref_;
+};
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,6 +54,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageSta
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj);
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj);
 JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, jobject obj);
+JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex(JNIEnv *env, jobject obj);
 JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, jobject obj, jstring key);
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj);
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttributes(JNIEnv *env, jobject obj);
@@ -51,15 +63,6 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribut
 }
 #endif
 
-class JniFlowFile {
- public:
-  JniFlowFile(const std::shared_ptr<core::ProcessContext> &ctx)
-      : ctx_(ctx) {
-
-  }
- private:
-  std::shared_ptr<core::ProcessContext> ctx_;
-};
 
 
 

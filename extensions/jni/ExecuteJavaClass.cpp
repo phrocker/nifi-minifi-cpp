@@ -125,13 +125,21 @@ void ExecuteJavaClass::onSchedule(const std::shared_ptr<core::ProcessContext> &c
   context->setDynamicProperty("character-set","UTF-8");
   context->setDynamicProperty("Batch Size","7");
 
-  spn.registerMethods();
+  JNINativeMethod methods[] = {
+           { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue)}
+
+      };
+  spn.registerMethods(methods, 1);
   std::cout << "ah3" << std::endl;
   java_servicer_->setReference<core::ProcessContext>(obj, context.get());
   std::cout << "ah4" << std::endl;
-  current_processor_class.callVoidMethod(clazzInstance, "init", "(Lorg/apache/nifi/processor/ProcessorInitializationContext;)V", initializer);
+  current_processor_class.callVoidMethod(clazzInstance, "initialize", "(Lorg/apache/nifi/processor/ProcessorInitializationContext;)V", initializer);
   std::cout << "calling" << std::endl;
-  current_processor_class.callVoidMethod(clazzInstance, "onScheduled", "(Lorg/apache/nifi/processor/ProcessContext;)V", obj);
+  try{
+    current_processor_class.callVoidMethod(clazzInstance, "onScheduled", "(Lorg/apache/nifi/processor/ProcessContext;)V", obj);
+  }catch( std::runtime_error &re){
+    // this is avoidable.
+  }
   std::cout << "called" << std::endl;
 
 }
@@ -146,6 +154,13 @@ void ExecuteJavaClass::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   java_servicer_->setReference<core::ProcessContext>(java_process_context, context.get());
 
   auto sessioncls = java_servicer_->loadClass("org/apache/nifi/processor/JniProcessSession");
+  JNINativeMethod methods[] = {
+           { "create", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_create)},
+           { "get", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_get)},
+           { "transfer", "(Lorg/apache/nifi/flowfile/FlowFile;Lorg/apache/nifi/processor/Relationship;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_transfer)}
+
+      };
+  sessioncls.registerMethods(methods,3);
 
   auto java_process_session = sessioncls.newInstance(java_servicer_->attach());
 

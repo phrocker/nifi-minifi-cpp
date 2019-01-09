@@ -30,10 +30,10 @@
 #include "properties/Configure.h"
 #include "JVMLoader.h"
 
-#ifdef __cplusplus
+/*#ifdef __cplusplus
 extern "C" {
 #endif
-
+*/
 JNIEXPORT void JNICALL
 Java_org_apache_nifi_processor_JniProcessContext_initialise(JNIEnv *env, jobject obj)
 {
@@ -48,11 +48,15 @@ Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, j
   std::string value;
   std::string keystr = kstr;
   if (!context->getProperty(keystr,value) ){
-    context->getDynamicProperty(keystr,value);
+    if (! context->getDynamicProperty(keystr,value) ){
+      return nullptr;
+    }
   }
   env->ReleaseStringUTFChars(propertyName, kstr);
   return env->NewStringUTF(value.c_str());
 }
+/*
 #ifdef __cplusplus
 }
 #endif
+*/

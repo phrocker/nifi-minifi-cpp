@@ -24,9 +24,7 @@
 #include <iterator>
 #include <algorithm>
 #include <jni.h>
-#include "core/Processor.h"
-#include "core/ProcessSession.h"
-#include "JavaControllerService.h"
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,24 +32,17 @@ extern "C" {
 
 JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_initialise(JNIEnv *env, jobject obj);
 
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_get(JNIEnv *env, jobject obj);
+
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_create(JNIEnv *env, jobject obj);
 
-JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jobject relationship);
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jobject relationship);
+
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_putAtttribute(JNIEnv *env, jobject obj, jobject ff, jstring key, jstring value);
 
 #ifdef __cplusplus
 }
 #endif
 
-class JniProcessSession {
- public:
-  JniProcessSession(const std::shared_ptr<core::ProcessContext> &ctx, std::shared_ptr<minifi::controllers::JavaControllerService> java_servicer)
-      : ctx_(ctx),
-        java_servicer_(java_servicer) {
-
-  }
- private:
-  std::shared_ptr<core::ProcessContext> ctx_;
-  std::shared_ptr<minifi::controllers::JavaControllerService> java_servicer_;
-};
 
 #endif /* EXTENSIONS_JNIPROCESSSESSION_H */

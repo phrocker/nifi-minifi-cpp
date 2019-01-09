@@ -82,7 +82,15 @@ class NarClassLoader {
 
     auto clazz_name = env->NewStringUTF(requested_name.c_str());
 
-    return env->CallObjectMethod(class_loader_, mthd, clazz_name);
+    jobject obj = env->CallObjectMethod(class_loader_, mthd, clazz_name);
+
+    if (env->ExceptionOccurred()) {
+          std::cout << "Exception occurred" << std::endl;
+          env->ExceptionDescribe();
+          env->ExceptionClear();
+        }
+
+    return obj;
   }
 
  private:
