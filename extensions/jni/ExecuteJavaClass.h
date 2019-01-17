@@ -71,6 +71,7 @@ class ExecuteJavaClass : public core::Processor {
     return true;
   }
 
+
  protected:
 
   virtual void notifyStop() override {

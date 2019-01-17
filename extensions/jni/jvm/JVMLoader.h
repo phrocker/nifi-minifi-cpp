@@ -69,10 +69,19 @@ class JVMLoader {
     return gClassLoader;
   }
 
+  void remove_class(const std::string &name){
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+    objects_.erase(name);
+  }
+
   JavaClass load_class(const std::string &name) {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
     auto finder = objects_.find(name);
     if (finder != objects_.end()) {
-      return finder->second;
+      auto oldClzz = finder->second;
+      JavaClass clazz(oldClzz);
+      clazz.setEnv(attach(name));
+      return clazz;
     }
     auto env = attach(name);
     std::cout << "call " << (gClassLoader == nullptr) << std::endl;
@@ -97,6 +106,41 @@ class JVMLoader {
     objects_.insert(std::make_pair(name, clazz));
     return clazz;
   }
+
+
+
+  JavaClass load_class(const std::string &name, JNIEnv *env) {
+    std::lock_guard<std::mutex> lock(internal_mutex_);
+      auto finder = objects_.find(name);
+      if (finder != objects_.end()) {
+        auto oldClzz = finder->second;
+              JavaClass clazz(oldClzz);
+              clazz.setEnv(attach(name));
+              std::cout << "returned prev obj" << std::endl;
+              return clazz;
+      }
+      std::cout << "call " << (gClassLoader == nullptr) << std::endl;
+
+      std::string modifiedName = name;
+      modifiedName = utils::StringUtils::replaceAll(modifiedName, "/", ".");
+
+      auto obj = env->CallObjectMethod(gClassLoader, gFindClassMethod, env->NewStringUTF(modifiedName.c_str()));
+      std::cout << " res nu ? " << (obj == nullptr) << std::endl;
+      auto clazzobj = static_cast<jclass>(obj);
+
+      if (clazzobj == nullptr) {
+        std::cout << "nully " << std::endl;
+        if (env->ExceptionOccurred()) {
+          std::cout << "Exception occurred" << std::endl;
+          env->ExceptionDescribe();
+          env->ExceptionClear();
+        }
+      }
+      std::cout << "called" << (gClassLoader == nullptr) << std::endl;
+      JavaClass clazz(name, clazzobj, env);
+      objects_.insert(std::make_pair(name, clazz));
+      return clazz;
+    }
 
   /*
 
@@ -211,12 +255,13 @@ class JVMLoader {
   }
 
  protected:
+  std::mutex internal_mutex_;
 
 #ifdef WIN32
 
   // base_object doesn't have a handle
   std::map< HMODULE, std::string > resource_mapping_;
-  std::mutex internal_mutex_;
+
 
   std::string error_str_;
   std::string current_error_;
@@ -350,6 +395,16 @@ class JVMLoader {
 
 #endif
 
+  inline jclass find_class_global(JNIEnv* env, const char *name){
+      jclass c = env->FindClass(name);
+      jclass c_global = 0;
+      if (c){
+          c_global = (jclass)env->NewGlobalRef(c);
+          env->DeleteLocalRef(c);
+      }
+      return c_global;
+  }
+
   void initialize(const std::vector<std::string> &opts) {
     string_options_ = opts;
     // added for testing
@@ -372,9 +427,9 @@ class JVMLoader {
 // pointer in env
     JNI_CreateJavaVM(&jvm_, (void**) &env_, &vm_args);
 
-    auto randomClass = env_->FindClass("org/apache/nifi/processor/ProcessContext");
+    auto randomClass = find_class_global(env_,"org/apache/nifi/processor/ProcessContext");
     jclass classClass = env_->GetObjectClass(randomClass);
-    auto classLoaderClass = env_->FindClass("java/lang/ClassLoader");
+    auto classLoaderClass = find_class_global(env_,"java/lang/ClassLoader");
     auto getClassLoaderMethod = env_->GetMethodID(classClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
     gClassLoader = env_->CallObjectMethod(randomClass, getClassLoaderMethod);
     gFindClassMethod = env_->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");

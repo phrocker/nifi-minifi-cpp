@@ -54,7 +54,7 @@ class NarClassLoader {
       printf("Find method Failed. 3\n");
       return nullptr;
     } else {
-      printf("Found method.\n");
+      printf("Found method. %s\n",requested_name.c_str());
     }
 
     auto clazz_name = env->NewStringUTF(requested_name.c_str());
@@ -63,6 +63,12 @@ class NarClassLoader {
 
     return (jclass) job;
   }
+
+
+
+   std::string getAnnotation(const std::string &requested_name){
+
+   }
   /**
    * Call empty constructor
    */
@@ -77,7 +83,7 @@ class NarClassLoader {
       printf("Find method Failed 2.\n");
       return nullptr;
     } else {
-      printf("Found method.\n");
+      printf("Found method. %s\n",requested_name.c_str());
     }
 
     auto clazz_name = env->NewStringUTF(requested_name.c_str());

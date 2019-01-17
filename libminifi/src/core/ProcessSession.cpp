@@ -64,7 +64,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::create() {
   auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
 
   std::shared_ptr<FlowFileRecord> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
-
+  record->setSize(0);
   if (flow_version != nullptr) {
     auto flow_id = flow_version->getFlowId();
     std::string attr = FlowAttributeKey(FLOW_ID);
@@ -87,8 +87,8 @@ void ProcessSession::add(const std::shared_ptr<core::FlowFile> &record) {
 std::shared_ptr<core::FlowFile> ProcessSession::create(const std::shared_ptr<core::FlowFile> &parent) {
   std::map<std::string, std::string> empty;
   std::shared_ptr<FlowFileRecord> record = std::make_shared<FlowFileRecord>(process_context_->getFlowFileRepository(), process_context_->getContentRepository(), empty);
-
   if (record) {
+    record->setSize(0);
     auto flow_version = process_context_->getProcessorNode()->getFlowIdentifier();
     if (flow_version != nullptr) {
       auto flow_id = flow_version->getFlowId();

@@ -104,7 +104,8 @@ JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribut
   return env->NewStringUTF(value.c_str());
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj) {
-  core::FlowFile *ff = JVMLoader::getPtr<core::FlowFile>(env, obj);
+  JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
+  auto ff = ptr->ref_;
   jlong val = ff->getSize();
   return val;
 }
@@ -112,6 +113,7 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribut
 
   JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(obj);
 
+  std::cout << "getattributes" << std::endl;
   auto ff = ptr->ref_;
   jclass mapClass = env->FindClass("java/util/HashMap");
   if (mapClass == NULL) {

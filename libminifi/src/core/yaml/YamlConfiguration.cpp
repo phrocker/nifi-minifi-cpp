@@ -751,7 +751,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
           }
         }
       } else {
-        core::Property myProp;
+        core::Property myProp(propertyName,"","");
         processor->getProperty(propertyName, myProp);
         PropertyValue defaultValue;
         defaultValue = myProp.getDefaultValue();
@@ -800,6 +800,7 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
           }
         }
         std::string rawValueString = propertyValueNode.as<std::string>();
+        std::cout << "set property " << propertyName << propertyValueNode.as<std::string>() <<  std::endl;
         if (!processor->setProperty(myProp, coercedValue)) {
           std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
           if (proc != 0) {
@@ -812,6 +813,9 @@ void YamlConfiguration::parsePropertiesNodeYaml(YAML::Node *propertiesNode, std:
               logger_->log_warn("Dynamic property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
             }
           }
+        }
+        else{
+          logger_->log_debug("Property %s with value %s set", propertyName.c_str(), rawValueString.c_str());
         }
       }
     }

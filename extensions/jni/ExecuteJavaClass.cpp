@@ -65,6 +65,7 @@ void ExecuteJavaClass::initialize() {
   properties.insert(NiFiProcessor);
   properties.insert(NarDirectory);
   setSupportedProperties(properties);
+  setAcceptAllProperties();
   // Set the supported relationships
   std::set<core::Relationship> relationships;
   relationships.insert(Success);
@@ -116,28 +117,28 @@ void ExecuteJavaClass::onSchedule(const std::shared_ptr<core::ProcessContext> &c
 
   std::cout << "ah" << std::endl;
   clazzInstance = loader_->newInstance(class_name_);
+  auto onScheduledName = loader_->getAnnotation("OnScheduled");
   std::cout << "ah2 " << (clazzInstance == nullptr) << std::endl;
   //auto clazz = java_servicer_->loadClass(class_name_);
   current_processor_class = java_servicer_->getObjectClass(class_name_, clazzInstance);
   // attempt to schedule here
   std::cout << "ah3" << std::endl;
-  context->setDynamicProperty("Unique FlowFiles", "false");
-  context->setDynamicProperty("character-set","UTF-8");
-  context->setDynamicProperty("Batch Size","7");
+//  context->setDynamicProperty("Unique FlowFiles", "false");
+//  context->setDynamicProperty("character-set", "UTF-8");
+//  context->setDynamicProperty("Batch Size", "7");
 
-  JNINativeMethod methods[] = {
-           { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue)}
+  JNINativeMethod methods[] = { { "getPropertyValue", "(Ljava/lang/String;)Ljava/lang/String;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue) }
 
-      };
+  };
   spn.registerMethods(methods, 1);
   std::cout << "ah3" << std::endl;
   java_servicer_->setReference<core::ProcessContext>(obj, context.get());
   std::cout << "ah4" << std::endl;
   current_processor_class.callVoidMethod(clazzInstance, "initialize", "(Lorg/apache/nifi/processor/ProcessorInitializationContext;)V", initializer);
   std::cout << "calling" << std::endl;
-  try{
+  try {
     current_processor_class.callVoidMethod(clazzInstance, "onScheduled", "(Lorg/apache/nifi/processor/ProcessContext;)V", obj);
-  }catch( std::runtime_error &re){
+  } catch (std::runtime_error &re) {
     // this is avoidable.
   }
   std::cout << "called" << std::endl;
@@ -154,20 +155,26 @@ void ExecuteJavaClass::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   java_servicer_->setReference<core::ProcessContext>(java_process_context, context.get());
 
   auto sessioncls = java_servicer_->loadClass("org/apache/nifi/processor/JniProcessSession");
-  JNINativeMethod methods[] = {
-           { "create", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_create)},
-           { "get", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_get)},
-           { "transfer", "(Lorg/apache/nifi/flowfile/FlowFile;Lorg/apache/nifi/processor/Relationship;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_transfer)}
+  JNINativeMethod methods[] = { { "create", "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_create) }, { "get",
+      "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_get) },
+      { "write", "(Lorg/apache/nifi/flowfile/FlowFile;[B)Z",
+                     reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_write) },
+      { "transfer","(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_transfer) }
 
-      };
-  sessioncls.registerMethods(methods,3);
+  };
+  sessioncls.registerMethods(methods, 4);
 
-  auto java_process_session = sessioncls.newInstance(java_servicer_->attach());
+  try {
 
-  java_servicer_->setReference<core::ProcessSession>(java_process_session, session.get());
+    auto java_process_session = sessioncls.newInstance(java_servicer_->attach());
 
-  current_processor_class.callVoidMethod(java_servicer_->attach(), clazzInstance, "onTrigger", "(Lorg/apache/nifi/processor/ProcessContext;Lorg/apache/nifi/processor/ProcessSession;)V", java_process_context,java_process_session);
+    java_servicer_->setReference<core::ProcessSession>(java_process_session, session.get());
 
+    current_processor_class.callVoidMethod(java_servicer_->attach(), clazzInstance, "onTrigger", "(Lorg/apache/nifi/processor/ProcessContext;Lorg/apache/nifi/processor/ProcessSession;)V",
+                                           java_process_context, java_process_session);
+  } catch (const std::exception &e ) {
+    std::cout << "Oh error " << e.what() << std::endl;
+  }
   std::cout << "ohsnap" << std::endl;
 
 }

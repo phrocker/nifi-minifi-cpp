@@ -42,8 +42,10 @@ class JavaClass {
 
   JavaClass(const std::string &name, jclass classref, JNIEnv* jenv)
       : name_(name),
-        class_ref_(classref),
         jenv_(jenv) {
+    class_ref_ = (jclass)jenv_->NewGlobalRef(classref);
+    cnstrctr = jenv_->GetMethodID(class_ref_, "<init>", "()V");
+
   }
 
   jclass getReference() {
@@ -52,6 +54,10 @@ class JavaClass {
 
   JNIEnv *getEnv(){
     return jenv_;
+  }
+
+  void setEnv(JNIEnv* jenv){
+    jenv_ = jenv;
   }
 
   JavaClass &operator=(const JavaClass &o) = default;
@@ -66,31 +72,30 @@ class JavaClass {
     if (lenv == nullptr){
       lenv = jenv_;
     }
-    jmethodID cnstrctr = lenv->GetMethodID(class_ref_, "<init>", "()V");
     if (cnstrctr == nullptr) {
       printf("Find method Failed. %s\n",name_.c_str());
       return nullptr;
     } else {
-      printf("Found method.\n");
+      printf("Found method. %s\n",name_.c_str());
     }
 
-    return lenv->NewObject(class_ref_, cnstrctr);
+    return lenv->NewGlobalRef(lenv->NewObject(class_ref_, cnstrctr));
   }
 
   JNIEXPORT
     jobject newInstance(const std::string &arg) {
       std::string instanceName = "(L" + name_ + ";)V";
-      jmethodID cnstrctr = jenv_->GetMethodID(class_ref_, "<init>", "(Ljava/util/String;)V");
-      if (cnstrctr == nullptr) {
+      jmethodID cnstrctsString = jenv_->GetMethodID(class_ref_, "<init>", "(Ljava/util/String;)V");
+      if (cnstrctsString == nullptr) {
         printf("Find method Failed 5. %s\n",name_.c_str());
         return nullptr;
       } else {
-        printf("Found method.\n");
+        printf("Found method. %s\n",name_.c_str());
       }
 
       auto clazz_name = jenv_->NewStringUTF(arg.c_str());
 
-      return jenv_->NewObject(class_ref_, cnstrctr, clazz_name);
+      return jenv_->NewObject(class_ref_, cnstrctsString, clazz_name);
     }
 
   jmethodID getClassMethod(JNIEnv *env, const std::string &methodName, const std::string &type) {
@@ -172,6 +177,7 @@ class JavaClass {
    }   */
 
  private:
+  jmethodID cnstrctr;
   std::string name_;
   jclass class_ref_;
   JNIEnv* jenv_;

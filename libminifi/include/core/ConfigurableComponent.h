@@ -28,6 +28,8 @@
 
 #define DEFAULT_DYNAMIC_PROPERTY_DESC "Dynamic Property"
 
+#define STAR_PROPERTIES "Property"
+
 #include "logging/Logger.h"
 #include "Property.h"
 
@@ -179,6 +181,10 @@ class ConfigurableComponent {
 
  protected:
 
+  void setAcceptAllProperties(){
+    accept_all_properties_ = true;
+  }
+
   /**
    * Returns true if the instance can be edited.
    * @return true/false
@@ -186,6 +192,8 @@ class ConfigurableComponent {
   virtual bool canEdit()= 0;
 
   mutable std::mutex configuration_mutex_;
+
+  bool accept_all_properties_;
 
   // Supported properties
   std::map<std::string, Property> properties_;
@@ -206,6 +214,7 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const{
 
    auto &&it = properties_.find(name);
    if (it != properties_.end()) {
+     std::cout << "got " << name << std::endl;
      Property item = it->second;
      value = static_cast<T>(item.getValue());
      if (item.getValue().getValue() != nullptr){
@@ -217,6 +226,7 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const{
        return false;
      }
    } else {
+     std::cout << "no got " << name << std::endl;
      return false;
    }
 }

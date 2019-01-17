@@ -48,9 +48,14 @@ Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, j
   std::string value;
   std::string keystr = kstr;
   if (!context->getProperty(keystr,value) ){
+    std::cout << "no property " << kstr << std::endl;
     if (! context->getDynamicProperty(keystr,value) ){
+      std::cout << "no dynproperty " << kstr << std::endl;
       return nullptr;
     }
+  }
+  else{
+    std::cout << "get property " << kstr << std::endl;
   }
   env->ReleaseStringUTFChars(propertyName, kstr);
   return env->NewStringUTF(value.c_str());

@@ -19,12 +19,31 @@
 #define EXTENSIONS_JNIPROCESSSESSION_H
 
 #include <string>
+#include <memory>
 #include <vector>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
 #include <jni.h>
+#include "io/BaseStream.h"
+#include "FlowFileRecord.h"
 
+class JniByteOutStream : public minifi::OutputStreamCallback {
+ public:
+  JniByteOutStream(jbyte *bytes, size_t length) : bytes_(bytes),length_(length) {
+
+  }
+
+  virtual ~JniByteOutStream() {
+
+  }
+  virtual int64_t process(std::shared_ptr<minifi::io::BaseStream> stream) {
+    return stream->write((uint8_t*)bytes_,length_);
+  }
+ private:
+  jbyte *bytes_;
+  size_t length_;
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,13 +55,14 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_get(J
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_create(JNIEnv *env, jobject obj);
 
-JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jobject relationship);
+JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray);
+
+JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer(JNIEnv *env, jobject obj, jobject ff, jstring relationship);
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_putAtttribute(JNIEnv *env, jobject obj, jobject ff, jstring key, jstring value);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif /* EXTENSIONS_JNIPROCESSSESSION_H */
