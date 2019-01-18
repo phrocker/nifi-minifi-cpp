@@ -117,8 +117,8 @@ void ExecuteJavaClass::onSchedule(const std::shared_ptr<core::ProcessContext> &c
 
   std::cout << "ah" << std::endl;
   clazzInstance = loader_->newInstance(class_name_);
-  auto onScheduledName = loader_->getAnnotation("OnScheduled");
-  std::cout << "ah2 " << (clazzInstance == nullptr) << std::endl;
+  auto onScheduledName = loader_->getAnnotation(class_name_,"OnScheduled");
+  std::cout << "ah2 " << (clazzInstance == nullptr) << " " << onScheduledName << std::endl;
   //auto clazz = java_servicer_->loadClass(class_name_);
   current_processor_class = java_servicer_->getObjectClass(class_name_, clazzInstance);
   // attempt to schedule here
@@ -137,7 +137,7 @@ void ExecuteJavaClass::onSchedule(const std::shared_ptr<core::ProcessContext> &c
   current_processor_class.callVoidMethod(clazzInstance, "initialize", "(Lorg/apache/nifi/processor/ProcessorInitializationContext;)V", initializer);
   std::cout << "calling" << std::endl;
   try {
-    current_processor_class.callVoidMethod(clazzInstance, "onScheduled", "(Lorg/apache/nifi/processor/ProcessContext;)V", obj);
+    current_processor_class.callVoidMethod(clazzInstance, onScheduledName.c_str(), "(Lorg/apache/nifi/processor/ProcessContext;)V", obj);
   } catch (std::runtime_error &re) {
     // this is avoidable.
   }
@@ -173,7 +173,7 @@ void ExecuteJavaClass::onTrigger(const std::shared_ptr<core::ProcessContext> &co
     current_processor_class.callVoidMethod(java_servicer_->attach(), clazzInstance, "onTrigger", "(Lorg/apache/nifi/processor/ProcessContext;Lorg/apache/nifi/processor/ProcessSession;)V",
                                            java_process_context, java_process_session);
   } catch (const std::exception &e ) {
-    std::cout << "Oh error " << e.what() << std::endl;
+    std::cout << "Oh " << class_name_ << "  error " << e.what() << std::endl;
   }
   std::cout << "ohsnap" << std::endl;
 

@@ -66,8 +66,38 @@ class NarClassLoader {
 
 
 
-   std::string getAnnotation(const std::string &requested_name){
+   std::string getAnnotation(const std::string &requested_name, const std::string &method_name){
+     auto env = class_ref_.getEnv();
 
+     java_servicer_->attach();
+
+     jmethodID mthd = env->GetMethodID(class_ref_.getReference(), "getMethod", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+     if (mthd == nullptr) {
+       printf("Find method Failed 2.\n");
+       return nullptr;
+     } else {
+       printf("Found method. %s\n",requested_name.c_str());
+     }
+
+     auto clazz_name = env->NewStringUTF(requested_name.c_str());
+     auto annotation_name = env->NewStringUTF(method_name.c_str());
+
+     jstring obj = (jstring)env->CallObjectMethod(class_loader_, mthd, clazz_name, annotation_name);
+
+     if (env->ExceptionOccurred()) {
+           std::cout << "Exception occurred" << std::endl;
+           env->ExceptionDescribe();
+           env->ExceptionClear();
+         }
+     std::string ret;
+     if (obj){
+       const char *str = env->GetStringUTFChars(obj,0);
+
+       ret = str;
+       env->ReleaseStringUTFChars(obj,str);
+     }
+
+     return ret;;
    }
   /**
    * Call empty constructor
