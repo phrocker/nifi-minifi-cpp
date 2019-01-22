@@ -22,6 +22,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <future>
 #include <queue>
 #include <map>
 #include <set>
@@ -136,25 +137,39 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
   }
 }
 
-void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {
+int8_t ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-
+  int8_t ret = -1;
   try {
     // Start all the processor node, input and output ports
-    for (auto processor : processors_) {
-      logger_->log_debug("Starting %s", processor->getName());
+    // then start processing the groups]
+    std::future<int8_t> fut = std::async(std::launch::async, [this,timeScheduler,eventScheduler]() {
+      for (auto processor : processors_) {
+        logger_->log_debug("Starting %s", processor->getName());
 
-      if (!processor->isRunning() && processor->getScheduledState() != DISABLED) {
-        if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
+        if (!processor->isRunning() && processor->getScheduledState() != DISABLED) {
+          if (processor->getSchedulingStrategy() == TIMER_DRIVEN)
           timeScheduler->schedule(processor);
-        else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
+          else if (processor->getSchedulingStrategy() == EVENT_DRIVEN)
           eventScheduler->schedule(processor);
+        }
       }
-    }
-    // Start processing the group
-    for (auto processGroup : child_process_groups_) {
-      processGroup->startProcessing(timeScheduler, eventScheduler);
-    }
+      for (auto processGroup : child_process_groups_) {
+        processGroup->startProcessing(timeScheduler, eventScheduler);
+      }
+      return 0;
+    });
+    auto status = fut.wait_for(std::chrono::seconds(60));
+    do {
+      if (status == std::future_status::timeout) {
+        return -1;
+      } else if (status == std::future_status::ready) {
+        ret = fut.get();
+        break;
+      }
+      status = fut.wait_for(std::chrono::seconds(60));
+    } while (status == std::future_status::deferred);
+
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
@@ -162,6 +177,7 @@ void ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, Ev
     logger_->log_debug("Caught Exception during process group start processing");
     throw;
   }
+  return ret;
 }
 
 void ProcessGroup::stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {

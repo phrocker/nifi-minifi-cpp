@@ -192,10 +192,23 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   initialized_ = false;
   load(this->root_, true);
   flow_update_ = true;
-  bool started = start() == 0;
-
+  bool started = false;
+  try{
+    started = start() == 0;
+  }catch(...){
+    logger_->log_warn("Starting updated flow failed.");
+  }
+  if (!started){
+    // we have to return to the original configuration
+    logger_->log_warn("Could not start name %s, version %d", newRoot->getName(), newRoot->getVersion());
+    controller_map_->clear();
+    this->root_ = flow_configuration_->getRoot();
+    load(this->root_, true);
+    logger_->log_warn("Returning to prior configuration, name %s, version %d", newRoot->getName(), newRoot->getVersion());
+  }
   updating_ = false;
 
+  // only if we have started the flow provided version do we care
   if (started) {
     auto flowVersion = flow_configuration_->getFlowVersion();
     if (flowVersion) {
@@ -358,7 +371,9 @@ int16_t FlowController::start() {
 
       if (this->root_ != nullptr) {
         start_time_ = std::chrono::steady_clock::now();
-        this->root_->startProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get());
+        if (this->root_->startProcessing(this->timer_scheduler_.get(), this->event_scheduler_.get()) < 0){
+          return -1;
+        }
       }
       initializeC2();
       running_ = true;

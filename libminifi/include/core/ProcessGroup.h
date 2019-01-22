@@ -160,7 +160,7 @@ class ProcessGroup {
     return config_version_;
   }
   // Start Processing
-  void startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
+  int8_t startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
   // Stop Processing
   void stopProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler);
   // Whether it is root process group
