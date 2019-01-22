@@ -139,11 +139,11 @@ void ProcessGroup::removeProcessGroup(ProcessGroup *child) {
 
 int8_t ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, EventDrivenSchedulingAgent *eventScheduler) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  int8_t ret = -1;
+  int ret = -1;
   try {
     // Start all the processor node, input and output ports
     // then start processing the groups]
-    std::future<int8_t> fut = std::async(std::launch::async, [this,timeScheduler,eventScheduler]() {
+    std::future<int> fut = std::async(std::launch::async, [this,timeScheduler,eventScheduler]() {
       for (auto processor : processors_) {
         logger_->log_debug("Starting %s", processor->getName());
 
@@ -167,6 +167,7 @@ int8_t ProcessGroup::startProcessing(TimerDrivenSchedulingAgent *timeScheduler, 
         ret = fut.get();
         break;
       }
+      // try another sixty seconds
       status = fut.wait_for(std::chrono::seconds(60));
     } while (status == std::future_status::deferred);
 
