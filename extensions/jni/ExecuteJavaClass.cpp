@@ -159,10 +159,12 @@ void ExecuteJavaClass::onTrigger(const std::shared_ptr<core::ProcessContext> &co
       "()Lorg/apache/nifi/flowfile/FlowFile;", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_get) },
       { "write", "(Lorg/apache/nifi/flowfile/FlowFile;[B)Z",
                      reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_write) },
+     { "readFlowFile", "(Lorg/apache/nifi/flowfile/FlowFile;)[B",
+                     reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_readFlowFile) },
       { "transfer","(Lorg/apache/nifi/flowfile/FlowFile;Ljava/lang/String;)V", reinterpret_cast<void*>(&Java_org_apache_nifi_processor_JniProcessSession_transfer) }
 
   };
-  sessioncls.registerMethods(methods, 4);
+  sessioncls.registerMethods(methods, 5);
 
   try {
 

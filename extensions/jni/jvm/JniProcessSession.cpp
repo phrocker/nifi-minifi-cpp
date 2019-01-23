@@ -101,6 +101,32 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_creat
   return ff_instance;
 }
 
+JNIEXPORT jbyteArray JNICALL Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *env, jobject obj, jobject ff){
+  core::ProcessSession *session = JVMLoader::getPtr<core::ProcessSession>(env, obj);
+    JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(ff);
+
+
+    if (ptr->ref_) {
+
+      JniByteInputStream callback(ptr->ref_->getSize());
+
+      session->read(ptr->ref_,&callback);
+
+      std::cout << "create array of " << callback.buffer_size_ << std::endl;
+      jbyte *bytes = new jbyte[callback.buffer_size_];
+      jbyteArray jbytes=env->NewByteArray(callback.buffer_size_);
+      std::cout << "create array of " << callback.buffer_size_ << std::endl;
+      memcpy(bytes, callback.buffer_, callback.buffer_size_);
+      std::cout << "create array of " << callback.buffer_size_ << std::endl;
+      env->SetByteArrayRegion(jbytes,0,callback.buffer_size_,bytes);
+      std::cout << "create array of " << callback.buffer_size_ << std::endl;
+      return jbytes;
+    }
+
+    return nullptr;
+
+}
+
 JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_write(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
   core::ProcessSession *session = JVMLoader::getPtr<core::ProcessSession>(env, obj);
   JniFlowFile *ptr = JVMLoader::getInstance()->getReference<JniFlowFile>(ff);

@@ -45,9 +45,39 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
   size_t length_;
 };
 
+// Nest Callback Class for read stream
+  class JniByteInputStream : public minifi::InputStreamCallback {
+   public:
+    JniByteInputStream(uint64_t size)
+        : read_size_(0) {
+      buffer_size_ = size;
+      buffer_ = new uint8_t[buffer_size_];
+    }
+    ~JniByteInputStream() {
+      if (buffer_)
+        delete[] buffer_;
+    }
+    int64_t process(std::shared_ptr<minifi::io::BaseStream> stream) {
+      int64_t ret = 0;
+      ret = stream->read(buffer_, buffer_size_);
+      if (!stream)
+        read_size_ = stream->getSize();
+      else
+        read_size_ = buffer_size_;
+      return ret;
+    }
+    uint8_t *buffer_;
+    uint64_t buffer_size_;
+    uint64_t read_size_;
+  };
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+JNIEXPORT jbyteArray JNICALL Java_org_apache_nifi_processor_JniProcessSession_readFlowFile(JNIEnv *env, jobject obj, jobject ff);
 
 JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_initialise(JNIEnv *env, jobject obj);
 
