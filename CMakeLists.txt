@@ -47,6 +47,7 @@ option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use a UUID library available in the host system" OFF)
 
 option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
+option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
 
 cmake_dependent_option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON "NOT STATIC_BUILD" OFF)
 
@@ -553,6 +554,12 @@ if (ENABLE_TENSORFLOW)
     createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
 endif()
 
+## OpenCV Extesions
+option(ENABLE_OPENCV "Disables the OpenCV extensions." OFF)
+if (ENABLE_OPENCV)
+	message("!!!!! OPENCV compiling!!!!!!!!!!!")
+	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enabled OpenCV support" "extensions/opencv")
+endif()
 
 ## Bustache/template extensions
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
