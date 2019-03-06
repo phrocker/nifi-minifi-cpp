@@ -17,25 +17,22 @@
 # under the License.
 #
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+file(GLOB OPENCV_TESTS  "*.cpp")
 
-find_package(OpenCV REQUIRED)
+SET(OPENCV_TEST_COUNT 0)
 
-include_directories(${LIBOPENCV_INCLUDE_DIR})
+FOREACH(testfile ${OPENCV_TESTS})
+	get_filename_component(testfilename "${testfile}" NAME_WE)
+	add_executable("${testfilename}" "${testfile}")
+	target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/opencv/")
+	createTests("${testfilename}")
+	if (APPLE)
+		target_link_libraries (${testfilename} -Wl,-all_load minifi-opencv)
+	else ()
+		target_link_libraries (${testfilename} -Wl,--whole-archive minifi-opencv -Wl,--no-whole-archive)
+	endif ()
+	MATH(EXPR OPENCV_TEST_COUNT "${OPENCV_TEST_COUNT}+1")
+	add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+ENDFOREACH()
+message("-- Finished building ${OPENCV_TEST_COUNT} OpenCV related test file(s)...")
 
-file(GLOB SOURCES  "*.cpp")
-
-add_library(minifi-opencv STATIC ${SOURCES})
-set_property(TARGET minifi-opencv PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(THREADS_HAVE_PTHREAD_ARG)
-    target_compile_options(PUBLIC minifi-opencv "-pthread")
-endif()
-if(CMAKE_THREAD_LIBS_INIT)
-    target_link_libraries(minifi-opencv "${CMAKE_THREAD_LIBS_INIT}")
-endif()
-
-target_link_libraries( minifi-opencv ${LIBMINIFI} ${OpenCV_LIBRARIES} )
-
-SET (OPENCV-EXTENSION minifi-opencv PARENT_SCOPE)
-
-register_extension(minifi-opencv)
