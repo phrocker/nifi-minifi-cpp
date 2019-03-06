@@ -22,6 +22,12 @@
 #include <string>
 #include <jni.h>
 
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace jni {
+
 static inline std::string JniStringToUTF(JNIEnv *env, const jstring &jstr) {
   if(!jstr && !env) {
     return "";
@@ -34,5 +40,12 @@ static inline std::string JniStringToUTF(JNIEnv *env, const jstring &jstr) {
   env->ReleaseStringUTFChars(jstr, c_str);
   return str;
 }
+
+} /* namespace jni */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
+} /* namespace org */
+
 
 #endif //NIFI_MINIFI_CPP_JNIUTIL_H

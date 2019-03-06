@@ -431,6 +431,24 @@ jobject Java_org_apache_nifi_processor_JniProcessSession_clonePortion(JNIEnv *en
 
 }
 
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_getProvenanceReporter(JNIEnv *env, jobject obj) {
+  if (obj == nullptr) {
+    return nullptr;
+  }
+
+  minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
+
+  auto provReporterClazz = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniProvenanceReporter", env);
+
+  auto provenanceReporter = provReporterClazz.newInstance(env);
+
+  minifi::jni::ThrowIf(env);
+
+
+  minifi::jni::JVMLoader::getInstance()->setReference(provenanceReporter, env, session);
+
+}
+
 jboolean Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray) {
   if (obj == nullptr) {
     // does not mean an error should be thrown, rather we will let

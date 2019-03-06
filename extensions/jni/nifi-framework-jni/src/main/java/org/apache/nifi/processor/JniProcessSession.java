@@ -318,6 +318,6 @@ public class JniProcessSession implements ProcessSession {
 
     @Override
     public ProvenanceReporter getProvenanceReporter() {
-        return new JniProvenanceReporter();
+        return new JniProvenanceReporter(this);
     }
 }

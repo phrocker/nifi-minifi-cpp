@@ -385,11 +385,6 @@ class PublishKafka : public core::Processor {
 
   KafkaPool connection_pool_;
 
-//  rd_kafka_conf_t *conf_;
-  //rd_kafka_t *rk_;
-  //1rd_kafka_topic_conf_t *topic_conf_;
-  //rd_kafka_topic_t *rkt_;
-  //std::string topic_;
   uint64_t max_seg_size_;
   std::regex attributeNameRegex;
 };

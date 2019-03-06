@@ -77,6 +77,8 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_remov
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_clonePortion(JNIEnv *env, jobject obj, jobject ff, jlong offset, jlong size);
 
+JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_getProvenanceReporter(JNIEnv *env, jobject obj);
+
 JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_append(JNIEnv *env, jobject obj, jobject ff, jbyteArray byteArray);
 
 JNIEXPORT jint JNICALL Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv *env, jobject obj);

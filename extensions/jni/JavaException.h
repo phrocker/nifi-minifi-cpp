@@ -27,7 +27,7 @@
 #include "core/expect.h"
 #include <jni.h>
 #include "jvm/JavaDefs.h"
-#include "JNIUtil.h"
+#include "jvm/JNIUtil.h"
 
 namespace org {
 namespace apache {
