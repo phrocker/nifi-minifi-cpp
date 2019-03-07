@@ -416,6 +416,12 @@ class LogAttribute(Processor):
         super(LogAttribute, self).__init__('LogAttribute',
                                            auto_terminate=['success'])
 
+class HashContent(Processor):
+    def __init__(self, ):
+        super(HashContent, self).__init__('HashContent',
+                                           auto_terminate=['success'])
+
+
 
 class GetFile(Processor):
     def __init__(self, input_dir):
