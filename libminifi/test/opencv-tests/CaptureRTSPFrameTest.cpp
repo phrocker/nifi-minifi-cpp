@@ -41,7 +41,6 @@
 TEST_CASE("CaptureRTSPFrame Dyer Home", "[opencvtest1]") {
 
     TestController testController;
-    core::ClassLoader::getDefaultClassLoader().registerResource("", "createGPSFactory");
 
     LogTestController::getInstance().setTrace<minifi::processors::CaptureRTSPFrame>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();

@@ -59,7 +59,7 @@ public:
 
     class CaptureRTSPFrameWriteCallback : public OutputStreamCallback {
         public:
-            explicit CaptureRTSPFrameWriteCallback(std::shared_ptr<cv::Mat> image_mat)
+            explicit CaptureRTSPFrameWriteCallback(cv::Mat image_mat)
                     : image_mat_(std::move(image_mat)) {
             }
             ~CaptureRTSPFrameWriteCallback() override = default;
@@ -67,7 +67,7 @@ public:
             int64_t process(std::shared_ptr<io::BaseStream> stream) override {
                 int64_t ret = 0;
                 if (image_buf_.size() > 0) {
-                    imencode(".jpg", *image_mat_.get(), image_buf_);
+                    imencode(".jpg", image_mat_, image_buf_);
                     ret = stream->write(image_buf_.data(), image_buf_.size());
                 }
                 return ret;
@@ -75,7 +75,7 @@ public:
 
         private:
             std::vector<uchar> image_buf_;
-            std::shared_ptr<cv::Mat> image_mat_;
+            cv::Mat image_mat_;
     };
 
 private:

@@ -91,23 +91,19 @@ namespace org {
 
                     void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                                                  const std::shared_ptr<core::ProcessSession> &session) {
-                        auto flow_file = session->get();
-
-                        if (!flow_file) {
-                            return;
-                        }
+                        auto flow_file = session->create();
 
                         // For now lets test building and tearing down from scratch on each invocation ....
                         cv::VideoCapture capture("rtsp://admin:Rascal18@192.168.1.200");
                         bool OK = capture.grab();
-                        std::shared_ptr<cv::Mat> frame;
+                        cv::Mat frame;
                         if (OK == false){
                             logger_->log_error("Unable to Capture RTSP frame!!!");
                         }
                         else{
                             // retrieve a frame of your source
-                            if (capture.read(*frame)) {
-                                if (!frame->empty()) {
+                            if (capture.read(frame)) {
+                                if (!frame.empty()) {
                                     logger_->log_info("Writing output capture image flow file");
                                     CaptureRTSPFrameWriteCallback write_cb(frame);
                                     session->write(flow_file, &write_cb);
@@ -123,109 +119,6 @@ namespace org {
                         // Release the Capture reference and free up resources.
                         capture.release();
 
-
-
-//                        try {
-//                            // Read graph
-//                            std::string tf_type;
-//                            flow_file->getAttribute("tf.type", tf_type);
-//
-//                            std::shared_ptr<tensorflow::GraphDef> graph_def;
-//                            uint32_t graph_version;
-//
-//                            {
-//                                std::lock_guard<std::mutex> guard(graph_def_mtx_);
-//
-//                                if ("graph" == tf_type) {
-//                                    logger_->log_info("Reading new graph def");
-//                                    graph_def_ = std::make_shared<tensorflow::GraphDef>();
-//                                    GraphReadCallback graph_cb(graph_def_);
-//                                    session->read(flow_file, &graph_cb);
-//                                    graph_version_++;
-//                                    logger_->log_info("Read graph version: %i", graph_version_);
-//                                    session->remove(flow_file);
-//                                    return;
-//                                }
-//
-//                                graph_version = graph_version_;
-//                                graph_def = graph_def_;
-//                            }
-//
-//                            if (!graph_def) {
-//                                logger_->log_error("Cannot process input because no graph has been defined");
-//                                session->transfer(flow_file, Retry);
-//                                return;
-//                            }
-//
-//                            // Use an existing context, if one is available
-//                            std::shared_ptr<TFContext> ctx;
-//
-//                            if (tf_context_q_.try_dequeue(ctx)) {
-//                                logger_->log_debug("Using available TensorFlow context");
-//
-//                                if (ctx->graph_version != graph_version) {
-//                                    logger_->log_info("Allowing session with stale graph to expire");
-//                                    ctx = nullptr;
-//                                }
-//                            }
-//
-//                            if (!ctx) {
-//                                logger_->log_info("Creating new TensorFlow context");
-//                                tensorflow::SessionOptions options;
-//                                ctx = std::make_shared<TFContext>();
-//                                ctx->tf_session.reset(tensorflow::NewSession(options));
-//                                ctx->graph_version = graph_version;
-//                                auto status = ctx->tf_session->Create(*graph_def);
-//
-//                                if (!status.ok()) {
-//                                    std::string msg = "Failed to create TensorFlow session: ";
-//                                    msg.append(status.ToString());
-//                                    throw std::runtime_error(msg);
-//                                }
-//                            }
-//
-//                            // Apply graph
-//                            // Read input tensor from flow file
-//                            auto input_tensor_proto = std::make_shared<tensorflow::TensorProto>();
-//                            TensorReadCallback tensor_cb(input_tensor_proto);
-//                            session->read(flow_file, &tensor_cb);
-//                            tensorflow::Tensor input;
-//                            input.FromProto(*input_tensor_proto);
-//                            std::vector<tensorflow::Tensor> outputs;
-//                            auto status = ctx->tf_session->Run({{input_node_, input}}, {output_node_}, {}, &outputs);
-//
-//                            if (!status.ok()) {
-//                                std::string msg = "Failed to apply TensorFlow graph: ";
-//                                msg.append(status.ToString());
-//                                throw std::runtime_error(msg);
-//                            }
-//
-//                            // Create output flow file for each output tensor
-//                            for (const auto &output : outputs) {
-//                                auto tensor_proto = std::make_shared<tensorflow::TensorProto>();
-//                                output.AsProtoTensorContent(tensor_proto.get());
-//                                logger_->log_info("Writing output tensor flow file");
-//                                TensorWriteCallback write_cb(tensor_proto);
-//                                session->write(flow_file, &write_cb);
-//                                session->transfer(flow_file, Success);
-//                            }
-//
-//                            // Make context available for use again
-//                            if (tf_context_q_.size_approx() < getMaxConcurrentTasks()) {
-//                                logger_->log_debug("Releasing TensorFlow context");
-//                                tf_context_q_.enqueue(ctx);
-//                            } else {
-//                                logger_->log_info("Destroying TensorFlow context because it is no longer needed");
-//                            }
-//                        } catch (std::exception &exception) {
-//                            logger_->log_error("Caught Exception %s", exception.what());
-//                            session->transfer(flow_file, Failure);
-//                            this->yield();
-//                        } catch (...) {
-//                            logger_->log_error("Caught Exception");
-//                            session->transfer(flow_file, Failure);
-//                            this->yield();
-//                        }
                     }
 
 
