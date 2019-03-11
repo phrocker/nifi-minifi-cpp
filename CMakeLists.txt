@@ -25,23 +25,32 @@ set(PROJECT_VERSION_MINOR 6)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
+if (WIN32)
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON)
+else()
+option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" OFF)
+endif()
 option(OPENSSL_OFF "Disables OpenSSL" OFF)
 option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" OFF)
 option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
+if (WIN32)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
+else()
+option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" OFF)
+endif()
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 if (WIN32)
-option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" OFF)
-else()
 option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON)
+else()
+option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" OFF)
 endif()
 option(ENABLE_PYTHON "Instructs the build system to enable building shared objects for the python lib" OFF)
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 
+option(OPENSSL_FORCE_SHARED "Forces linking against shared library" ON)
 
 include(CheckIncludeFile)
 include(FeatureSummary)
@@ -175,40 +184,8 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if (OPENSSL_OFF STREQUAL "OFF")
-	if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
-		message("Using bundled LibreSSL")
-		set(BUILD_ARGS "")
-		if (WIN32)
-		set(BUILD_ARGS " -GVisual Studio 15 2017")
-		endif(WIN32)
-		ExternalProject_Add(
-		libressl-portable
-		GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
-		GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
-		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-		CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-					"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
-					"${BUILD_ARGS}"
-		PATCH_COMMAND ./autogen.sh
-		)
-	
-		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
-		add_library(crypto STATIC IMPORTED)
-		set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
-		add_dependencies(crypto libressl-portable)
-		add_library(ssl STATIC IMPORTED)
-		set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
-		set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-		add_dependencies(ssl libressl-portable)
-		add_library(tls STATIC IMPORTED)
-		set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
-		set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
-		add_dependencies(tls libressl-portable)
-	
-		set(OPENSSL_FOUND "YES")
-		set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
-		set(OPENSSL_LIBRARIES tls ssl crypto)
-	else()
+	if(USE_SYSTEM_OPENSSL)
+		
 		# Set the right openssl root path
 		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 		set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
@@ -230,6 +207,41 @@ if (OPENSSL_OFF STREQUAL "OFF")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DOPENSSL_SUPPORT")
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DOPENSSL_SUPPORT")
 		endif()
+	else()
+		message("Using bundled LibreSSL")
+		set(BUILD_ARGS "")
+		if (WIN32)
+		set(BUILD_ARGS " -GVisual Studio 15 2017")
+		endif(WIN32)
+		ExternalProject_Add(
+		libressl-portable
+		GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
+		GIT_TAG "4ea2a01a0d2cc889e95316f51c7a36f8f158df44"
+		SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
+		CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+					"-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+					"-DLIBRESSL_APPS=OFF"
+					"-DLIBRESSL_TESTS=OFF"
+					"${BUILD_ARGS}"
+		PATCH_COMMAND ./autogen.sh
+		)
+	
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+		add_library(crypto STATIC IMPORTED)
+		set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
+		add_dependencies(crypto libressl-portable)
+		add_library(ssl STATIC IMPORTED)
+		set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
+		set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
+		add_dependencies(ssl libressl-portable)
+		add_library(tls STATIC IMPORTED)
+		set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
+		set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
+		add_dependencies(tls libressl-portable)
+	
+		set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
+		set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include" CACHE STRING "" FORCE)
+		set(OPENSSL_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a" "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a" CACHE STRING "" FORCE)
 	endif()
 if (OPENSSL_FOUND)
   include_directories(${OPENSSL_INCLUDE_DIR})
@@ -240,7 +252,7 @@ endif (OPENSSL_FOUND)
 else()
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
 endif()
-if(USE_SYSTEM_ZLIB STREQUAL "OFF")
+if(NOT USE_SYSTEM_ZLIB)
   message("Using bundled zlib")
 
   if (WIN32)
@@ -268,9 +280,9 @@ if(USE_SYSTEM_ZLIB STREQUAL "OFF")
   add_dependencies(z zlib-external)
   set(ZLIB_FOUND "YES" CACHE STRING "" FORCE)
   set(ZLIB_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include" CACHE STRING "" FORCE)
-  set(ZLIB_LIBRARIES z CACHE STRING "" FORCE)
-  set(ZLIB_LIBRARY z CACHE STRING "" FORCE)
-  set(ZLIB_LIBRARY z CACHE STRING "" FORCE)
+  set(ZLIB_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
+  set(ZLIB_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
+  set(ZLIB_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
   message("ZLIBV LIBR is ${ZLIB_LIBRARIES}")
 else()
   find_package (ZLIB REQUIRED)
@@ -347,7 +359,7 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
     BUILD_BYPRODUCTS "thirdparty/${BYPRODUCT}"
   )
 
-  if(USE_SYSTEM_OPENSSL STREQUAL "OFF")
+  if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
     add_dependencies(curl-external libressl-portable)
   endif()
 
@@ -362,8 +374,10 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   add_dependencies(curl curl-external)
   set(CURL_FOUND "YES")
   set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
-  set(CURL_LIBRARY curl CACHE STRING "" FORCE)
+  set(CURL_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}" CACHE STRING "" FORCE)
   set(CURL_LIBRARIES ${CURL_LIBRARY} CACHE STRING "" FORCE)
+ else()
+  message("Using System cURL")
 endif()
 
 if (CURL_FOUND)
@@ -425,10 +439,18 @@ execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
                
 add_subdirectory(libminifi)
 
+if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
+  add_dependencies(minifi libressl-portable)
+endif()
+
 #### EXTENSIONS
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
 if ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET)
 	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "extensions/http-curl/tests/")
+	if(NOT USE_SYSTEM_CURL)
+		message("minifi-http-curl will depend on curl-external")
+		add_dependencies(minifi-http-curl curl-external)
+	endif()
 endif()
 
 option(DISABLE_CIVET "Disables CivetWeb components." OFF)
@@ -542,6 +564,8 @@ endif()
 
 add_subdirectory(main)
 add_subdirectory(nanofi)
+
+add_dependencies(nanofi minifiexe)
 
 if (NOT DISABLE_CURL)
   if (ENABLE_PYTHON)

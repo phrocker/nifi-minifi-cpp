@@ -25,7 +25,7 @@ include_directories(protocols client processors sitetosite)
 file(GLOB SOURCES  "*.cpp" "protocols/*.cpp" "client/*.cpp" "processors/*.cpp" "sitetosite/*.cpp")
 
 if (USE_CURL_NSS)
-    message("okay use nss")
+    message("Using NSS")
 	add_definitions(-DUSE_CURL_NSS)
 endif()
 
