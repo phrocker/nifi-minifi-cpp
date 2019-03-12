@@ -327,6 +327,15 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   set(CURL_C_FLAGS "-I${OPENSSL_INCLUDE_DIR}")
   set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
 
+
+get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+
+if ("${LIB64}" STREQUAL "TRUE")
+    set(LIBSUFFIX 64)
+else()
+    set(LIBSUFFIX "")
+endif()
+
   if (WIN32)
  if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
   set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.lib")
@@ -334,7 +343,7 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   set(BYPRODUCT "thirdparty/curl-install/lib/libcurl-d.lib")
   endif()
   else()
-  set(BYPRODUCT "thirdparty/curl-install/lib/libcurl.a")
+  set(BYPRODUCT "thirdparty/curl-install/lib${LIBSUFFIX}/libcurl.a")
   endif()
 
   if (WIN32)
