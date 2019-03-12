@@ -345,7 +345,7 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   ExternalProject_Add(
     curl-external
     GIT_REPOSITORY "https://github.com/curl/curl.git"
-    GIT_TAG "f3294d9d86e6a7915a967efff2842089b8b0d071"  # Version 7.59.0
+    GIT_TAG "f3294d9d86e6a7915a967efff2842089b8b0d071"  # Version 7.64.0
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
