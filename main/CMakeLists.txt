@@ -82,6 +82,24 @@ else()
 #	set_target_properties(minifiexe PROPERTIES LINK_FLAGS "/WHOLEARCHIVE:core-minifi")
 endif ()
 
+# Include OpenSSL
+if (OPENSSL_FOUND)
+	if (NOT USE_SYSTEM_OPENSSL)
+		if (APPLE)
+			target_link_libraries(minifiexe -Wl,-all_load${OPENSSL_LIBRARIES})
+		elseif(NOT WIN32)
+			target_link_libraries(minifiexe -Wl,--whole-archive ${OPENSSL_LIBRARIES} -Wl,--no-whole-archive)
+		else()
+		target_link_libraries(minifiexe ${OPENSSL_LIBRARIES})
+		endif()
+	else()
+		target_link_libraries(minifiexe ${OPENSSL_LIBRARIES})
+	endif()
+	include_directories(${OPENSSL_INCLUDE_DIR})
+endif(OPENSSL_FOUND)
+
+add_dependencies(minifiexe minifi)
+
 
 if (APPLE)
 	target_link_libraries (minifiexe -Wl,-all_load minifi)
@@ -100,13 +118,6 @@ if (WIN32)
   	target_link_libraries(minifiexe semaphore)
 endif()
 
-# Include OpenSSL
-if (OPENSSL_FOUND)
-	target_link_libraries(minifiexe ${OPENSSL_LIBRARIES})
-	include_directories(${OPENSSL_INCLUDE_DIR})
-endif(OPENSSL_FOUND)
-
-add_dependencies(minifiexe minifi)
 
 
 if (APPLE)
