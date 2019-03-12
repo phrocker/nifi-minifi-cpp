@@ -16,3 +16,7 @@
 # under the License.
 
 # Dummy OpenSSL find for when we use bundled version
+
+set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
+set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include" CACHE STRING "" FORCE)
+set(OPENSSL_LIBRARIES "${CMAKE_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a" "${CMAKE_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a" "${CMAKE_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a" CACHE STRING "" FORCE)
