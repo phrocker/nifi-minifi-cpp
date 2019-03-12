@@ -86,9 +86,10 @@ elseif (APPLE)
     )
 else ()
 	target_link_libraries(minifi-http-curl ${OPENSSL_LIBRARIES})
-    set_target_properties(minifi-http-curl PROPERTIES
-        LINK_FLAGS "-Wl,--whole-archive"
-    )
+	message("${OPENSSL_LIBRARIES}")
+	foreach(OPENSSL_LIB ${OPENSSL_LIBRARIES})
+		target_link_libraries (minifi-http-curl -Wl,--whole-archive ${OPENSSL_LIB} -Wl,--no-whole-archive)	
+	endforeach()
 endif ()
 
 SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)
