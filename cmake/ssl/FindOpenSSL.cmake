@@ -18,5 +18,37 @@
 # Dummy OpenSSL find for when we use bundled version
 
 set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
-set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include" CACHE STRING "" FORCE)
-set(OPENSSL_LIBRARIES "${CMAKE_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a" "${CMAKE_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a" "${CMAKE_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a" CACHE STRING "" FORCE)
+set(OPENSSL_INCLUDE_DIR "${LIBRESSL_SRC_DIR}/include" CACHE STRING "" FORCE)
+set(OPENSSL_CRYPTO_LIBRARY "${LIBRESSL_BIN_DIR}/lib/libcrypto.a" CACHE STRING "" FORCE)
+set(OPENSSL_SSL_LIBRARY "${LIBRESSL_BIN_DIR}/lib/libssl.a" CACHE STRING "" FORCE)
+set(OPENSSL_LIBRARIES "${LIBRESSL_BIN_DIR}/lib/libtls.a" ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY} CACHE STRING "" FORCE)
+
+message("**ADDING OpenSSL::SSL ${OPENSSL_CRYPTO_LIBRARY}***")
+
+if (EXISTS "${OPENSSL_CRYPTO_LIBRARY}")
+	message("**** have crypto ***")
+endif()
+ if(NOT TARGET OpenSSL::Crypto )
+      message("**ADDING OpenSSL::SSL***")
+    add_library(OpenSSL::Crypto UNKNOWN IMPORTED)
+    set_target_properties(OpenSSL::Crypto PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}")
+    
+      set_target_properties(OpenSSL::Crypto PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+        IMPORTED_LOCATION "${OPENSSL_CRYPTO_LIBRARY}")
+    
+  endif()
+
+  if(NOT TARGET OpenSSL::SSL
+      )
+    add_library(OpenSSL::SSL UNKNOWN IMPORTED)
+    set_target_properties(OpenSSL::SSL PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${OPENSSL_INCLUDE_DIR}")
+    
+    message("**ADDING OpenSSL::SSL as ${OPENSSL_SSL_LIBRARY}***")
+      set_target_properties(OpenSSL::SSL PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+        IMPORTED_LOCATION "${OPENSSL_SSL_LIBRARY}")
+    
+  endif()

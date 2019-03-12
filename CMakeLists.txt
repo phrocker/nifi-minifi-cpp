@@ -234,14 +234,19 @@ if (OPENSSL_OFF STREQUAL "OFF")
 		add_library(crypto STATIC IMPORTED)
 		set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
 		add_dependencies(crypto libressl-portable)
+						
 		add_library(ssl STATIC IMPORTED)
 		set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
 		set_target_properties(ssl PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
 		add_dependencies(ssl libressl-portable)
+		
 		add_library(tls STATIC IMPORTED)
 		set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
 		set_target_properties(tls PROPERTIES INTERFACE_LINK_LIBRARIES crypto)
 		add_dependencies(tls libressl-portable)
+		
+		set(LIBRESSL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/" CACHE STRING "" FORCE)
+		set(LIBRESSL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/" CACHE STRING "" FORCE)
 	
 		set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
 		set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include" CACHE STRING "" FORCE)
@@ -340,14 +345,16 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   ExternalProject_Add(
     curl-external
     GIT_REPOSITORY "https://github.com/curl/curl.git"
-    GIT_TAG "4d6bd91ab33328c6d27eddc32e064defc02dc4fd"  # Version 7.59.0
+    GIT_TAG "f3294d9d86e6a7915a967efff2842089b8b0d071"  # Version 7.59.0
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
                 -DBUILD_CURL_EXE=OFF
                 -DBUILD_TESTING=OFF
-                -DCURL_STATICLIB=ON
+                -DBUILD_SHARED_LIBS=OFF
                 -DHTTP_ONLY=ON
+                -DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}
+                -DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}
                 -DCURL_DISABLE_CRYPTO_AUTH=ON
                 -DHAVE_GLIBC_STRERROR_R=1
                 -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
@@ -370,6 +377,8 @@ if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
   add_library(curl STATIC IMPORTED)
   set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${BYPRODUCT}")
+  
+  
   if (OPENSSL_FOUND) 
      if (NOT WIN32)
        set_target_properties(curl PROPERTIES INTERFACE_LINK_LIBRARIES ${OPENSSL_LIBRARIES})
