@@ -569,7 +569,7 @@ add_dependencies(nanofi minifiexe)
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 	add_subdirectory(thirdparty/cxxopts)
 	add_subdirectory(controller)
-	add_dependencies(controller minifiexe)
+	add_dependencies(minificontroller minifiexe)
 endif()
 
 
