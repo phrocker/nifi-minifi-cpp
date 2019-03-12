@@ -53,7 +53,7 @@ option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WI
 option(OPENSSL_FORCE_SHARED "Forces linking against shared library" OFF)
 
 if (NOT STATIC_BUILD AND NOT USE_SYSTEM_OPENSSL)
-	set(OPENSSL_FORCE_SHARED ON)
+	option(OPENSSL_FORCE_SHARED "Forces linking against shared library" ON)
 endif()
 
 include(CheckIncludeFile)
@@ -462,11 +462,6 @@ if (NOT DISABLE_CIVET)
 	createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb" "${TEST_DIR}/civetweb-tests")
 endif()
 
-if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
-	add_subdirectory(thirdparty/cxxopts)
-	add_subdirectory(controller)
-endif()
-
 ## Add the rocks DB extension
 if (NOT ROCKSDB_FOUND OR BUILD_ROCKSDB)
 	set(BUILD_RD "TRUE")
@@ -570,6 +565,13 @@ add_subdirectory(main)
 add_subdirectory(nanofi)
 
 add_dependencies(nanofi minifiexe)
+
+if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
+	add_subdirectory(thirdparty/cxxopts)
+	add_subdirectory(controller)
+	add_dependencies(controller minifiexe)
+endif()
+
 
 if (NOT DISABLE_CURL)
   if (ENABLE_PYTHON)
