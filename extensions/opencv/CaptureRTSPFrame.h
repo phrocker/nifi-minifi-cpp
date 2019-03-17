@@ -66,10 +66,11 @@ public:
 
             int64_t process(std::shared_ptr<io::BaseStream> stream) override {
                 int64_t ret = 0;
-                if (image_buf_.size() > 0) {
-                    imencode(".jpg", image_mat_, image_buf_);
-                    ret = stream->write(image_buf_.data(), image_buf_.size());
-                }
+                imencode(".jpg", image_mat_, image_buf_);
+
+                //imwrite( "/Users/jeremydyer/Desktop/images/capture.jpg", image_mat_ );
+
+                ret = stream->write(image_buf_.data(), image_buf_.size());
                 return ret;
             }
 
