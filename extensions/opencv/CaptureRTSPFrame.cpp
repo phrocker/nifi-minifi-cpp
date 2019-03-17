@@ -94,7 +94,15 @@ namespace org {
                         auto flow_file = session->create();
 
                         // For now lets test building and tearing down from scratch on each invocation ....
-                        cv::VideoCapture capture("rtsp://admin:Rascal18@192.168.1.200");
+                        std::string rtspURI = "rtsp://";
+                        rtspURI.append(rtsp_username_);
+                        rtspURI.append(":");
+                        rtspURI.append(rtsp_password_);
+                        rtspURI.append("@");
+                        rtspURI.append(rtsp_uri_);
+
+                        //cv::VideoCapture capture("rtsp://admin:Rascal18@192.168.1.200");
+                        cv::VideoCapture capture(rtspURI.c_str());
                         bool OK = capture.grab();
                         cv::Mat frame;
                         if (OK == false){
