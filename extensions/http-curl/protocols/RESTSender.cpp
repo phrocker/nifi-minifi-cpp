@@ -39,6 +39,7 @@ namespace c2 {
 RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
     : C2Protocol(name, uuid),
       logger_(logging::LoggerFactory<Connectable>::getLogger()) {
+
 }
 
 void RESTSender::initialize(const std::shared_ptr<core::controller::ControllerServiceProvider> &controller, const std::shared_ptr<Configure> &configure) {
@@ -98,12 +99,23 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     input->write(outputConfig);
     callback->ptr = input.get();
     callback->pos = 0;
+
+    if (!ssl_context_service_) {
+      auto generatedService = std::make_shared<minifi::controllers::SSLContextService>("Service", configuration_);
+      generatedService->onEnable();
+      client.initialize("POST", url, generatedService);
+    }
     client.set_request_method("POST");
     client.setUploadCallback(callback.get());
     client.setPostSize(outputConfig.size());
   } else {
-    // we do not need to set the uplaod callback
+    // we do not need to set the upload callback
     // since we are not uploading anything on a get
+    if (!ssl_context_service_) {
+      auto generatedService = std::make_shared<minifi::controllers::SSLContextService>("Service", configuration_);
+      generatedService->onEnable();
+      client.initialize("GET", url, generatedService);
+    }
     client.set_request_method("GET");
   }
 
