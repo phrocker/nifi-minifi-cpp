@@ -35,7 +35,9 @@
 #include "processors/TailFile.h"
 #include "processors/LogAttribute.h"
 #include <iostream>
+#include <ObjectDetection.h>
 #include "CaptureRTSPFrame.h"
+#include "processors/GetFile.h"
 
 
 TEST_CASE("CaptureRTSPFrame Dyer Home", "[opencvtest1]") {
@@ -47,8 +49,15 @@ TEST_CASE("CaptureRTSPFrame Dyer Home", "[opencvtest1]") {
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
     std::shared_ptr<TestPlan> plan = testController.createPlan();
-
     std::shared_ptr<core::Processor> captureRTSP = plan->addProcessor("CaptureRTSPFrame", "CaptureRTSPFrame");
+
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPUsername.getName(), "admin");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPPassword.getName(), "nope");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPHostname.getName(), "192.168.1.200");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPURI.getName(), "");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::RTSPPort.getName(), "");
+    plan->setProperty(captureRTSP, minifi::processors::CaptureRTSPFrame::ImageEncoding.getName(), ".jpg");
+
 
     plan->addProcessor("LogAttribute", "logattribute", core::Relationship("Success", "description"), true);
 
@@ -73,4 +82,32 @@ TEST_CASE("CaptureRTSPFrame Dyer Home", "[opencvtest1]") {
 
     //REQUIRE(true == LogTestController::getInstance().contains("GPSD client scheduled"));
     LogTestController::getInstance().reset();
+}
+
+
+
+TEST_CASE("ObjectDetection - Detect Face", "[objectfacedetection]") {
+
+  TestController testController;
+
+  LogTestController::getInstance().setTrace<minifi::processors::ObjectDetection>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+
+  char dir[] = "/Users/jeremydyer/Desktop/opencv_test";
+
+  std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
+  plan->setProperty(getfile, minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+
+  std::shared_ptr<core::Processor> objectDetection = plan->addProcessor("ObjectDetection", "ObjectDetection", core::Relationship("success", "description"), true);
+  plan->setProperty(objectDetection, minifi::processors::ObjectDetection::ImageEncoding.getName(), ".jpg");
+
+  plan->runNextProcessor();  // GetFile
+  plan->runNextProcessor();  // ObjectDetection
+  plan->reset();
+
+  LogTestController::getInstance().reset();
 }

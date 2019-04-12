@@ -24,77 +24,117 @@
 #include <core/Processor.h>
 #include <opencv2/opencv.hpp>
 
-namespace org {
-    namespace apache {
-        namespace nifi {
-            namespace minifi {
-                namespace processors {
+#include <iomanip>
+#include <ctime>
 
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace processors {
 
 class CaptureRTSPFrame : public core::Processor {
 
-public:
+ public:
 
-    explicit CaptureRTSPFrame(const std::string &name, utils::Identifier uuid = utils::Identifier())
-            : Processor(name, uuid),
-              logger_(logging::LoggerFactory<CaptureRTSPFrame>::getLogger()) {
+  explicit CaptureRTSPFrame(const std::string &name, utils::Identifier uuid = utils::Identifier())
+      : Processor(name, uuid),
+        logger_(logging::LoggerFactory<CaptureRTSPFrame>::getLogger()) {
+  }
+
+  static core::Property RTSPUsername;
+  static core::Property RTSPPassword;
+  static core::Property RTSPHostname;
+  static core::Property RTSPURI;
+  static core::Property RTSPPort;
+  static core::Property ImageEncoding;
+
+  static core::Relationship Success;
+  static core::Relationship Failure;
+
+  void initialize() override;
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
+    logger_->log_error("onTrigger invocation with raw pointers is not implemented");
+  }
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
+                 const std::shared_ptr<core::ProcessSession> &session) override;
+
+  void notifyStop() override;
+
+  class CaptureRTSPFrameWriteCallback : public OutputStreamCallback {
+   public:
+    explicit CaptureRTSPFrameWriteCallback(cv::Mat image_mat, std::string image_encoding_)
+        : image_mat_(std::move(image_mat)), image_encoding_(image_encoding_) {
+    }
+    ~CaptureRTSPFrameWriteCallback() override = default;
+
+    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+      int64_t ret = 0;
+      imencode(image_encoding_, image_mat_, image_buf_);
+      ret = stream->write(image_buf_.data(), image_buf_.size());
+      return ret;
     }
 
-    static core::Property RTSPUsername;
-    static core::Property RTSPPassword;
-    static core::Property RTSPHostname;
-    static core::Property RTSPURI;
-    static core::Property CaptureFrameRate;
+   private:
+    std::vector<uchar> image_buf_;
+    cv::Mat image_mat_;
+    std::string image_encoding_;
+  };
 
-    static core::Relationship Success;
-    static core::Relationship Failure;
+ private:
+  std::shared_ptr<logging::Logger> logger_;
+  std::string rtsp_username_;
+  std::string rtsp_password_;
+  std::string rtsp_host_;
+  std::string rtsp_port_;
+  std::string rtsp_uri_;
+  cv::VideoCapture video_capture_;
+  std::string image_encoding_;
+  std::string video_backend_driver_;
 
-    void initialize() override;
-    void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-    void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
-        logger_->log_error("onTrigger invocation with raw pointers is not implemented");
-    }
-    void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                   const std::shared_ptr<core::ProcessSession> &session) override;
+  std::function<int()> f_ex;
 
-    class CaptureRTSPFrameWriteCallback : public OutputStreamCallback {
-        public:
-            explicit CaptureRTSPFrameWriteCallback(cv::Mat image_mat)
-                    : image_mat_(std::move(image_mat)) {
-            }
-            ~CaptureRTSPFrameWriteCallback() override = default;
+  std::atomic<bool> running_;
 
-            int64_t process(std::shared_ptr<io::BaseStream> stream) override {
-                int64_t ret = 0;
-                imencode(".jpg", image_mat_, image_buf_);
+  std::unique_ptr<DataHandler> handler_;
 
-                //imwrite( "/Users/jeremydyer/Desktop/images/capture.jpg", image_mat_ );
+  std::vector<std::string> endpoints;
 
-                ret = stream->write(image_buf_.data(), image_buf_.size());
-                return ret;
-            }
+  std::map<std::string, std::future<int>*> live_clients_;
 
-        private:
-            std::vector<uchar> image_buf_;
-            cv::Mat image_mat_;
-    };
+  utils::ThreadPool<int> client_thread_pool_;
 
-private:
-    std::shared_ptr<logging::Logger> logger_;
-    std::string rtsp_username_;
-    std::string rtsp_password_;
-    std::string rtsp_hostname_;
-    std::string rtsp_uri_;
-    int8_t capture_framerate_;
+  moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
+
+  bool stay_connected_;
+
+  uint16_t concurrent_handlers_;
+
+  int8_t endOfMessageByte;
+
+  uint64_t reconnect_interval_;
+
+  uint64_t receive_buffer_size_;
+
+  uint16_t connection_attempt_limit_;
+
+  std::shared_ptr<GetTCPMetrics> metrics_;
+
+  // Mutex for ensuring clients are running
+
+  std::mutex mutex_;
+
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
 
 };
 
-                    REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT
+REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT
 
-                } /* namespace processors */
-            } /* namespace minifi */
-        } /* namespace nifi */
-    } /* namespace apache */
+} /* namespace processors */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
 } /* namespace org */
 
 

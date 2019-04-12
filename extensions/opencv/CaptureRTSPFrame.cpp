@@ -18,120 +18,158 @@
 #include "CaptureRTSPFrame.h"
 
 namespace org {
-    namespace apache {
-        namespace nifi {
-            namespace minifi {
-                namespace processors {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace processors {
 
-                    static core::Property rtspUsername;
-                    static core::Property rtspPassword;
-                    static core::Property rtspHostname;
-                    static core::Property rtspURI;
-                    static core::Property captureFrameRate;
+static core::Property rtspUsername;
+static core::Property rtspPassword;
+static core::Property rtspHostname;
+static core::Property rtspURI;
+static core::Property captureFrameRate;
+static core::Property imageEncoding;
 
-                    core::Property CaptureRTSPFrame::RTSPUsername(  // NOLINT
-                            "RTSP Username",
-                            "The username for connecting to the RTSP stream", "");
-                    core::Property CaptureRTSPFrame::RTSPPassword(  // NOLINT
-                            "RTSP Password",
-                            "Password used to connect to the RTSP stream", "");
-                    core::Property CaptureRTSPFrame::RTSPHostname(  // NOLINT
-                            "RTSP Hostname",
-                            "Hostname of the RTSP stream we are trying to connect to", "");
-                    core::Property CaptureRTSPFrame::RTSPURI(  // NOLINT
-                            "RTSP URI",
-                            "URI that should be appended to the RTSP stream hostname", "");
-                    core::Property CaptureRTSPFrame::CaptureFrameRate(  // NOLINT
-                            "RTSP Capture Frame Rate",
-                            "How many frames should be captured per second from the RTSP stream. This cannot be faster than the upstream source is supplying frame rates", "");
+core::Property CaptureRTSPFrame::RTSPUsername(  // NOLINT
+    "RTSP Username",
+    "The username for connecting to the RTSP stream", "");
+core::Property CaptureRTSPFrame::RTSPPassword(  // NOLINT
+    "RTSP Password",
+    "Password used to connect to the RTSP stream", "");
+core::Property CaptureRTSPFrame::RTSPHostname(  // NOLINT
+    "RTSP Hostname",
+    "Hostname of the RTSP stream we are trying to connect to", "");
+core::Property CaptureRTSPFrame::RTSPURI(  // NOLINT
+    "RTSP URI",
+    "URI that should be appended to the RTSP stream hostname", "");
+core::Property CaptureRTSPFrame::RTSPPort(  // NOLINT
+    "RTSP Port",
+    "Port that should be connected to to receive RTSP Frames",
+    "");
+core::Property CaptureRTSPFrame::ImageEncoding( // NOLINT
+    "Image Encoding",
+    "The encoding that should be applied the the frame images captured from the RTSP stream",
+    ".jpg"
+    );
 
-                    core::Relationship CaptureRTSPFrame::Success(  // NOLINT
-                            "success",
-                            "Successful capture of RTSP frame");
-                    core::Relationship CaptureRTSPFrame::Failure(  // NOLINT
-                            "failure",
-                            "Failures to capture RTSP frame");
+core::Relationship CaptureRTSPFrame::Success(  // NOLINT
+    "success",
+    "Successful capture of RTSP frame");
+core::Relationship CaptureRTSPFrame::Failure(  // NOLINT
+    "failure",
+    "Failures to capture RTSP frame");
 
-                    void CaptureRTSPFrame::initialize() {
-                        std::set<core::Property> properties;
-                        properties.insert(RTSPUsername);
-                        properties.insert(RTSPPassword);
-                        properties.insert(RTSPHostname);
-                        properties.insert(RTSPURI);
-                        properties.insert(CaptureFrameRate);
-                        setSupportedProperties(std::move(properties));
+void CaptureRTSPFrame::initialize() {
+  std::set<core::Property> properties;
+  properties.insert(RTSPUsername);
+  properties.insert(RTSPPassword);
+  properties.insert(RTSPHostname);
+  properties.insert(RTSPPort);
+  properties.insert(RTSPURI);
+  properties.insert(ImageEncoding);
+  setSupportedProperties(std::move(properties));
 
-                        std::set<core::Relationship> relationships;
-                        relationships.insert(Success);
-                        relationships.insert(Failure);
-                        setSupportedRelationships(std::move(relationships));
-                    }
+  std::set<core::Relationship> relationships;
+  relationships.insert(Success);
+  relationships.insert(Failure);
+  setSupportedRelationships(std::move(relationships));
+}
 
-                    void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
+void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) {
 
-                        std::string value;
+  std::string value;
 
-                        if (context->getProperty(RTSPUsername.getName(), value)) {
-                            rtsp_username_ = value;
-                        }
-                        if (context->getProperty(RTSPPassword.getName(), value)) {
-                            rtsp_password_ = value;
-                        }
-                        if (context->getProperty(RTSPHostname.getName(), value)) {
-                            rtsp_hostname_ = value;
-                        }
-                        if (context->getProperty(RTSPURI.getName(), value)) {
-                            rtsp_uri_ = value;
-                        }
-                        if (context->getProperty(CaptureFrameRate.getName(), value)) {
-                            core::Property::StringToInt(value, capture_framerate_);
-                        }
-                        logger_->log_trace("CaptureRTSPFrame processor scheduled");
-                    }
+  if (context->getProperty(RTSPUsername.getName(), value)) {
+    rtsp_username_ = value;
+  }
+  if (context->getProperty(RTSPPassword.getName(), value)) {
+    rtsp_password_ = value;
+  }
+  if (context->getProperty(RTSPHostname.getName(), value)) {
+    rtsp_host_ = value;
+  }
+  if (context->getProperty(RTSPPort.getName(), value)) {
+    rtsp_port_ = value;
+  }
+  if (context->getProperty(RTSPURI.getName(), value)) {
+    rtsp_uri_ = value;
+  }
+  if (context->getProperty(ImageEncoding.getName(), value)) {
+    image_encoding_ = value;
+  }
 
-                    void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                                                 const std::shared_ptr<core::ProcessSession> &session) {
-                        auto flow_file = session->create();
+  logger_->log_trace("CaptureRTSPFrame processor scheduled");
 
-                        // For now lets test building and tearing down from scratch on each invocation ....
-                        std::string rtspURI = "rtsp://";
-                        rtspURI.append(rtsp_username_);
-                        rtspURI.append(":");
-                        rtspURI.append(rtsp_password_);
-                        rtspURI.append("@");
-                        rtspURI.append(rtsp_uri_);
+  //TODO: Work with edge cases of dirty input when building URI
+  std::string rtspURI = "rtsp://";
+  rtspURI.append(rtsp_username_);
+  rtspURI.append(":");
+  rtspURI.append(rtsp_password_);
+  rtspURI.append("@");
+  rtspURI.append(rtsp_host_);
+  if (!rtsp_port_.empty()) {
+    rtspURI.append(":");
+    rtspURI.append(rtsp_port_);
+  }
 
-                        //cv::VideoCapture capture("rtsp://admin:Rascal18@192.168.1.200");
-                        cv::VideoCapture capture(rtspURI.c_str());
-                        bool OK = capture.grab();
-                        cv::Mat frame;
-                        if (OK == false){
-                            logger_->log_error("Unable to Capture RTSP frame!!!");
-                        }
-                        else{
-                            // retrieve a frame of your source
-                            if (capture.read(frame)) {
-                                if (!frame.empty()) {
-                                    logger_->log_info("Writing output capture image flow file");
-                                    CaptureRTSPFrameWriteCallback write_cb(frame);
-                                    session->write(flow_file, &write_cb);
-                                    session->transfer(flow_file, Success);
-                                } else {
-                                    logger_->log_error("Empty Mat frame received from Capture read command meaning the connection is bad");
-                                }
-                            } else {
-                                logger_->log_error("Unable to read from Capture handle on RTSP stream!!!");
-                            }
-                        }
+  if (!rtsp_uri_.empty()) {
+    rtspURI.append("/");
+    rtspURI.append(rtsp_uri_);
+  }
 
-                        // Release the Capture reference and free up resources.
-                        capture.release();
+  //TODO: Log RTSP URL but redact the password
+  cv::VideoCapture capture(rtspURI.c_str());
+  video_capture_ = capture;
+  video_backend_driver_ = video_capture_.getBackendName();
+}
 
-                    }
+void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
+                                 const std::shared_ptr<core::ProcessSession> &session) {
+  auto flow_file = session->create();
 
+  //TODO: Check authentication
 
-                } /* namespace processors */
-            } /* namespace minifi */
-        } /* namespace nifi */
-    } /* namespace apache */
+  cv::Mat frame;
+
+  // retrieve a frame of your source
+  if (video_capture_.read(frame)) {
+    if (!frame.empty()) {
+      CaptureRTSPFrameWriteCallback write_cb(frame, image_encoding_);
+      //TODO: Change filename attribute and update content type of flowfile
+
+      auto t = std::time(nullptr);
+      auto tm = *std::localtime(&t);
+
+      std::ostringstream oss;
+      oss << std::put_time(&tm, "%d-%m-%Y %H-%M-%S");
+      auto filename = oss.str();
+      filename.append(image_encoding_);
+
+      session->putAttribute(flow_file, "filename", filename);
+      session->putAttribute(flow_file, "video.backend.driver", video_backend_driver_);
+
+      session->write(flow_file, &write_cb);
+      session->transfer(flow_file, Success);
+    } else {
+      logger_->log_error("Empty Mat frame received from capture");
+      session->transfer(flow_file, Failure);
+    }
+  } else {
+    logger_->log_error("Unable to read from capture handle on RTSP stream");
+    session->transfer(flow_file, Failure);
+  }
+
+  frame.release();
+
+}
+
+void CaptureRTSPFrame::notifyStop() {
+  // Release the Capture reference and free up resources.
+  video_capture_.release();
+}
+
+} /* namespace processors */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
 } /* namespace org */
