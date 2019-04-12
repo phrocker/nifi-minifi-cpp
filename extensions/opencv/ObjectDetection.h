@@ -25,67 +25,87 @@
 #include <opencv2/opencv.hpp>
 
 namespace org {
-    namespace apache {
-        namespace nifi {
-            namespace minifi {
-                namespace processors {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace processors {
 
+class ObjectDetection : public core::Processor {
 
-                    class ObjectDetection : public core::Processor {
+ public:
 
-                    public:
+  explicit ObjectDetection(const std::string &name, utils::Identifier uuid = utils::Identifier())
+      : Processor(name, uuid),
+        logger_(logging::LoggerFactory<ObjectDetection>::getLogger()) {
+  }
 
-                        explicit ObjectDetection(const std::string &name, utils::Identifier uuid = utils::Identifier())
-                                : Processor(name, uuid),
-                                  logger_(logging::LoggerFactory<ObjectDetection>::getLogger()) {
-                        }
+  static core::Property HaarCascadeXMLPath;
+  static core::Property ImageEncoding;
 
-                        static core::Property RTSPUsername;
+  static core::Relationship Success;
+  static core::Relationship Failure;
 
-                        static core::Relationship Success;
-                        static core::Relationship Failure;
+  void initialize() override;
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
+    logger_->log_error("onTrigger invocation with raw pointers is not implemented");
+  }
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
+                 const std::shared_ptr<core::ProcessSession> &session) override;
 
-                        void initialize() override;
-                        void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-                        void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override {
-                            logger_->log_error("onTrigger invocation with raw pointers is not implemented");
-                        }
-                        void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                                       const std::shared_ptr<core::ProcessSession> &session) override;
+  class ObjectDetectionReadCallback : public InputStreamCallback {
+   public:
+    explicit ObjectDetectionReadCallback(std::shared_ptr<core::FlowFile> flowFile, cv::Mat* mat) : flowFile_(flowFile), image_mat_(mat) {}
 
-                        class ObjectDetectionWriteCallback : public OutputStreamCallback {
-                        public:
-                            explicit ObjectDetectionWriteCallback(cv::Mat image_mat)
-                                    : image_mat_(std::move(image_mat)) {
-                            }
-                            ~ObjectDetectionWriteCallback() override = default;
+    ~ObjectDetectionReadCallback() override = default;
 
-                            int64_t process(std::shared_ptr<io::BaseStream> stream) override {
-                                int64_t ret = 0;
-                                if (image_buf_.size() > 0) {
-                                    imencode(".jpg", image_mat_, image_buf_);
-                                    ret = stream->write(image_buf_.data(), image_buf_.size());
-                                }
-                                return ret;
-                            }
+    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+      int64_t read_size = stream->readData(image_buf, flowFile_->getSize());
+      cv::imdecode(image_buf, cv::IMREAD_COLOR, image_mat_);
+      return read_size;
+    }
 
-                        private:
-                            std::vector<uchar> image_buf_;
-                            cv::Mat image_mat_;
-                        };
+   private:
+    std::shared_ptr<core::FlowFile> flowFile_;
+    cv::Mat* image_mat_;
+    std::vector<uint8_t> image_buf;
+  };
 
-                    private:
-                        std::shared_ptr<logging::Logger> logger_;
-                        std::string rtsp_username_;
+  class ObjectDetectionWriteCallback : public OutputStreamCallback {
+   public:
+    explicit ObjectDetectionWriteCallback(cv::Mat image_mat, std::string imageEncoding)
+        : image_mat_(image_mat), image_encoding_(imageEncoding) {
+    }
+    ~ObjectDetectionWriteCallback() override = default;
 
-                    };
+    int64_t process(std::shared_ptr<io::BaseStream> stream) override {
+      int64_t ret = 0;
+      if (image_buf_.size() > 0) {
+        imencode(image_encoding_, image_mat_, image_buf_);
+        ret = stream->write(image_buf_.data(), image_buf_.size());
+      }
+      return ret;
+    }
 
-                    REGISTER_RESOURCE(ObjectDetection, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT
+   private:
+    std::vector<uchar> image_buf_;
+    cv::Mat image_mat_;
+    std::string image_encoding_;
+  };
 
-                } /* namespace processors */
-            } /* namespace minifi */
-        } /* namespace nifi */
-    } /* namespace apache */
+ private:
+  std::shared_ptr<logging::Logger> logger_;
+  std::string haar_cascade_xml_path_;
+  std::string image_encoding_;
+
+};
+
+REGISTER_RESOURCE(ObjectDetection, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT
+
+} /* namespace processors */
+} /* namespace minifi */
+} /* namespace nifi */
+} /* namespace apache */
 } /* namespace org */
 
 
