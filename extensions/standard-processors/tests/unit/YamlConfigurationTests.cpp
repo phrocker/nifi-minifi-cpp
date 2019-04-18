@@ -21,7 +21,7 @@
 #include "core/repository/VolatileContentRepository.h"
 #include <core/RepositoryFactory.h>
 #include "core/yaml/YamlConfiguration.h"
-#include "../TestBase.h"
+#include "TestBase.h"
 
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   TestController test_controller;

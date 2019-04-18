@@ -480,7 +480,7 @@ flow * create_getfile(nifi_instance * instance, flow * parent_flow, GetFileConfi
   auto getFile = new_flow->addProcessor(first_processor, first_processor);
 
   new_flow->setProperty(getFile, "Input Directory", c->directory);
-  new_flow->setProperty(getFile, "Keep SourceFile ", c->keep_source ? "true" : "false");
+  new_flow->setProperty(getFile, "Keep Source File ", c->keep_source ? "true" : "false");
   new_flow->setProperty(getFile, "Recurse Subdirectories", c->recurse ? "true" : "false");
 
   return new_flow;
