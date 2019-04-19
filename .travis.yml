@@ -101,6 +101,14 @@ matrix:
       script:
         - mkdir build && cd build && cmake .. && make debian
     - os: linux
+      name: docker verification with alpine
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - mkdir build && cd build && cmake .. && make docker && make docker-verify
+    - os: linux
       name: centos static package biuld
       dist: trusty
       sudo: required
