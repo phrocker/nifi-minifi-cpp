@@ -20,43 +20,37 @@
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(controllerservices)
 
-#find_package(AWSSDK REQUIRED COMPONENTS transfer s3)
-#include_directories(${AWSSDK_INCLUDE_DIR})
-
 file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp" )
 
-set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/extensions/aws")
-set(BYPRODUCT "${BASE_DIR}/thirdparty/aws-sdk-cpp/.libs/libcoap-2.a")
-set(DIR "${BASE_DIR}/thirdparty/aws-sdk-cpp")
+set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-cpp")
+set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-install/")
 
 # AWS SDK 1.7.89
 ExternalProject_Add(
         awssdk-external
         GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
         GIT_TAG "09b65deba03cfbef9a1e5d5986aa4de71bc03cd8"
-        PREFIX "${BASE_DIR}/thirdparty/aws-sdk-cpp"
-        BUILD_IN_SOURCE true
-        SOURCE_DIR "${DIR}"
-        BUILD_COMMAND make
-        CMAKE_COMMAND "cmake .. -D BUILD_ONLY=s3"
-        UPDATE_COMMAND ""
-        INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
-        CONFIGURE_COMMAND ""
-        PATCH_COMMAND ""
-        STEP_TARGETS build
         EXCLUDE_FROM_ALL TRUE
+        INSTALL_DIR ${BYPRODUCT}
+        CMAKE_ARGS -DBUILD_ONLY=s3
+                   -DENABLE_TESTING=OFF
+                   -DBUILD_SHARED_LIBS=OFF
+                   -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
 )
 
 add_library(awssdklib STATIC IMPORTED)
 set_target_properties(awssdklib PROPERTIES IMPORTED_LOCATION "${BYPRODUCT}")
 add_dependencies(awssdklib awssdk-external)
 set(AWSSDK_FOUND "YES" CACHE STRING "" FORCE)
-set(AWSSDK_INCLUDE_DIRS "${DIR}/include" CACHE STRING "" FORCE)
+set(AWSSDK_INCLUDE_DIRS "${BYPRODUCT}/include" CACHE STRING "" FORCE)
 set(AWSSDK_LIBRARIES awssdklib CACHE STRING "" FORCE)
 set(AWSSDK_LIBRARY awssdklib CACHE STRING "" FORCE)
-
+include_directories(${AWSSDK_INCLUDE_DIRS})
 add_library(minifi-aws STATIC ${SOURCES})
-target_link_libraries (minifi-aws ${AWSSDK_LIBRARIES})
+
+#target_link_libraries (minifi-aws ${AWSSDK_LIBRARIES})
+target_link_libraries (minifi-aws ${BYPRODUCT}/lib/libaws-cpp-sdk-core.a)
+target_link_libraries (minifi-aws ${BYPRODUCT}/lib/libaws-cpp-sdk-s3.a)
 
 SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
 register_extension(minifi-aws)
