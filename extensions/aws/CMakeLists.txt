@@ -48,7 +48,7 @@ set(AWSSDK_LIBRARY awssdklib CACHE STRING "" FORCE)
 include_directories(${AWSSDK_INCLUDE_DIRS})
 add_library(minifi-aws STATIC ${SOURCES})
 
-#target_link_libraries (minifi-aws ${AWSSDK_LIBRARIES})
+target_link_libraries (minifi-aws ${AWSSDK_LIBRARIES})
 target_link_libraries (minifi-aws ${BYPRODUCT}/lib/libaws-cpp-sdk-core.a)
 target_link_libraries (minifi-aws ${BYPRODUCT}/lib/libaws-cpp-sdk-s3.a)
 
