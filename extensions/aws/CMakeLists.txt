@@ -19,16 +19,44 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(controllerservices)
-include_directories(${AWSSDK_INCLUDE_DIR})
+
+#find_package(AWSSDK REQUIRED COMPONENTS transfer s3)
+#include_directories(${AWSSDK_INCLUDE_DIR})
 
 file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp" )
 
-find_package(AWSSDK REQUIRED COMPONENTS transfer s3)
+set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/extensions/aws")
+set(BYPRODUCT "${BASE_DIR}/thirdparty/aws-sdk-cpp/.libs/libcoap-2.a")
+set(DIR "${BASE_DIR}/thirdparty/aws-sdk-cpp")
+
+# AWS SDK 1.7.89
+ExternalProject_Add(
+        awssdk-external
+        GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
+        GIT_TAG "09b65deba03cfbef9a1e5d5986aa4de71bc03cd8"
+        PREFIX "${BASE_DIR}/thirdparty/aws-sdk-cpp"
+        BUILD_IN_SOURCE true
+        SOURCE_DIR "${DIR}"
+        BUILD_COMMAND make
+        CMAKE_COMMAND "cmake .. -D BUILD_ONLY=s3"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ${CMAKE_COMMAND}  -E echo "Skipping install step."
+        CONFIGURE_COMMAND ""
+        PATCH_COMMAND ""
+        STEP_TARGETS build
+        EXCLUDE_FROM_ALL TRUE
+)
+
+add_library(awssdklib STATIC IMPORTED)
+set_target_properties(awssdklib PROPERTIES IMPORTED_LOCATION "${BYPRODUCT}")
+add_dependencies(awssdklib awssdk-external)
+set(AWSSDK_FOUND "YES" CACHE STRING "" FORCE)
+set(AWSSDK_INCLUDE_DIRS "${DIR}/include" CACHE STRING "" FORCE)
+set(AWSSDK_LIBRARIES awssdklib CACHE STRING "" FORCE)
+set(AWSSDK_LIBRARY awssdklib CACHE STRING "" FORCE)
 
 add_library(minifi-aws STATIC ${SOURCES})
-#set_property(TARGET minifi-aws PROPERTY POSITION_INDEPENDENT_CODE ON)
-message("AWS link libraries@!!!!!!!" ${AWSSDK_LINK_LIBRARIES})
-target_link_libraries (minifi-aws ${AWSSDK_LINK_LIBRARIES})
+target_link_libraries (minifi-aws ${AWSSDK_LIBRARIES})
 
 SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
 register_extension(minifi-aws)
