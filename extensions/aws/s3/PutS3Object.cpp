@@ -24,6 +24,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyValidation.h"
+#include "S3.h"
 
 namespace org {
 namespace apache {
@@ -62,14 +63,23 @@ core::Property PutS3Object::SecretKey(
     core::PropertyBuilder::createProperty("Secret Key")->withDescription("Specifies the AWS Secret Key.")->isRequired(false)->supportsExpressionLanguage(true)->build());
 
 core::Property PutS3Object::Region(
-    core::PropertyBuilder::createProperty("Region")->withDescription("Specifies the region on which to put this S3 Object.")->isRequired(false)->supportsExpressionLanguage(false)->build());
+    core::PropertyBuilder::createProperty("Region")->withDescription("Specifies the region on which to put this S3 Object.")->isRequired(false)->supportsExpressionLanguage(false)
+        ->withAllowableValues<std::string>( { "us-west-2", "us-east-1", "us-east-2" })->withDefaultValue("us-east-1")->build());
 
 const std::string PutS3Object::ProcessorName("PutS3Object");
 core::Relationship PutS3Object::Success("success", "All files are routed to success");
 core::Relationship PutS3Object::Failure("failure", "All files are routed to failure");
 void PutS3Object::initialize() {
   //! Set the supported properties
+  auto init = S3Singleton::get();
+
   std::set<core::Property> properties;
+  properties.insert(ObjectKey);
+  properties.insert(Bucket);
+  properties.insert(ContentType);
+  properties.insert(AccessKey);
+  properties.insert(SecretKey);
+  properties.insert(Region);
   setSupportedProperties(properties);
   //! Set the supported relationships
   std::set<core::Relationship> relationships;
@@ -83,7 +93,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 
   std::string region;
   if (!context->getProperty(Region.getName(), region)) {
-    client_config.region = region;
+    client_config_.region = region.c_str();
     return;
   }
 }
@@ -92,21 +102,53 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
 
   auto flowFile = session->get();
   if (flowFile) {
-    std::string objectKey;
+    std::string objectKey, bucketName, access_key, secret;
     context->getProperty(ObjectKey, objectKey, flowFile);
-    Aws::S3::S3Client s3_client(client_config_);
+    context->getProperty(Bucket, bucketName, flowFile);
+    context->getProperty(AccessKey, access_key, flowFile);
+    context->getProperty(SecretKey, secret, flowFile);
+
+    if (objectKey.empty()) {
+      objectKey = "filename";
+    }
+    std::string object;
+    if (!flowFile->getAttribute(objectKey, object)) {
+      object = objectKey;
+    }
+
+    // this assumes we have a local file system.
+    auto path = flowFile->getResourceClaim()->getContentFullPath();
+    client_config_.endpointOverride = "https://s3.amazonaws.com";
+
+    std::unique_ptr<Aws::S3::S3Client> s3_client = nullptr;
+
+    Aws::String s3Ack = access_key.c_str();
+    Aws::String s3Secret = secret.c_str();
+
+    Aws::Auth::AWSCredentials creds(s3Ack, s3Secret);
+
+    if (!access_key.empty() && !secret.empty()) {
+      s3_client = std::unique_ptr<Aws::S3::S3Client>(new Aws::S3::S3Client(creds, client_config_));
+    } else {
+      s3_client = std::unique_ptr<Aws::S3::S3Client>(new Aws::S3::S3Client(client_config_));
+    }
     Aws::S3::Model::PutObjectRequest object_request;
 
-    object_request.SetBucket(s3_bucket_name);
-    object_request.SetKey(s3_object_name);
-    const std::shared_ptr<Aws::IOStream> input_data = Aws::MakeShared<Aws::FStream>("SampleAllocationTag", file_name.c_str(), std::ios_base::in | std::ios_base::binary);
+    Aws::String s3Obj = object.c_str();
+    Aws::String s3Bucket = bucketName.c_str();
+    object_request.SetBucket(s3Bucket);
+    object_request.SetKey(s3Obj);
+
+    const std::shared_ptr<Aws::IOStream> input_data = Aws::MakeShared<Aws::FStream>("SampleAllocationTag", path.c_str(), std::ios_base::in | std::ios_base::binary);
     object_request.SetBody(input_data);
 
     // Put the object
-    auto put_object_outcome = s3_client.PutObject(object_request);
+    auto put_object_outcome = s3_client->PutObject(object_request);
     if (!put_object_outcome.IsSuccess()) {
       auto error = put_object_outcome.GetError();
-      std::cout << "ERROR: " << error.GetExceptionName() << ": " << error.GetMessage() << std::endl;
+      session->transfer(flowFile, Failure);
+    } else {
+      session->transfer(flowFile, Success);
     }
   }
 

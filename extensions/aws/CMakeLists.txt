@@ -20,7 +20,7 @@
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(controllerservices)
 
-file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp" )
+file(GLOB SOURCES "*.cpp" "s3/*.cpp" )
 
 set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-cpp")
 set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/aws-sdk-install/")
@@ -34,13 +34,14 @@ ExternalProject_Add(
         INSTALL_DIR ${BYPRODUCT}
         CMAKE_ARGS -DBUILD_ONLY=s3
                    -DENABLE_TESTING=OFF
-                   -DBUILD_SHARED_LIBS=OFF
+                   -DBUILD_SHARED_LIBS=ON
+                   -DCMAKE_BUILD_TYPE=RelWithDebInfo
                    -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
 )
 
 add_library(awssdklib STATIC IMPORTED)
 set_target_properties(awssdklib PROPERTIES IMPORTED_LOCATION "${BYPRODUCT}")
-add_dependencies(awssdklib awssdk-external)
+
 set(AWSSDK_FOUND "YES" CACHE STRING "" FORCE)
 set(AWSSDK_INCLUDE_DIRS "${BYPRODUCT}/include" CACHE STRING "" FORCE)
 set(AWSSDK_LIBRARIES awssdklib CACHE STRING "" FORCE)
@@ -48,8 +49,10 @@ set(AWSSDK_LIBRARY awssdklib CACHE STRING "" FORCE)
 include_directories(${AWSSDK_INCLUDE_DIRS})
 add_library(minifi-aws STATIC ${SOURCES})
 #target_link_libraries (minifi-aws ${AWSSDK_LIBRARIES})
-target_link_libraries (minifi-aws ${BYPRODUCT}/lib/libaws-cpp-sdk-core.a)
-target_link_libraries (minifi-aws ${BYPRODUCT}/lib/libaws-cpp-sdk-s3.a)
-
+target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-event-stream.so)
+target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-common.so)
+target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-core.so)
+target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-cpp-sdk-s3.so)
+add_dependencies(minifi-aws awssdk-external)
 SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
 register_extension(minifi-aws)

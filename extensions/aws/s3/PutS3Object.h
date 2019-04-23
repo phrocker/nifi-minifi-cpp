@@ -28,6 +28,7 @@
 #include <aws/s3/S3Client.h>
 #include <aws/s3/model/Bucket.h>
 #include <aws/s3/model/PutObjectRequest.h>
+#include <aws/core/auth/AWSCredentials.h>
 namespace org {
 namespace apache {
 namespace nifi {
@@ -81,6 +82,7 @@ class PutS3Object : public core::Processor {
  private:
 
   Aws::Client::ClientConfiguration client_config_;
+
 
   // Logger
   std::shared_ptr<logging::Logger> logger_;
