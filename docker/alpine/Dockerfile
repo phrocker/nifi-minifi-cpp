@@ -18,38 +18,64 @@
 
 # First stage: the build environment
 # Edge required for rocksdb
-FROM centos:7 AS builder
+FROM alpine:3.8 AS builder
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
 ARG UID
 ARG GID
 ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
-ARG DUMP_LOCATION
 
 # Install the system dependencies needed for a build
+RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
+	g++ \
+	make \
+	bison \
+	flex \
+	flex-dev \
+	maven \
+	openjdk8-jre-base \
+	openjdk8 \
+	autoconf \
+	libtool \
+	wget \
+	gdb \
+	musl-dev \
+	boost-dev \
+	vim \
+	util-linux-dev \
+	curl-dev \
+	cmake \
+	git \
+	nss \
+	nss-dev \
+	unzip \
+	gpsd-dev \
+	libressl-dev \
+	zlib-dev \
+	bzip2-dev \
+	python3-dev
 
-ENV USER root
+ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
+
+# Setup minificpp user
+RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
 RUN mkdir -p $MINIFI_BASE_DIR 
-USER $USER
-
-RUN yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel sudo git which maven
-
+ENV JAVA_HOME /usr/lib/jvm/default-jvm
+ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
+RUN chown -R $USER:$USER $MINIFI_BASE_DIR
+
+USER $USER
 
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
-# Setup minificpp user
-RUN mkdir -p $MINIFI_BASE_DIR 
-
-
 # Perform the build
 RUN cd $MINIFI_BASE_DIR \
-	&& ./bootstrap.sh -e -t \
-	&& rm -rf build \ 
 	&& mkdir build \
 	&& cd build \
-	&& cmake3 -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
-	&& make -j8 package 
+	&& cmake -DOPENSSL_FORCE_SHARED=true -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
+	&& make -j8 package \
+	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR

@@ -49,7 +49,7 @@ pip install --upgrade \
 export JAVA_HOME="/usr/lib/jvm/default-jvm"
 export PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
 
-export MINIFI_VERSION=0.6.0
+export MINIFI_VERSION=0.7.0
 export PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
 
 exec pytest -s -v "${docker_dir}"/test/integration

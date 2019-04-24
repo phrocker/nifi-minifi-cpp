@@ -60,7 +60,7 @@ class SingleNodeDockerCluster(Cluster):
 
     def __init__(self):
         self.minifi_version = os.environ['MINIFI_VERSION']
-        self.nifi_version = '1.7.0'
+        self.nifi_version = '1.9.1'
         self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
         self.nifi_root = '/opt/nifi/nifi-' + self.nifi_version
         self.network = None
@@ -108,12 +108,9 @@ class SingleNodeDockerCluster(Cluster):
         dockerfile = dedent("""FROM {base_image}
                 USER root
                 ADD config.yml {minifi_root}/conf/config.yml
-                RUN chown minificpp:minificpp {minifi_root}/conf/config.yml
-                USER minificpp
                 """.format(name=name,hostname=name,
                            base_image='apacheminificpp:' + self.minifi_version,
                            minifi_root=self.minifi_root))
-
         test_flow_yaml = minifi_flow_yaml(flow)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
 
@@ -154,14 +151,11 @@ class SingleNodeDockerCluster(Cluster):
         dockerfile = dedent("""FROM {base_image}
                 USER root
                 ADD flow.xml.gz {nifi_root}/conf/flow.xml.gz
-                RUN chown nifi:nifi {nifi_root}/conf/flow.xml.gz
                 RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\\1={name}/' {nifi_root}/conf/nifi.properties
                 RUN sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\\1=5000/' {nifi_root}/conf/nifi.properties
-                USER nifi
                 """.format(name=name,
                            base_image='apache/nifi:' + self.nifi_version,
                            nifi_root=self.nifi_root))
-
         test_flow_xml = nifi_flow_xml(flow, self.nifi_version)
         logging.info('Using generated flow config xml:\n%s', test_flow_xml)
 

@@ -101,6 +101,14 @@ matrix:
       script:
         - mkdir build && cd build && cmake .. && make debian
     - os: linux
+      name: Alpine linux docker build
+      dist: trusty
+      sudo: required
+      services:
+        - docker
+      script:
+        - mkdir build && cd build && cmake .. && make alpine
+    - os: linux
       name: docker verification with alpine
       dist: trusty
       sudo: required

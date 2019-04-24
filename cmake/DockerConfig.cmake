@@ -49,6 +49,11 @@ add_custom_target(
     COMMAND ${CMAKE_SOURCE_DIR}/docker/ContainerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} xenial
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/xenial/)     
     
+    
+add_custom_target(
+    alpine
+    COMMAND ${CMAKE_SOURCE_DIR}/docker/ContainerBuild.sh 1000 1000 ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH} minificppsource ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} alpine
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docker/alpine/)         
 
 add_custom_target(
     docker-verify

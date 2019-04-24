@@ -18,107 +18,62 @@
 
 # First stage: the build environment
 # Edge required for rocksdb
-FROM alpine:3.8 AS builder
+FROM ubuntu:xenial AS builder
 MAINTAINER Apache NiFi <dev@nifi.apache.org>
 
 ARG UID
 ARG GID
 ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
+ARG DUMP_LOCATION
 
 # Install the system dependencies needed for a build
-RUN apk --update --no-cache upgrade && apk --update --no-cache add gcc \
-	g++ \
-	make \
-	bison \
-	flex \
-	flex-dev \
-	maven \
-	openjdk8-jre-base \
-	openjdk8 \
-	autoconf \
-	libtool \
-	wget \
-	gdb \
-	musl-dev \
-	boost-dev \
-	vim \
-	util-linux-dev \
-	curl-dev \
-	cmake \
-	git \
-	nss \
-	nss-dev \
-	unzip \
-	gpsd-dev \
-	libressl-dev \
-	zlib-dev \
-	bzip2-dev \
-	python3-dev
 
-ENV USER minificpp
+ENV USER root
 ENV MINIFI_BASE_DIR /opt/minifi
-
-# Setup minificpp user
-RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
 RUN mkdir -p $MINIFI_BASE_DIR 
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
+USER $USER
+
+RUN apt-get update && apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven 
+
 
 ADD $MINIFI_SOURCE_CODE $MINIFI_BASE_DIR
-RUN chown -R $USER:$USER $MINIFI_BASE_DIR
-
-USER $USER
 
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 
+# Setup minificpp user
+RUN mkdir -p $MINIFI_BASE_DIR 
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+
 # Perform the build
 RUN cd $MINIFI_BASE_DIR \
+	&& ./bootstrap.sh -e -t \
+	&& rm -rf build \ 
 	&& mkdir build \
 	&& cd build \
-	&& cmake -DOPENSSL_FORCE_SHARED=true -DDISABLE_JEMALLOC=ON -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
-	&& make -j8 package \
+	&& cmake -DUSE_SHARED_LIBS= -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=ON .. \
+	&& make -j8 package  \
 	&& tar -xzvf $MINIFI_BASE_DIR/build/nifi-minifi-cpp-$MINIFI_VERSION-bin.tar.gz -C $MINIFI_BASE_DIR
 
-# Second stage: the runtime image
-# Edge required for rocksdb
-FROM alpine:3.8
+FROM ubuntu:xenial
 
 ARG UID
 ARG GID
 ARG MINIFI_VERSION
 ARG MINIFI_SOURCE_CODE
 
-# Add testing repo for rocksdb
-RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
-
-RUN apk --update --no-cache upgrade && apk add --update --no-cache \
-	util-linux \
-	curl \
-	unzip \
-	gpsd \
-	openjdk8-jre-base \
-	openjdk8 \
-	nss \
-	nss-dev \
-	libressl \
-	python3 \
-	zlib
+RUN apt-get update && apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven libpython3-dev
 
 # Start MiNiFi CPP in the foreground
-ENV USER minificpp
+#ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
 ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-ENV JAVA_HOME /usr/lib/jvm/default-jvm
-ENV PATH $PATH:/usr/lib/jvm/default-jvm/bin
-RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+#RUN addgroup -g $GID $USER && adduser -u $UID -D -G $USER -g "" $USER
 RUN mkdir -p $MINIFI_BASE_DIR 
 
 # Copy built minifi distribution from builder
 COPY --from=builder ${MINIFI_HOME} ${MINIFI_HOME}
-RUN chown -R ${USER}:${USER} /opt/minifi
-
-USER $USER
 
 WORKDIR ${MINIFI_HOME}
-CMD ./bin/minifi.sh run
+CMD ./bin/minifi
