@@ -114,8 +114,6 @@ matrix:
       sudo: required
       services:
         - docker
-      before_install:
-        - docker run --net=host -p 8080:8080
       script:
         - mkdir build && cd build && cmake .. && make docker && make docker-verify
     - os: linux
