@@ -29,6 +29,8 @@ FOREACH(testfile ${CIVETWEB_INTEGRATION_TESTS})
 
   if (APPLE)
     target_link_libraries (${testfilename} -Wl,-all_load ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi-civet-extensions minifi-http-curl minifi-standard-processors)
+  elseif (WIN32)
+    target_link_libraries (${testfilename} ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi-http-curl minifi-civet-extensions minifi-standard-processors)
   else ()
     target_link_libraries (${testfilename} -Wl,--whole-archive ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi-civet-extensions minifi-http-curl minifi-standard-processors -Wl,--no-whole-archive)
   endif ()

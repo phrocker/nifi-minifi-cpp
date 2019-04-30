@@ -90,6 +90,25 @@ class FileUtils {
 #endif
   }
 
+  static std::string create_temp_directory(char *format) {
+#ifdef WIN32
+	  std::string tempDirectory;
+	  char tempBuffer[MAX_PATH];
+	  auto ret = GetTempPath(MAX_PATH, tempBuffer); 
+	  if (ret <= MAX_PATH && ret != 0)
+	  {
+		  tempDirectory = tempBuffer;
+	  }
+	  return tempDirectory;
+#else
+	  auto dir = mkdtemp(format);
+	  if (nullptr == dir) {
+		  return "";
+	  }
+	  else return dir;
+#endif
+  }
+
   static int64_t delete_dir(const std::string &path, bool delete_files_recursively = true) {
 #ifdef BOOST_VERSION
     try {

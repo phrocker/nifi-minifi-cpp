@@ -18,6 +18,7 @@
 
 #include <uuid/uuid.h>
 #include <fstream>
+#include <chrono>
 #include <map>
 #include <memory>
 #include <set>
@@ -55,7 +56,7 @@ TEST_CASE("Test GET Body", "[ListenHTTPGETBody]") {  // NOLINT
 
   // Define directory for test input
   std::string test_in_dir("/tmp/gt.XXXXXX");
-  REQUIRE(testController.createTempDirectory(&test_in_dir[0]) != nullptr);
+  REQUIRE(!testController.createTempDirectory(&test_in_dir[0]).empty());
 
   // Define test input file
   std::string test_input_file(test_in_dir);
@@ -104,7 +105,7 @@ TEST_CASE("Test GET Body", "[ListenHTTPGETBody]") {  // NOLINT
   plan->runNextProcessor();  // Log
   plan->runNextProcessor();  // Listen
 
-  sleep(1);
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   utils::HTTPClient client("http://localhost:8888/contentListener/test");
   REQUIRE(client.submit());
   const auto &body_chars = client.getResponseBody();

@@ -173,7 +173,7 @@ class VerifyC2Heartbeat : public CoapIntegrationBase {
 
  protected:
   bool isSecure;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
 };

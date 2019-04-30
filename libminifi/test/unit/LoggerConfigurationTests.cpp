@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <sstream>
+#include <iostream>
 
 #include "../TestBase.h"
 #include "core/logging/LoggerConfiguration.h"

@@ -164,7 +164,7 @@ class SecureSocketTest : public IntegrationBase {
   std::function<int(std::vector<uint8_t>*b, int *size)> handler;
   std::atomic<bool> isRunning_;
   bool isSecure;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
   std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket;
