@@ -180,8 +180,9 @@ int main(int argc, char **argv) {
     key_dir = argv[2];
   }
 
+#ifndef WIN32
   signal(SIGPIPE, sigpipe_handle);
-
+#endif
   SecureSocketTest harness(true);
 
   harness.setKeyDir(key_dir);
