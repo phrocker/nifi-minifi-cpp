@@ -404,21 +404,6 @@ include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 include_directories(thirdparty/rapidjson-1.1.0/include)
 
 ## Expression language extensions
-option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
-include_directories("extensions/expression-language/common")
-if (DISABLE_EXPRESSION_LANGUAGE)
-    # Build expression language NoOp implementation, if necessary
-    include_directories("extensions/expression-language/noop")
-    add_subdirectory(extensions/expression-language/noop)
-else()
-    include_directories("extensions/expression-language/impl")
-    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "${TEST_DIR}/expression-language-tests")
-    if(NOT USE_SYSTEM_CURL)
-		message("minifi-expression-language-extensions will depend on curl-external")
-		add_dependencies(minifi-expression-language-extensions curl-external)
-	endif()
-endif()
-
 if(BOOTSTRAP)
     add_subdirectory(thirdparty/cxxopts)
     createExtension(BOOTSTRAP "BOOTSTRAP" "Bootstraps documentation and other features" "extensions/bootstrap")
@@ -459,6 +444,17 @@ if ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET)
 		add_dependencies(minifi-http-curl curl-external)
 	endif()
 endif()
+
+option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
+if (NOT DISABLE_EXPRESSION_LANGUAGE)
+    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "${TEST_DIR}/expression-language-tests")
+    if(NOT USE_SYSTEM_CURL)
+		message("minifi-expression-language-extensions will depend on curl-external")
+		add_dependencies(minifi-expression-language-extensions curl-external)
+	endif()
+endif()
+
+
 
 option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 if (NOT DISABLE_CIVET)
