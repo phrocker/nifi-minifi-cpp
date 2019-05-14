@@ -19,45 +19,56 @@
 #include <memory>
 #include <impl/expression/Expression.h>
 
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
 
-	class ProcessContextExpr : public core::ProcessContext {
-	public:
-	
-		/**
-			std::forward of argument list did not work on all platforms. 
-		**/
-		ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
-			const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
-			: core::ProcessContext(processor,controller_service_provider,repo,flow_repo,content_repo), logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger())
-		{  }
+class ProcessContextExpr : public core::ProcessContext {
+ public:
 
-		ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
-			const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration, const std::shared_ptr<core::ContentRepository> &content_repo =
-			std::make_shared<core::repository::FileSystemRepository>())
-			: core::ProcessContext(processor, controller_service_provider, repo, flow_repo,configuration, content_repo), logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger())
-		{  }
-		// Destructor
-		virtual ~ProcessContextExpr() {
-		}
-		virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+  /**
+   std::forward of argument list did not work on all platforms.
+   **/
+  ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
+                              const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo =
+                                  std::make_shared<core::repository::FileSystemRepository>())
+      : core::ProcessContext(processor, controller_service_provider, repo, flow_repo, content_repo),
+        logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
+  }
 
-		virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
-	protected:
+  ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
+                              const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration,
+                              const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
+      : core::ProcessContext(processor, controller_service_provider, repo, flow_repo, configuration, content_repo),
+        logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
+  }
 
+  explicit ProcessContextExpr(const std::string &name, utils::Identifier uuid)
+      : core::ProcessContext(name, uuid) {
+    throw std::exception();
+  }
 
-		std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
-		std::map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
+  explicit ProcessContextExpr(const std::string &name)
+      : core::ProcessContext(name) {
+    throw std::exception();
+  }
 
-	private:
-		std::shared_ptr<logging::Logger> logger_;
-	};
+  // Destructor
+  virtual ~ProcessContextExpr() {
+  }
+  virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
 
+  virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
+ protected:
+
+  std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
+  std::map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
+
+ private:
+  std::shared_ptr<logging::Logger> logger_;
+};
 
 } /* namespace core */
 } /* namespace minifi */

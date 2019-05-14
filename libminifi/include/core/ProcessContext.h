@@ -44,16 +44,18 @@ namespace minifi {
 namespace core {
 
 // ProcessContext Class
-class ProcessContext : public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
+class ProcessContext : public core::CoreComponent, public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
  public:
 
   // Constructor
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
-                 const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
-      : VariableRegistry(std::make_shared<minifi::Configure>()),
+  explicit ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
+                          const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<core::ContentRepository> &content_repo =
+                              std::make_shared<core::repository::FileSystemRepository>())
+      : core::CoreComponent("ProcessContext"),
+        VariableRegistry(std::make_shared<minifi::Configure>()),
         controller_service_provider_(controller_service_provider),
         flow_repo_(flow_repo),
         content_repo_(content_repo),
@@ -66,10 +68,11 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   /*!
    * Create a new process context associated with the processor/controller service/state manager
    */
-  ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider, const std::shared_ptr<core::Repository> &repo,
-                 const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration, const std::shared_ptr<core::ContentRepository> &content_repo =
-                     std::make_shared<core::repository::FileSystemRepository>())
-      : VariableRegistry(configuration),
+  explicit ProcessContext(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
+                          const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_repo, const std::shared_ptr<minifi::Configure> &configuration,
+                          const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
+      : core::CoreComponent("ProcessContext"),
+        VariableRegistry(configuration),
         controller_service_provider_(controller_service_provider),
         flow_repo_(flow_repo),
         content_repo_(content_repo),
@@ -77,6 +80,19 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         logger_(logging::LoggerFactory<ProcessContext>::getLogger()) {
     repo_ = repo;
   }
+
+  explicit ProcessContext(const std::string &name, utils::Identifier uuid)
+      : core::CoreComponent("ProcessContext"),
+        VariableRegistry(nullptr) {
+    throw std::exception();
+  }
+
+  explicit ProcessContext(const std::string &name)
+      : core::CoreComponent("ProcessContext"),
+        VariableRegistry(nullptr) {
+    throw std::exception();
+  }
+
   // Destructor
   virtual ~ProcessContext() {
   }
@@ -192,8 +208,6 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return controller_service_provider_->getControllerServiceName(identifier);
   }
 
- 
-
  private:
 
   template<typename T>
@@ -211,7 +225,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   std::shared_ptr<core::ContentRepository> content_repo_;
   // Processor
   std::shared_ptr<ProcessorNode> processor_node_;
-  
+
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 

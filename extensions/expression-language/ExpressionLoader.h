@@ -36,26 +36,26 @@ class ExpressionObjectFactory : public core::ObjectFactory {
    * Gets the name of the object.
    * @return class name of processor
    */
-  virtual std::string getName() override{
+  virtual std::string getName() override {
     return "ExpressionObjectFactory";
   }
 
-  virtual std::string getClassName() override{
+  virtual std::string getClassName() override {
     return "ExpressionObjectFactory";
   }
   /**
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::vector<std::string> getClassNames() override{
+  virtual std::vector<std::string> getClassNames() override {
     std::vector<std::string> class_names;
     class_names.push_back("ProcessContext");
     return class_names;
   }
 
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override{
+  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
     if (utils::StringUtils::equalsIgnoreCase(class_name, "ProcessContext")) {
-      return std::unique_ptr<ObjectFactory>(new core::StructuralObjectFactory<core::ProcessContextExpr>());
+      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<core::ProcessContextExpr>());
     } else {
       return nullptr;
     }
@@ -66,6 +66,6 @@ class ExpressionObjectFactory : public core::ObjectFactory {
 };
 
 extern "C" {
-	DLL_EXPORT void *createExpressionFactory(void);
+DLL_EXPORT void *createExpressionFactory(void);
 }
 #endif /* EXTENSIONS_EXPRESSIONLOADER_H_ */

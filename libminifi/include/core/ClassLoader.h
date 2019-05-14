@@ -20,6 +20,7 @@
 
 #include <mutex>
 #include <vector>
+#include <memory>
 #include <map>
 #include "utils/StringUtils.h"
 #ifndef WIN32
@@ -53,6 +54,60 @@ namespace core {
 #define RTLD_LOCAL  (1 << 2)
 #endif
 
+class Object : public std::enable_shared_from_this<Object>{
+ public:
+  Object(){
+
+  }
+  template<class T, class ... Args> std::shared_ptr<T> get(Args&&... _Args) const;
+};
+
+
+
+
+template<class T>
+class ConstructedObject : public Object{
+public:
+  ConstructedObject() {
+  }
+
+
+
+  template <class _T, typename... Args>
+  std::shared_ptr<T> get(Args&&... _Args) const {
+    const auto ptr = std::make_shared<T>(std::forward<Args>(_Args)...);
+    return std::static_pointer_cast<_T>(ptr);
+  }
+
+
+
+};
+
+//Here's the trick: dynamic_cast rather than virtual
+template<class T, class ... Args> std::shared_ptr<T> Object::get(Args&&... _Args) const
+{ return std::dynamic_pointer_cast<const Object>(shared_from_this())->get<T>(std::forward<Args>(_Args)...); }
+
+class Constructor {
+
+
+ public:
+  Constructor() {
+
+  }
+
+  Constructor(std::unique_ptr<Object> obj) : obj_(std::move(obj)) {
+
+  }
+
+  Object* get(){
+    return obj_.get();
+  }
+
+ private:
+
+  std::unique_ptr<Object> obj_;
+};
+
 /**
  * Factory that is used as an interface for
  * creating processors from shared objects.
@@ -74,7 +129,11 @@ class ObjectFactory {
   virtual ~ObjectFactory() {
 
   }
-  
+
+  virtual Constructor make_type() {
+    return Constructor();
+  }
+
   /**
    * Create a shared pointer to a new processor.
    */
@@ -128,57 +187,13 @@ class ObjectFactory {
 
 };
 
-template<class T>
-class StructuralObjectFactory : public ObjectFactory
-{
-public:
-	StructuralObjectFactory() {
-		className = core::getClassName<T>();
-	}
+template<typename J, class ... _Types>
+static std::shared_ptr<J> *make_type(const Constructor &con, _Types&&... _Args) {
 
-	StructuralObjectFactory(const std::string &group_name)
-		: ObjectFactory(group_name) {
-		className = core::getClassName<T>();
-	}
+  const auto t = std::make_shared<J>(std::forward<_Types>(_Args)...);
+  return t;
+}
 
-
-
-	template<class... _Types>
-		std::shared_ptr<T> make_type(_Types&&... _Args) {
-		const auto t = std::make_shared<T>(std::forward<_Types>(_Args)...);
-		return t;
-	}
-
-
-	/**
-   * Gets the name of the object.
-   * @return class name of processor
-   */
-	virtual std::string getName() {
-		return className;
-	}
-	
-	/**
-	 * Gets the class name for the object
-	 * @return class name for the processor.
-	 */
-	virtual std::string getClassName() {
-		return className;
-	}
-
-	virtual std::vector<std::string> getClassNames() {
-		std::vector<std::string> container;
-		container.push_back(className);
-		return container;
-	}
-
-	virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
-		return nullptr;
-	}
-
-protected:
-	std::string className;
-};
 /**
  * Factory that is used as an interface for
  * creating processors from shared objects.
@@ -202,6 +217,10 @@ class DefautObjectFactory : public ObjectFactory {
   virtual ~DefautObjectFactory() {
 
   }
+
+  virtual Constructor make_type() {
+      return Constructor( std::unique_ptr<Object>( new ConstructedObject<T>()));
+    }
 
   /**
    * Create a shared pointer to a new processor.
@@ -389,9 +408,8 @@ class ClassLoader {
     }
   }
 
-  template<class T,
-	  class... _Types>
-	  std::shared_ptr<T> instantiateType(_Types&&... _Args);
+  template<class T, class ... _Types>
+  std::shared_ptr<T> instantiateType(const std::string &class_name, _Types&&... _Args);
 
   /**
    * Instantiate object based on class_name
@@ -583,19 +601,18 @@ class ClassLoader {
   std::vector<void *> dl_handles_;
 };
 
-template<class _T, class... _Types>
-	std::shared_ptr<_T> instantiateType(const std::string &class_name,_Types&&... _Args) {
-	std::lock_guard<std::mutex> lock(internal_mutex_);
-	auto factory_entry = loaded_factories_.find(class_name);
-	if (factory_entry != loaded_factories_.end()) {
-		auto st = std::dynamic_cast<StructuralObjectFactory>(factory_entry->second);
-		if (st) {
-			auto obj = st->make_type(std::forward<_Types>(_Args)...);
-			return obj;
-		}
-	}
-	const auto t = std::make_shared<_T>(std::forward<_Types>(_Args)...);
-	return t;
+template<class _T, class ... _Types>
+std::shared_ptr<_T> ClassLoader::instantiateType(const std::string &class_name, _Types&&... _Args) {
+  std::lock_guard<std::mutex> lock(internal_mutex_);
+  auto factory_entry = loaded_factories_.find(class_name);
+  if (factory_entry != loaded_factories_.end()) {
+    if (factory_entry->second) {
+      auto obj = factory_entry->second->make_type().get()->get<_T>(std::forward<_Types>(_Args)...);
+      return obj;
+    }
+  }
+  const auto t = std::make_shared<_T>(std::forward<_Types>(_Args)...);
+  return t;
 }
 
 template<class T>
