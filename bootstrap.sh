@@ -281,6 +281,8 @@ add_dependency JNI_ENABLED "jnibuild"
 
 add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 
+add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
+
 TESTS_DISABLED=${FALSE}
 
 add_disabled_option SQLITE_ENABLED ${FALSE} "ENABLE_SQLITE"
