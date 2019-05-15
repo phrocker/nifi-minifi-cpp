@@ -88,7 +88,8 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
 
   processor_nodes_.push_back(node);
 
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
+  auto context = core::ClassLoader::getDefaultClassLoader().instantiateType< core::ProcessContext >("ProcessContext", node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
+  //std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
   processor_contexts_.push_back(context);
 
   processor_queue_.push_back(processor);

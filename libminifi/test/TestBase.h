@@ -260,6 +260,8 @@ class TestController {
     log.reset();
     utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());
     flow_version_ = std::make_shared<minifi::state::response::FlowVersion>("test", "test", "test");
+
+    core::FlowConfiguration::initialize_static_functions();
   }
 
   std::shared_ptr<TestPlan> createPlan(std::shared_ptr<minifi::Configure> configuration = nullptr) {

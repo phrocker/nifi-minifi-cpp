@@ -27,6 +27,7 @@
 #include <PutFile.h>
 #include <UpdateAttribute.h>
 #include <LogAttribute.h>
+#include <Expression.h>
 
 namespace expression = org::apache::nifi::minifi::expression;
 

@@ -36,6 +36,7 @@ class ProcessContextExpr : public core::ProcessContext {
                                   std::make_shared<core::repository::FileSystemRepository>())
       : core::ProcessContext(processor, controller_service_provider, repo, flow_repo, content_repo),
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
+    std::cout << "oh boyyy" << std::endl;
   }
 
   ProcessContextExpr(const std::shared_ptr<ProcessorNode> &processor, std::shared_ptr<controller::ControllerServiceProvider> &controller_service_provider,
@@ -43,6 +44,7 @@ class ProcessContextExpr : public core::ProcessContext {
                               const std::shared_ptr<core::ContentRepository> &content_repo = std::make_shared<core::repository::FileSystemRepository>())
       : core::ProcessContext(processor, controller_service_provider, repo, flow_repo, configuration, content_repo),
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
+    std::cout << "oh boyyy" << std::endl;
   }
 
   explicit ProcessContextExpr(const std::string &name, utils::Identifier uuid)

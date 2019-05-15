@@ -106,11 +106,15 @@ class ProcessContext : public core::CoreComponent, public controller::Controller
     return getPropertyImp<typename std::common_type<T>::type>(name, value);
   }
 
-  virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
+  virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+    return getProperty(property.getName(), value);
+  }
   bool getDynamicProperty(const std::string &name, std::string &value) const {
     return processor_node_->getDynamicProperty(name, value);
   }
-  virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file);
+  virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+    return getDynamicProperty(property.getName(), value);
+  }
   std::vector<std::string> getDynamicPropertyKeys() const {
     return processor_node_->getDynamicPropertyKeys();
   }

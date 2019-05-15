@@ -75,6 +75,7 @@ public:
 
   template <class _T, typename... Args>
   std::shared_ptr<T> get(Args&&... _Args) const {
+    std::cout << "oh we're deep " << std::endl;
     const auto ptr = std::make_shared<T>(std::forward<Args>(_Args)...);
     return std::static_pointer_cast<_T>(ptr);
   }
@@ -83,9 +84,13 @@ public:
 
 };
 
-//Here's the trick: dynamic_cast rather than virtual
+/**
+ * Avoid the need for virtual. There are hundreds of examples
+ */
 template<class T, class ... Args> std::shared_ptr<T> Object::get(Args&&... _Args) const
-{ return std::dynamic_pointer_cast<const Object>(shared_from_this())->get<T>(std::forward<Args>(_Args)...); }
+{
+  std::cout << "almost there" << std::endl;
+  return static_cast<const Object*>(this)->get<T>(std::forward<Args>(_Args)...); }
 
 class Constructor {
 
@@ -99,7 +104,7 @@ class Constructor {
 
   }
 
-  Object* get(){
+  Object* get() const{
     return obj_.get();
   }
 
@@ -216,6 +221,11 @@ class DefautObjectFactory : public ObjectFactory {
    */
   virtual ~DefautObjectFactory() {
 
+  }
+
+  template<typename _T, typename... Args>
+  virtual std::shared_ptr<T> make(const Constructor &constructor, Args&& _Args){
+    static_cast<const ConstructedObject<T>*>( constructor.get())->get<_T>(std::forward<Args>(_Args)...) );
   }
 
   virtual Constructor make_type() {
@@ -603,14 +613,17 @@ class ClassLoader {
 
 template<class _T, class ... _Types>
 std::shared_ptr<_T> ClassLoader::instantiateType(const std::string &class_name, _Types&&... _Args) {
+  std::cout << " for " << class_name << std::endl;
   std::lock_guard<std::mutex> lock(internal_mutex_);
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     if (factory_entry->second) {
-      auto obj = factory_entry->second->make_type().get()->get<_T>(std::forward<_Types>(_Args)...);
+      std::cout << "have a factory" <<  factory_entry->second->getName() << std::endl;
+      auto obj = factory_entry->second->make( factory_entry->second->make_type().get(),std::forward<_Types>(_Args)...);
       return obj;
     }
   }
+  std::cout << "no factory" << std::endl;
   const auto t = std::make_shared<_T>(std::forward<_Types>(_Args)...);
   return t;
 }

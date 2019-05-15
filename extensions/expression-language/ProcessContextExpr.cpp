@@ -24,6 +24,7 @@ namespace minifi {
 namespace core {
 
 bool ProcessContextExpr::getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
+  std::cout << "oh boyyy" << std::endl;
   if (!property.supportsExpressionLangauge()) {
     return ProcessContext::getProperty(property.getName(), value);
   }
@@ -41,7 +42,7 @@ bool ProcessContextExpr::getProperty(const Property &property, std::string &valu
 }
 
 bool ProcessContextExpr::getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) {
-
+  std::cout << "oh bo2yyy" << std::endl;
   if (!property.supportsExpressionLangauge()) {
     return ProcessContext::getDynamicProperty(property.getName(), value);
   }

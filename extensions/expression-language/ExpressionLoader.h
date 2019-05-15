@@ -48,12 +48,13 @@ class ExpressionObjectFactory : public core::ObjectFactory {
    * @return class name for the processor.
    */
   virtual std::vector<std::string> getClassNames() override {
-    std::vector<std::string> class_names;
-    class_names.push_back("ProcessContext");
+    std::cout << "getClassNames ProcessContext" << std::endl;
+    std::vector<std::string> class_names({"ProcessContext"});
     return class_names;
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
+    std::cout << "assign" << std::endl;
     if (utils::StringUtils::equalsIgnoreCase(class_name, "ProcessContext")) {
       return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<core::ProcessContextExpr>());
     } else {
