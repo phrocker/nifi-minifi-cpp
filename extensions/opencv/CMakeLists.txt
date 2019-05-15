@@ -38,6 +38,21 @@ ExternalProject_Add(
                     -DBUILD_DOCS=OFF
                     -DBUILD_PERF_TESTS=OFF
                     -DBUILD_TESTS=OFF
+                    -DBUILD_opencv_calib3d=OFF
+                    -DBUILD_opencv_core=ON
+                    -DBUILD_opencv_dnn=OFF
+                    -DBUILD_opencv_features2d=OFF
+                    -DBUILD_opencv_flann=OFF
+                    -DBUILD_opencv_gapi=OFF
+                    -DBUILD_opencv_highgui=OFF
+                    -DBUILD_opencv_imgcodecs=ON
+                    -DBUILD_opencv_ml=OFF
+                    -DBUILD_opencv_objdetect=ON
+                    -DBUILD_opencv_photo=OFF
+                    -DBUILD_opencv_stitching=OFF
+                    -DBUILD_opencv_video=OFF
+                    -DBUILD_opencv_videoio=OFF
+
 )
 
 add_library(opencvlib STATIC IMPORTED)
@@ -52,37 +67,37 @@ include_directories(${OPENCV_INCLUDE_DIRS})
 add_library(minifi-opencv STATIC ${SOURCES})
 
 if (APPLE)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_calib3d.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_calib3d.4.1.0.dylib)
     target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_core.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_dnn.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_features2d.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_flann.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_gapi.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_highgui.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_dnn.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_features2d.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_flann.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_gapi.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_highgui.4.1.0.dylib)
     target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_imgcodecs.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_imgproc.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_ml.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_imgproc.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_ml.4.1.0.dylib)
     target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_objdetect.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_photo.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_stitching.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_video.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_videoio.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_photo.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_stitching.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_video.4.1.0.dylib)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_videoio.4.1.0.dylib)
 else ()
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_calib3d.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_calib3d.so.4.1.0)
     target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_core.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_dnn.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_features2d.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_flann.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_gapi.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_highgui.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_dnn.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_features2d.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_flann.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_gapi.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_highgui.so.4.1.0)
     target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_imgcodecs.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_imgproc.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_ml.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_imgproc.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_ml.so.4.1.0)
     target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_objdetect.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_photo.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_stitching.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_video.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_videoio.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_photo.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_stitching.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_video.so.4.1.0)
+#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_videoio.so.4.1.0)
 endif ()
 
 add_dependencies(minifi-opencv opencv-external)
