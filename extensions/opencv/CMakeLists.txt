@@ -19,24 +19,10 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-#find_package(OpenCV REQUIRED)
-#
-#include_directories(${LIBOPENCV_INCLUDE_DIR})
-
 file(GLOB SOURCES  "*.cpp")
 
 set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/opencv")
 set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/opencv-install/")
-
-#set_property(TARGET minifi-opencv PROPERTY POSITION_INDEPENDENT_CODE ON)
-#if(THREADS_HAVE_PTHREAD_ARG)
-#    target_compile_options(PUBLIC minifi-opencv "-pthread")
-#endif()
-#if(CMAKE_THREAD_LIBS_INIT)
-#    target_link_libraries(minifi-opencv "${CMAKE_THREAD_LIBS_INIT}")
-#endif()
-
-#target_link_libraries( minifi-opencv ${LIBMINIFI} ${OpenCV_LIBRARIES} )
 
 # OpenCV 4.1.0
 ExternalProject_Add(
@@ -56,8 +42,6 @@ ExternalProject_Add(
 
 add_library(opencvlib STATIC IMPORTED)
 set_target_properties(opencvlib PROPERTIES IMPORTED_LOCATION "${BYPRODUCT}")
-
-message("!!!!!!!!!!!!!!!!!! BYPRODUCT !!!!!!!!!!!!!!!!!!" ${BYPRODUCT})
 
 set(OPENCV_FOUND "YES" CACHE STRING "" FORCE)
 set(OPENCV_INCLUDE_DIRS "${BYPRODUCT}/include/opencv4" CACHE STRING "" FORCE)
