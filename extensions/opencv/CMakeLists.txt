@@ -35,9 +35,8 @@ set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/opencv-install/")
 #if(CMAKE_THREAD_LIBS_INIT)
 #    target_link_libraries(minifi-opencv "${CMAKE_THREAD_LIBS_INIT}")
 #endif()
-#
-#target_link_libraries( minifi-opencv ${LIBMINIFI} ${OpenCV_LIBRARIES} )
 
+#target_link_libraries( minifi-opencv ${LIBMINIFI} ${OpenCV_LIBRARIES} )
 
 # OpenCV 4.1.0
 ExternalProject_Add(
@@ -45,22 +44,48 @@ ExternalProject_Add(
         GIT_REPOSITORY "https://github.com/opencv/opencv.git"
         GIT_TAG "371bba8f54560b374fbcd47e7e02f015ac4969ad"
         EXCLUDE_FROM_ALL TRUE
+        INSTALL_DIR ${BYPRODUCT}
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+                    -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
+                    -DBUILD_SHARED_LIBS=ON
+                    -DBUILD_EXAMPLES=OFF
+                    -DBUILD_DOCS=OFF
+                    -DBUILD_PERF_TESTS=OFF
+                    -DBUILD_TESTS=OFF
 )
 
+add_library(opencvlib STATIC IMPORTED)
+set_target_properties(opencvlib PROPERTIES IMPORTED_LOCATION "${BYPRODUCT}")
+
+message("!!!!!!!!!!!!!!!!!! BYPRODUCT !!!!!!!!!!!!!!!!!!" ${BYPRODUCT})
+
 set(OPENCV_FOUND "YES" CACHE STRING "" FORCE)
-set(OPENCV_INCLUDE_DIRS "${BYPRODUCT}/include" CACHE STRING "" FORCE)
-set(OPENCV_LIBRARIES awssdklib CACHE STRING "" FORCE)
-set(OPENCV_LIBRARY awssdklib CACHE STRING "" FORCE)
+set(OPENCV_INCLUDE_DIRS "${BYPRODUCT}/include/opencv4" CACHE STRING "" FORCE)
+set(OPENCV_LIBRARIES opencvlib CACHE STRING "" FORCE)
+set(OPENCV_LIBRARY opencvlib CACHE STRING "" FORCE)
 
 include_directories(${OPENCV_INCLUDE_DIRS})
 add_library(minifi-opencv STATIC ${SOURCES})
 
-#if (APPLE)
-#    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-event-stream.dylib)
-#else ()
-#    target_link_libraries (minifi-aws ${BYPRODUCT}lib/libaws-c-event-stream.so)
-#endif ()
+if (APPLE)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_calib3d.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_core.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_dnn.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_features2d.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_flann.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_gapi.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_highgui.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_imgcodecs.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_imgproc.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_ml.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_objdetect.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_photo.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_stitching.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_video.4.1.0.dylib)
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_videoio.4.1.0.dylib)
+else ()
+    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_*.4.1.0.so)
+endif ()
 
 add_dependencies(minifi-opencv opencv-external)
 

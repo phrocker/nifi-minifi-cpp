@@ -93,39 +93,39 @@ class CaptureRTSPFrame : public core::Processor {
   std::string image_encoding_;
   std::string video_backend_driver_;
 
-  std::function<int()> f_ex;
-
-  std::atomic<bool> running_;
-
-  std::unique_ptr<DataHandler> handler_;
-
-  std::vector<std::string> endpoints;
-
-  std::map<std::string, std::future<int>*> live_clients_;
-
-  utils::ThreadPool<int> client_thread_pool_;
-
-  moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
-
-  bool stay_connected_;
-
-  uint16_t concurrent_handlers_;
-
-  int8_t endOfMessageByte;
-
-  uint64_t reconnect_interval_;
-
-  uint64_t receive_buffer_size_;
-
-  uint16_t connection_attempt_limit_;
-
-  std::shared_ptr<GetTCPMetrics> metrics_;
-
-  // Mutex for ensuring clients are running
-
-  std::mutex mutex_;
-
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
+//  std::function<int()> f_ex;
+//
+//  std::atomic<bool> running_;
+//
+//  std::unique_ptr<DataHandler> handler_;
+//
+//  std::vector<std::string> endpoints;
+//
+//  std::map<std::string, std::future<int>*> live_clients_;
+//
+//  utils::ThreadPool<int> client_thread_pool_;
+//
+//  moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
+//
+//  bool stay_connected_;
+//
+//  uint16_t concurrent_handlers_;
+//
+//  int8_t endOfMessageByte;
+//
+//  uint64_t reconnect_interval_;
+//
+//  uint64_t receive_buffer_size_;
+//
+//  uint16_t connection_attempt_limit_;
+//
+//  std::shared_ptr<GetTCPMetrics> metrics_;
+//
+//  // Mutex for ensuring clients are running
+//
+//  std::mutex mutex_;
+//
+//  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
 
 };
 
