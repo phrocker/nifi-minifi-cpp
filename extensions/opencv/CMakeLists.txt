@@ -19,88 +19,52 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
+#find_package(OpenCV REQUIRED)
+#
+#include_directories(${LIBOPENCV_INCLUDE_DIR})
+
 file(GLOB SOURCES  "*.cpp")
 
 set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/opencv")
 set(BYPRODUCT "${CMAKE_CURRENT_BINARY_DIR}/opencv-install/")
 
+#set_property(TARGET minifi-opencv PROPERTY POSITION_INDEPENDENT_CODE ON)
+#if(THREADS_HAVE_PTHREAD_ARG)
+#    target_compile_options(PUBLIC minifi-opencv "-pthread")
+#endif()
+#if(CMAKE_THREAD_LIBS_INIT)
+#    target_link_libraries(minifi-opencv "${CMAKE_THREAD_LIBS_INIT}")
+#endif()
+
+#target_link_libraries( minifi-opencv ${LIBMINIFI} ${OpenCV_LIBRARIES} )
+
+set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/opencv")
+set(BYPRODUCT "${BASE_DIR}/install")
+
 # OpenCV 4.1.0
-ExternalProject_Add(
-        opencv-external
-        GIT_REPOSITORY "https://github.com/opencv/opencv.git"
-        GIT_TAG "371bba8f54560b374fbcd47e7e02f015ac4969ad"
-        EXCLUDE_FROM_ALL TRUE
-        INSTALL_DIR ${BYPRODUCT}
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+
+build_git_project(opencv-external "${BASE_DIR}" "https://github.com/opencv/opencv.git" "371bba8f54560b374fbcd47e7e02f015ac4969ad" 
+					-DCMAKE_BUILD_TYPE=Release
                     -DCMAKE_INSTALL_PREFIX=${BYPRODUCT}
-                    -DBUILD_SHARED_LIBS=ON
+                    -DBUILD_SHARED_LIBS=OFF
                     -DBUILD_EXAMPLES=OFF
                     -DBUILD_DOCS=OFF
+                    -DBUILD_PACKAGE=OFF
+					-DBUILD_opencv_apps=OFF                    
                     -DBUILD_PERF_TESTS=OFF
-                    -DBUILD_TESTS=OFF
-                    -DBUILD_opencv_calib3d=OFF
-                    -DBUILD_opencv_core=ON
-                    -DBUILD_opencv_dnn=OFF
-                    -DBUILD_opencv_features2d=OFF
-                    -DBUILD_opencv_flann=OFF
-                    -DBUILD_opencv_gapi=OFF
-                    -DBUILD_opencv_highgui=OFF
-                    -DBUILD_opencv_imgcodecs=ON
-                    -DBUILD_opencv_ml=OFF
-                    -DBUILD_opencv_objdetect=ON
-                    -DBUILD_opencv_photo=OFF
-                    -DBUILD_opencv_stitching=OFF
-                    -DBUILD_opencv_video=OFF
-                    -DBUILD_opencv_videoio=OFF
+                    -DBUILD_TESTS=OFF)
 
-)
 
-add_library(opencvlib STATIC IMPORTED)
-set_target_properties(opencvlib PROPERTIES IMPORTED_LOCATION "${BYPRODUCT}")
+message("!!!!!!!!!!!!!!!!!! BYPRODUCT !!!!!!!!!!!!!!!!!!" ${BYPRODUCT})
 
-set(OPENCV_FOUND "YES" CACHE STRING "" FORCE)
-set(OPENCV_INCLUDE_DIRS "${BYPRODUCT}/include/opencv4" CACHE STRING "" FORCE)
-set(OPENCV_LIBRARIES opencvlib CACHE STRING "" FORCE)
-set(OPENCV_LIBRARY opencvlib CACHE STRING "" FORCE)
 
-include_directories(${OPENCV_INCLUDE_DIRS})
+
 add_library(minifi-opencv STATIC ${SOURCES})
 
-if (APPLE)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_calib3d.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_core.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_dnn.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_features2d.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_flann.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_gapi.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_highgui.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_imgcodecs.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_imgproc.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_ml.4.1.0.dylib)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_objdetect.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_photo.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_stitching.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_video.4.1.0.dylib)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib/libopencv_videoio.4.1.0.dylib)
-else ()
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_calib3d.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_core.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_dnn.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_features2d.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_flann.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_gapi.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_highgui.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_imgcodecs.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_imgproc.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_ml.so.4.1.0)
-    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_objdetect.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_photo.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_stitching.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_video.so.4.1.0)
-#    target_link_libraries (minifi-opencv ${BYPRODUCT}lib64/libopencv_videoio.so.4.1.0)
-endif ()
-
-add_dependencies(minifi-opencv opencv-external)
+set(OpenCV_DIR ${BASE_DIR})
+find_package( OpenCV REQUIRED PATHS "${BASE_DIR}/opencv-external/src/opencv-external-build/")
+target_link_libraries( minifi-opencv ${OpenCV_LIBS} )
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 SET (OPENCV-EXTENSION minifi-opencv PARENT_SCOPE)
 register_extension(minifi-opencv)
