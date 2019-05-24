@@ -55,7 +55,13 @@ endif()
 
 endif()
 
+
+
+  
 add_executable(minifiexe MiNiFiMain.cpp)
+
+target_link_libraries(minifiexe ${ZLIB_LIBRARY})
+
 if (NOT USE_SHARED_LIBS)
 	if (LIBC_STATIC)
 		set_target_properties(minifiexe PROPERTIES LINK_SEARCH_START_STATIC 1)
@@ -106,6 +112,88 @@ endif(OPENSSL_FOUND)
 add_dependencies(minifiexe minifi)
 
 
+set(BASE_DIR_ZIPPER "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zipper")
+set(DIR_ZIPPER "${BASE_DIR_ZIPPER}/thirdparty/zipper-src")
+set(BYPRODUCT_ZIPPER "${DIR_ZIPPER}/libZipper-static.a")
+
+set(BASE_DIR_TINYXML "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/tinyxml")
+set(DIR_TINYXML "${BASE_DIR_TINYXML}/thirdparty/tinyxml-src")
+set(BYPRODUCT_TINYXML "${DIR_TINYXML}/libtinyxml2.a")
+
+ExternalProject_Add(
+	    tinyxml-external
+	    GIT_REPOSITORY "https://github.com/leethomason/tinyxml2.git"
+	    GIT_TAG "7.0.1" 
+	    PREFIX "${BASE_DIR_TINYXML}/thirdparty/tinyxml"
+	    BUILD_IN_SOURCE true
+	    SOURCE_DIR "${DIR_TINYXML}"
+	    BUILD_BYPRODUCTS ${BYPRODUCT_TINYXML} 
+	     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+	     	   "-DBUILD_SHARED_LIBS=OFF"
+	     	   "-DBUILD_STATIC_LIBS=ON"
+               "-DCMAKE_INSTALL_PREFIX=${DIR_TINYXML}"
+	  )
+	  
+  include_directories("${DIR_TINYXML}")
+	  
+  add_library(tinyxml STATIC IMPORTED)
+
+
+ExternalProject_Add(
+	    zipper-external
+	    GIT_REPOSITORY "https://github.com/sebastiandev/zipper.git"
+	    GIT_TAG "3b0ca4e18caa04d61434c23716d410e581ffd1b5" 
+	    PREFIX "${BASE_DIR_ZIPPER}/thirdparty/zipper"
+	    BUILD_IN_SOURCE true
+	    SOURCE_DIR "${DIR_ZIPPER}"
+	    BUILD_BYPRODUCTS ${BYPRODUCT_ZIPPER} 
+	     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+	     	   "-DMZ_WZAES=OFF"
+	     	   "-DMZ_PKCRYPT=OFF"
+	     	   "-DMZ_BZIP2=OFF"
+	     	   "-DMZ_LZMA=OFF"
+	     	   "-DZLIB_FOUND=${ZLIB_FOUND}"
+			   "-DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}"
+			   "-DZLIB_INCLUDE_DIRS=${ZLIB_INCLUDE_DIRS}"
+			   "-DZLIB_LIBRARIES=${ZLIB_LIBRARIES}"
+			   "-DZLIB_LIBRARY=${ZLIB_LIBRARY}"
+			   "-DZLIB_LIBRARY_RELEASE=${ZLIB_LIBRARY_RELEASE}"
+               "-DCMAKE_INSTALL_PREFIX=${DIR_ZIPPER}"
+	  )
+	  
+  include_directories("${DIR_ZIPPER}/include")
+	  
+  add_library(zipper STATIC IMPORTED)
+
+add_executable(bootstrap Bootstrap.cpp)
+set_target_properties(bootstrap PROPERTIES LINK_SEARCH_START_STATIC 1)
+
+
+find_package(ZLIB REQUIRED)
+
+
+set_target_properties(zipper PROPERTIES IMPORTED_LOCATION "${BYPRODUCT_ZIPPER}")
+set_target_properties(tinyxml PROPERTIES IMPORTED_LOCATION "${BYPRODUCT_TINYXML}")
+add_dependencies(bootstrap tinyxml-external)
+  add_dependencies(zipper zipper-external)
+  add_dependencies(zipper zlib-external)
+target_link_libraries(bootstrap zipper tinyxml core-minifi ${ZLIB_LIBRARY} cxxopts)
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os")
+
+
+target_link_libraries(bootstrap -static-libgcc -static-libstdc++)
+set_target_properties(bootstrap PROPERTIES LINK_SEARCH_END_STATIC 1)
+
+if(WIN32)
+	set_target_properties(bootstrap PROPERTIES LINK_FLAGS "${LINK_FLAGS} ${WIN32_ARCHIVES}")
+endif()
+set_target_properties(bootstrap
+        PROPERTIES OUTPUT_NAME bootstrap)
+
+add_dependencies(bootstrap minifiexe)
+
+
 if (APPLE)
 	target_link_libraries (minifiexe -Wl,-all_load minifi)
 elseif(NOT WIN32)
@@ -135,24 +223,31 @@ if (APPLE)
 	foreach(EXTENSION ${extensions})
 		message("Linking MiNiFiMain against ${EXTENSION}")
 		target_link_libraries (minifiexe -Wl,-all_load ${EXTENSION})
+		target_link_libraries (bootstrap -Wl,-all_load ${EXTENSION})
 		add_dependencies(minifiexe ${EXTENSION})
+		add_dependencies(bootstrap ${EXTENSION})
 	endforeach()    
 else ()
 	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
 	foreach(EXTENSION ${extensions})
 	if (WIN32)
 	target_link_libraries (minifiexe ${EXTENSION})
+	target_link_libraries (bootstrap ${EXTENSION})
 	  set(WIN32_ARCHIVES "${WIN32_ARCHIVES} /WHOLEARCHIVE:${EXTENSION}")
 	  add_dependencies(minifiexe ${EXTENSION})
+	  add_dependencies(bootstrap ${EXTENSION})
     else()
 	  target_link_libraries (minifiexe -Wl,--whole-archive ${EXTENSION} -Wl,--no-whole-archive)
+	  target_link_libraries (bootstrap -Wl,--whole-archive ${EXTENSION} -Wl,--no-whole-archive)
 	  add_dependencies(minifiexe ${EXTENSION})
+	  add_dependencies(bootstrap ${EXTENSION})
 	  endif()
 	endforeach()
 endif ()
 
 if(WIN32)
 	set_target_properties(minifiexe PROPERTIES LINK_FLAGS "${LINK_FLAGS} ${WIN32_ARCHIVES}")
+	set_target_properties(bootstrap PROPERTIES LINK_FLAGS "${LINK_FLAGS} ${WIN32_ARCHIVES}")
 endif()
 set_target_properties(minifiexe
         PROPERTIES OUTPUT_NAME minifi)

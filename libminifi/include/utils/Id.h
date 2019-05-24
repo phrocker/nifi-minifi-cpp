@@ -104,7 +104,7 @@ class Identifier : public IdentifierBase<UUID_FIELD, std::string> {
 
   /**
    * I believe these exist to make windows builds happy -- need more testing
-   * to ensure this doesn't cause any issues.
+   * to ensure this doesn't  cause any issues.
    */
   Identifier(const IdentifierBase &other);
   Identifier &operator=(const IdentifierBase &other);

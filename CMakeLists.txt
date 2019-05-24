@@ -606,7 +606,6 @@ endif()
 
 add_subdirectory(main)
 add_subdirectory(nanofi)
-
 add_dependencies(nanofi minifiexe)
 
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
@@ -614,7 +613,6 @@ if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 	add_subdirectory(controller)
 	add_dependencies(minificontroller minifiexe)
 endif()
-
 
 if (NOT DISABLE_CURL)
   if (ENABLE_PYTHON)
