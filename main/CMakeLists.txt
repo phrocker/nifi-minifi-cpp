@@ -165,6 +165,8 @@ ExternalProject_Add(
 	  
   add_library(zipper STATIC IMPORTED)
 
+include_directories(../thirdparty/cxxopts/include)
+
 add_executable(bootstrap Bootstrap.cpp)
 set_target_properties(bootstrap PROPERTIES LINK_SEARCH_START_STATIC 1)
 
@@ -177,7 +179,7 @@ set_target_properties(tinyxml PROPERTIES IMPORTED_LOCATION "${BYPRODUCT_TINYXML}
 add_dependencies(bootstrap tinyxml-external)
   add_dependencies(zipper zipper-external)
   add_dependencies(zipper zlib-external)
-target_link_libraries(bootstrap zipper tinyxml core-minifi ${ZLIB_LIBRARY} cxxopts)
+target_link_libraries(bootstrap zipper tinyxml minifi ${ZLIB_LIBRARY})
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os")
 
