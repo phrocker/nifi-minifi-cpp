@@ -164,7 +164,7 @@ class SecureSocketTest : public IntegrationBase {
   std::function<int(std::vector<uint8_t>*b, int *size)> handler;
   std::atomic<bool> isRunning_;
   bool isSecure;
-  char *dir;
+  std::string dir;
   std::stringstream ss;
   TestController testController;
   std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket;
@@ -180,8 +180,9 @@ int main(int argc, char **argv) {
     key_dir = argv[2];
   }
 
+#ifndef WIN32
   signal(SIGPIPE, sigpipe_handle);
-
+#endif
   SecureSocketTest harness(true);
 
   harness.setKeyDir(key_dir);

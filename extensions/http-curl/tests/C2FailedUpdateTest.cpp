@@ -45,6 +45,7 @@
 #include "CivetServer.h"
 #include <cstring>
 #include "protocols/RESTSender.h"
+#include "utils/file/FileUtils.h"
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -171,7 +172,7 @@ int main(int argc, char **argv) {
   configuration->set("nifi.c2.rest.url", "http://localhost:7071/update");
   configuration->set("nifi.c2.rest.url.ack", "http://localhost:7071/update");
   configuration->set("nifi.c2.agent.heartbeat.period", "1000");
-  mkdir("content_repository", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  utils::file::FileUtils::create_dir("content_repository");
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
@@ -206,7 +207,7 @@ int main(int argc, char **argv) {
   assert(logs.find("Invalid configuration payload") != std::string::npos);
   assert(logs.find("update failed.") != std::string::npos);
   LogTestController::getInstance().reset();
-  rmdir("./content_repository");
+  utils::file::FileUtils::delete_dir("content_repository",true);
   assert(h_ex.calls_ <= (milliseconds / 1000) + 1);
 
   return 0;

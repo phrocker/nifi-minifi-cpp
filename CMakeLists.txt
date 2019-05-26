@@ -30,37 +30,50 @@ include(FeatureSummary)
 include(ExternalProject)
 
 option(SKIP_TESTS "Skips building all tests." OFF)
-
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
-
 option(USE_SHARED_LIBS "Builds using shared libraries" ON)
-
 option(ENABLE_PYTHON "Instructs the build system to enable building shared objects for the python lib" OFF)
-
-cmake_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT ENABLE_PYTHON; NOT USE_SHARED_LIBS" OFF)
-
+cmake_dependent_option(STATIC_BUILD "Attempts to statically link as many dependencies as possible." ON "NOT ENABLE_PYTHON; NOT USE_SHARED_LIBS" OFF)  
 cmake_dependent_option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON "NOT STATIC_BUILD" OFF)
 option(LIBC_STATIC "Instructs the build system to statically link libstdc++ and glibc into minifiexe. Experiemental" OFF)
-
 option(OPENSSL_OFF "Disables OpenSSL" OFF)
 option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use a UUID library available in the host system" OFF)
-
 option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
 cmake_dependent_option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON "NOT STATIC_BUILD" OFF)
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
-
 cmake_dependent_option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON "NOT STATIC_BUILD" OFF)
-
 cmake_dependent_option(USE_SYSTEM_LIBSSH2 "Instructs the build system to search for and use a libssh2 library available in the host system" OFF "NOT STATIC_BUILD" OFF)
-
 option(USE_SYSTEM_BZIP2 "Instructs the build system to search for and use a bzip2 library available in the host system" ON)
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
 option(FORCE_WINDOWS "Instructs the build system to force Windows builds when WIN32 is specified" OFF)
 option(DISABLE_CURL "Disables libCurl Properties." OFF)
 
 option(USE_GOLD_LINKER "Use Gold Linker" OFF)
+
+if (OPENSSL_ROOT_DIR )
+	set(OPENSSL_PASSTHROUGH "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
+endif()
+
+set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
+                           -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+                           -DANDROID_STL=${ANDROID_STL}
+                           -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                           -DANDROID_NDK=${ANDROID_NDK}
+                           -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                           -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                           -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+                           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                           -DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}
+                           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+						   ${OPENSSL_PASSTHROUGH}
+                           -G${CMAKE_GENERATOR})
 
 if(NOT WIN32)
 	if (ENABLE_JNI)
@@ -130,6 +143,8 @@ endif()
 include(CheckCXXCompilerFlag)
 if (WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+	add_compile_options("/W1")
   if ((MSVC_VERSION GREATER "1900") OR (MSVC_VERSION EQUAL "1900"))
     CHECK_CXX_COMPILER_FLAG("/std:c++14" _cpp_latest_flag_supported)
     if (_cpp_latest_flag_supported)
@@ -174,6 +189,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if (NOT OPENSSL_OFF)
 	if(USE_SYSTEM_OPENSSL)
+		
 		# Set the right openssl root path
 		if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 		set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
@@ -184,7 +200,7 @@ if (NOT OPENSSL_OFF)
 		endif()
 	else()
 		include(LibreSSL)
-		use_libre_ssl(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+		use_libre_ssl("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
 	endif()	
 	
@@ -263,8 +279,8 @@ endif(DISABLE_CURL)
 if(NOT DISABLE_CURL AND (NOT USE_SYSTEM_CURL))
   message("Using bundled cURL")
   
-  set(CURL_C_FLAGS "-I${OPENSSL_INCLUDE_DIR}")
-  set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
+  set(CURL_C_FLAGS "-I${CMAKE_C_FLAGS}")
+  set(CURL_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 
 get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
@@ -276,13 +292,9 @@ else()
 endif()
 
   if (WIN32)
- if (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo OR CMAKE_BUILD_TYPE MATCHES Release)
-  set(BYPRODUCT "lib/libcurl.lib")
+	set(BYPRODUCT "lib/libcurl.lib")
   else()
-  set(BYPRODUCT "lib/libcurl-d.lib")
-  endif()
-  else()
-  set(BYPRODUCT "lib${LIBSUFFIX}/libcurl.a")
+  	set(BYPRODUCT "lib${LIBSUFFIX}/libcurl.a")
   endif()
 
   if (WIN32)
@@ -301,10 +313,11 @@ endif()
                 -DBUILD_TESTING=OFF
                 -DBUILD_SHARED_LIBS=OFF
                 -DHTTP_ONLY=ON
-                -DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}
-                -DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}
+                "-DLIBRESSL_BIN_DIR=${LIBRESSL_BIN_DIR}"
+                "-DLIBRESSL_SRC_DIR=${LIBRESSL_SRC_DIR}"
                 -DCURL_DISABLE_CRYPTO_AUTH=ON
                 -DCMAKE_USE_LIBSSH2=OFF
+				"-DCMAKE_DEBUG_POSTFIX="
                 -DHAVE_GLIBC_STRERROR_R=1
                 -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
                 -DHAVE_POSIX_STRERROR_R=0
@@ -314,6 +327,7 @@ endif()
                 -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
                "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
+			   "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
 	${PC}
     BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/${BYPRODUCT}"
@@ -326,13 +340,11 @@ endif()
   set(CURL_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/" CACHE STRING "" FORCE)
   set(CURL_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/" CACHE STRING "" FORCE)
   set(CURL_BYPRODUCT_DIR "${BYPRODUCT}" CACHE STRING "" FORCE)
-
-
+	
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
   add_library(curl STATIC IMPORTED)
   set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CURL_BIN_DIR}${BYPRODUCT}")
-
-
+    
   if (OPENSSL_FOUND) 
      if (NOT WIN32)
        set_target_properties(curl PROPERTIES INTERFACE_LINK_LIBRARIES ${OPENSSL_LIBRARIES})
@@ -342,7 +354,7 @@ endif()
   set(CURL_FOUND "YES")
   set(CURL_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
   set(CURL_LIBRARY "${CURL_BIN_DIR}${BYPRODUCT}" CACHE STRING "" FORCE)
-  set(CURL_LIBRARIES ${CURL_LIBRARY} CACHE STRING "" FORCE)
+  set(CURL_LIBRARIES "${CURL_LIBRARY}" CACHE STRING "" FORCE)
  else()
   message("Using System cURL")
 endif()
@@ -378,31 +390,30 @@ include_directories(thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 include_directories(thirdparty/rapidjson-1.1.0/include)
 
 ## Expression language extensions
-option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
-include_directories("extensions/expression-language/common")
-if (DISABLE_EXPRESSION_LANGUAGE)
-    # Build expression language NoOp implementation, if necessary
-    include_directories("extensions/expression-language/noop")
-    add_subdirectory(extensions/expression-language/noop)
-else()
-    include_directories("extensions/expression-language/impl")
-    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "${TEST_DIR}/expression-language-tests")
-    if(NOT USE_SYSTEM_CURL)
-		message("minifi-expression-language-extensions will depend on curl-external")
-		add_dependencies(minifi-expression-language-extensions curl-external)
-	endif()
-endif()
-
 if(BOOTSTRAP)
+<<<<<<< HEAD
 	# display an error message for those using the bootstrap
     message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
 endif()
 
                
+=======
+    add_subdirectory(thirdparty/cxxopts)
+    createExtension(BOOTSTRAP "BOOTSTRAP" "Bootstraps documentation and other features" "extensions/bootstrap")
+    # we don't currently need this route. A follow on should help re-write processor documentation from what exists in code, so this will remain here 
+	# execute_process(COMMAND ${CMAKE_BINARY_DIR}/extensions/bootstrap/bstrp --inputc2docs "${CMAKE_SOURCE_DIR}/PROCESSORS.md" --outputc2docs "${CMAKE_SOURCE_DIR}/libminifi/include/agent/agent_docs.h")
+    return()
+endif()
+
+>>>>>>> MINIFICPP-883: Add windows build script
 add_subdirectory(libminifi)
 
 if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
   add_dependencies(minifi libressl-portable)
+endif()
+
+if(NOT USE_SYSTEM_CURL)
+  add_dependencies(minifi curl-external)
 endif()
 
 if (WIN32 OR NOT USE_SYSTEM_ZLIB)
@@ -421,9 +432,23 @@ if ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET)
 	endif()
 endif()
 
+option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
+if (NOT DISABLE_EXPRESSION_LANGUAGE)
+    createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "extensions/expression-language/tests")
+    if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
+  add_dependencies(minifi-expression-language-extensions libressl-portable)
+endif()
+    if(NOT USE_SYSTEM_CURL)
+		message("minifi-expression-language-extensions will depend on curl-external")
+		add_dependencies(minifi-expression-language-extensions curl-external)
+	endif()
+endif()
+
+
+
 option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 if (NOT DISABLE_CIVET)
-	createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb" "${TEST_DIR}/civetweb-tests")
+	createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb")
 endif()
 
 ## Add the rocks DB extension
@@ -461,7 +486,7 @@ endif()
 if (WIN32)
 option(ENABLE_WEL "Enables the suite of Windows Event Log extensions." OFF)
 if (ENABLE_ALL OR ENABLE_WEL)
-	createExtension(WEL-EXTENSION "WEL EXTENSIONS" "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log" "${TEST_DIR}/windows-event-log-tests")
+	createExtension(WEL-EXTENSION "WEL EXTENSIONS" "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log" "extensions/windows-event-log/tests")
 endif()
 endif(WIN32)
 
@@ -530,6 +555,7 @@ if (ENABLE_OPENCV)
 	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enabled OpenCV support" "extensions/opencv" "${TEST_DIR}/opencv-tests")
 endif()
 
+
 ## Bustache/template extensions
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 if (ENABLE_BUSTACHE)
@@ -563,6 +589,7 @@ if ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL)
         add_dependencies(minifi-sftp zlib-external)
     endif()
 endif()
+
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 
@@ -674,7 +701,7 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
         COMPONENT bin)
         
 endif()
-
+        
 
 if (WIN32)
 set(CPACK_GENERATOR "WIX")
