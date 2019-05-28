@@ -27,6 +27,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "FileMetrics.h"
 
 namespace org {
 namespace apache {
@@ -47,60 +48,6 @@ struct GetFileRequest {
   std::string fileFilter = "[^\\.].*";
 };
 
-class GetFileMetrics : public state::response::ResponseNode {
- public:
-  GetFileMetrics()
-      : state::response::ResponseNode("GetFileMetrics") {
-    iterations_ = 0;
-    accepted_files_ = 0;
-    input_bytes_ = 0;
-  }
-
-  GetFileMetrics(std::string name, utils::Identifier &uuid)
-      : state::response::ResponseNode(name, uuid) {
-    iterations_ = 0;
-    accepted_files_ = 0;
-    input_bytes_ = 0;
-  }
-  virtual ~GetFileMetrics() {
-
-  }
-  virtual std::string getName() const {
-    return core::Connectable::getName();
-  }
-
-  virtual std::vector<state::response::SerializedResponseNode> serialize() {
-    std::vector<state::response::SerializedResponseNode> resp;
-
-    state::response::SerializedResponseNode iter;
-    iter.name = "OnTriggerInvocations";
-    iter.value = (uint32_t)iterations_.load();
-
-    resp.push_back(iter);
-
-    state::response::SerializedResponseNode accepted_files;
-    accepted_files.name = "AcceptedFiles";
-    accepted_files.value = (uint32_t)accepted_files_.load();
-
-    resp.push_back(accepted_files);
-
-    state::response::SerializedResponseNode input_bytes;
-    input_bytes.name = "InputBytes";
-    input_bytes.value = (uint32_t)input_bytes_.load();
-
-    resp.push_back(input_bytes);
-
-    return resp;
-  }
-
- protected:
-  friend class GetFile;
-
-  std::atomic<size_t> iterations_;
-  std::atomic<size_t> accepted_files_;
-  std::atomic<size_t> input_bytes_;
-
-};
 
 // GetFile Class
 class GetFile : public core::Processor, public state::response::MetricsNodeSource {
@@ -112,7 +59,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   explicit GetFile(std::string name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid),
         logger_(logging::LoggerFactory<GetFile>::getLogger()) {
-    metrics_ = std::make_shared<GetFileMetrics>();
+    metrics_ = std::make_shared<metrics::FileMetrics>("GetFileMetrics");
   }
   // Destructor
   virtual ~GetFile() {
@@ -164,7 +111,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
 
  private:
 
-  std::shared_ptr<GetFileMetrics> metrics_;
+  std::shared_ptr<metrics::FileMetrics> metrics_;
 
   // Queue for store directory list
   std::queue<std::string> _dirList;
