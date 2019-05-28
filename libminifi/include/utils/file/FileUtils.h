@@ -209,6 +209,10 @@ class FileUtils {
     }
     return false;
   }
+
+  static void set_permissions(const std::string &path, uint32_t &perm){
+        chmod(path.c_str(),perm);
+    }
 #endif
 
 #ifndef WIN32
@@ -250,12 +254,20 @@ class FileUtils {
 #endif
   }
 
-  static int copy_file(const std::string &path_from, const std::string dest_path) {
+  static int copy_file(const std::string &path_from, const std::string &dest_path) {
     std::ifstream src(path_from, std::ios::binary);
-    if (!src.is_open())
+    if (!src.good())
       return -1;
     std::ofstream dest(dest_path, std::ios::binary);
+    if (!dest.is_open())
+      return -1;
     dest << src.rdbuf();
+    src.close();
+    dest.close();
+    std::ifstream ver(dest_path, std::ios::binary);
+    if (!ver.good())
+      return -1;
+    ver.close();
     return 0;
   }
 

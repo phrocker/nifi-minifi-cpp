@@ -36,6 +36,7 @@
 #endif
 
 #include <fcntl.h>
+#include <fstream>
 #include <stdio.h>
 #include <cstdlib>
 #include <semaphore.h>
@@ -53,6 +54,11 @@
 #include "FlowController.h"
 #include "Main.h"
 #include "agent/agent_version.h"
+#include "utils/file/FileUtils.h"
+#include <zipper/zipper.h>
+#include <zipper/unzipper.h>
+#include <zipper/tools.h>
+
 // Variables that allow us to avoid a timed wait.
 sem_t *running;
 //! Flow Controller
@@ -87,16 +93,65 @@ void sigHandler(int signal) {
   }
 }
 
-
 int main(int argc, char **argv) {
   std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
 
+  std::cout << argc << std::endl;
+
+  const std::vector<std::string> arguments(argv + 1, argv + argc);
+
+  if (argc == 3) {
+    if (!strcmp(argv[1], "install")) {
+      std::string path = argv[2];
+      std::cout << "Installing Apache NiFi MiNiFi C++ to " << path << std::endl;
+      const auto &tmp = temp_dir();
+      zipper::Unzipper unz(argv[0]);
+      const auto entries = unz.entries();
+
+      for (const auto &entry : entries) {
+        if (entry.name == "installer.zip") {
+          const auto &install_path = temp_dir() + "/installer.zip";
+          std::cout << "Binary contains " + entry.name << "; extracting to " << install_path <<  std::endl;
+          std::fstream out(install_path, std::ios::binary | std::ios::out);
+          unz.extractEntryToStream(entry.name, out);
+          out.close();
+          zipper::Unzipper inst(install_path);
+          inst.extract(path);
+          std::string install_dir;
+          org::apache::nifi::minifi::utils::file::FileUtils::list_dir(path,[&install_dir](const std::string&path, const std::string&file) {
+
+            if (file == "minifi.sh"){
+              install_dir = path;
+            }
+            return true;
+          },logger,true);
+          std::string install_exe = install_dir + FILE_SEPARATOR + "minifi";
+          auto ret = org::apache::nifi::minifi::utils::file::FileUtils::copy_file(argv[0],install_exe) ;
+          {
+          std::ifstream in(argv[0], std::ifstream::ate | std::ifstream::binary);
+          std::cout << argv[0] << " is " << in.tellg() << std::endl;
+          }
+          {
+                    std::ifstream in(install_exe, std::ifstream::ate | std::ifstream::binary);
+                    std::cout << install_exe << " is " << in.tellg() << std::endl;
+                    }
+
+          assert( ret == 0);
+          uint32_t perm = 755;
+          org::apache::nifi::minifi::utils::file::FileUtils::set_permissions(install_exe,perm);
+          std::cout << ret << " Installed agent to " << install_exe << std::endl;
+        }
+
+
+      }
+      org::apache::nifi::minifi::utils::file::FileUtils::delete_dir(temp_dir());
+      exit(1);
+    }
+  }
   uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
   // initialize static functions that were defined apriori
   core::FlowConfiguration::initialize_static_functions();
-
-  const std::vector<std::string> arguments(argv+1,argv+argc);
 
   std::string graceful_shutdown_seconds = "";
   std::string prov_repo_class = "provenancerepository";

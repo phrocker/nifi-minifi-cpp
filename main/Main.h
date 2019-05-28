@@ -18,6 +18,7 @@
 #ifndef MAIN_MAIN_H_
 #define MAIN_MAIN_H_
 
+#include "utils/file/FileUtils.h"
 
 #ifdef WIN32
 #define FILE_SEPARATOR "\\"
@@ -137,6 +138,22 @@ bool validHome(const std::string &home_path) {
 }
 
 
+static const std::string temp_dir() {
+  // would be safe just doing an assignment once but no point
+  // in setting up the generator over and over again.
+  static std::string temp_dir;
+  if (temp_dir.empty()) {
+    const auto property = std::make_shared<minifi::Properties>();
+    auto generator = org::apache::nifi::minifi::utils::IdGenerator::getIdGenerator();
+    generator->initialize(property);
+    utils::Identifier ident;
+    generator->generate(ident);
+    org::apache::nifi::minifi::utils::file::FileUtils::create_dir(ident.to_string());
+    temp_dir = ident.to_string();
+  }
+  return temp_dir;
+
+}
 
 
 

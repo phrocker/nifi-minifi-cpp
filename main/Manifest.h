@@ -23,23 +23,8 @@
 #include "agent/agent_docs.h"
 #include "core/ClassLoader.h"
 #include "tinyxml2.h"
+#include "Main.h"
 
-static const std::string temp_dir() {
-  // would be safe just doing an assignment once but no point
-  // in setting up the generator over and over again.
-  static std::string temp_dir;
-  if (temp_dir.empty()) {
-    const auto property = std::make_shared<minifi::Properties>();
-    auto generator = utils::IdGenerator::getIdGenerator();
-    generator->initialize(property);
-    utils::Identifier ident;
-    generator->generate(ident);
-    utils::file::FileUtils::create_dir(ident.to_string());
-    temp_dir = ident.to_string();
-  }
-  return temp_dir;
-
-}
 
 void produce_manifest(std::ostream &out) {
   out << "Nar-Group: org.apache.nifi" << std::endl;

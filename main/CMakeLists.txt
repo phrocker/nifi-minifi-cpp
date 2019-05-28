@@ -60,8 +60,6 @@ endif()
   
 add_executable(minifiexe MiNiFiMain.cpp)
 
-target_link_libraries(minifiexe ${ZLIB_LIBRARY})
-
 if (NOT USE_SHARED_LIBS)
 	if (LIBC_STATIC)
 		set_target_properties(minifiexe PROPERTIES LINK_SEARCH_START_STATIC 1)
@@ -184,7 +182,11 @@ target_link_libraries(bootstrap zipper tinyxml minifi ${ZLIB_LIBRARY})
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os")
 
 
-target_link_libraries(bootstrap -static-libgcc -static-libstdc++)
+if (APPLE)
+	target_link_libraries(bootstrap -static-libstdc++)
+elseif(NOT WIN32)
+	target_link_libraries(bootstrap -static-libxgcc -static-libstdc++)
+endif()
 set_target_properties(bootstrap PROPERTIES LINK_SEARCH_END_STATIC 1)
 
 if(WIN32)
@@ -206,6 +208,7 @@ else()
 	#set_target_properties(minifiexe PROPERTIES LINK_FLAGS "${LINK_FLAGS} /WHOLEARCHIVE:minifi")
 endif ()
 
+target_link_libraries(minifiexe zipper ${ZLIB_LIBRARY})
 target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ${JEMALLOC_LIBRARIES}) #
 
 if (WIN32)
@@ -215,7 +218,11 @@ endif()
 
 if (NOT USE_SHARED_LIBS)
 	if (LIBC_STATIC)
-		target_link_libraries(minifiexe -static-libgcc -static-libstdc++)
+		if (APPLE)
+		target_link_libraries(minifiexe -static-libstdc++)
+		elseif(NOT WIN32)
+		target_link_libraries(minifiexe -static-libxgcc -static-libstdc++)
+		endif()
 		set_target_properties(minifiexe PROPERTIES LINK_SEARCH_END_STATIC 1)
 	endif(LIBC_STATIC)
 endif(NOT USE_SHARED_LIBS)

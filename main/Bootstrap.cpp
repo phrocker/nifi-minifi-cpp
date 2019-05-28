@@ -36,6 +36,7 @@
 #include "agent/agent_docs.h"
 #include "core/ClassLoader.h"
 #include "Manifest.h"
+#include "Main.h"
 
 
 static void addOrCreate(const std::string &binary, std::istream &stream, const std::string &name, bool replace = false) {
@@ -83,6 +84,7 @@ int main(int argc, char **argv) {
   ("h,help", "Shows Help")  //NOLINT
   ("agent", "Agent binary Location", cxxopts::value<std::string>())  //NOLINT
   ("manifest", "Manifest path")  //NOLINT
+  ("basepath", "Path to the installation base path",cxxopts::value<std::string>())  //NOLINT
   ("extension", "Add Extension Docs");  //NOLINT
 
   core::FlowConfiguration::initialize_static_functions();
@@ -121,31 +123,15 @@ int main(int argc, char **argv) {
         }
       }
 
-      /*
-       unzFile uf = unzOpen(binary.c_str());
-       int res = unzGoToFirstFile(uf);
-       std::cout << "res" << res << std::endl;
-       if (res == UNZ_OK) {
-       do {
-       char filename_inzip[256] = { 0 };
-       unz_file_info64 file_info = { 0 };
-       const char *string_method = NULL;
-       unzGetCurrentFileInfo64(uf, &file_info, filename_inzip, sizeof(filename_inzip), NULL, 0, NULL, 0);
-       ZPOS64_T uncompressed_size = file_info.uncompressed_size;
-       void *ptr = malloc(uncompressed_size * (sizeof(ZPOS64_T)));
-       unzReadCurrentFile(uf, ptr, uncompressed_size);
-       printf("%s\n", filename_inzip);
-       res = unzGoToNextFile(uf);
-       free(ptr);
+      if (result.count("basepath") > 0) {
+        const auto& basepath = result["basepath"].as<std::string>();
+        addOrCreate(binary, basepath, "installer.zip");
+      }
 
-       } while (res != UNZ_END_OF_LIST_OF_FILE);
-       }
-       unzCloseCurrentFile(uf);
-       */
     }
 
     std::cout << "Deleting temp dir " << temp_dir() << std::endl;
-    //utils::file::FileUtils::delete_dir(temp_dir());
+    utils::file::FileUtils::delete_dir(temp_dir());
     std::cout << "yah boi" << std::endl;
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;

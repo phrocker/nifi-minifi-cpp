@@ -682,19 +682,19 @@ set(CPACK_SOURCE_IGNORE_FILES "/docs/generated/;${CMAKE_SOURCE_DIR}/build/;~$;${
 # Generate binary assembly
 install(FILES conf/minifi.properties conf/minifi-log.properties conf/minifi-uid.properties conf/config.yml
         DESTINATION conf
-        COMPONENT bin)
+        COMPONENT base)
         
 install(DIRECTORY extensions/pythonprocessors/
         DESTINATION minifi-python
-        COMPONENT bin)
+        COMPONENT base)
 
 install(PROGRAMS bin/minifi.sh
         DESTINATION bin
-        COMPONENT bin)
+        COMPONENT base)
 
 install(FILES LICENSE README.md NOTICE
         DESTINATION .
-        COMPONENT bin)
+        COMPONENT base)
 
 if(WIN32)
 #preference is to use the exe type so that we have a solution that works well for cross compilation
@@ -728,13 +728,13 @@ set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/msi/LICENSE.txt")
 set(CPACK_PACKAGE_FILE_NAME "${ASSEMBLY_BASE_NAME}")
 if(NOT WIN32)
-set(CPACK_GENERATOR "TGZ")
+set(CPACK_GENERATOR "ZIP;TGZ")
 set(CPACK_BINARY_TGZ, "ON")
 endif()
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
 set(CPACK_RDKAFKA_COMPONENT_INSTALL ON)
 set(CPACK_MQTT_COMPONENT_INSTALL ON)
-set(CPACK_COMPONENTS_ALL bin conf)
+set(CPACK_COMPONENTS_ALL bin base)
 
 
 include(CPack)
