@@ -385,8 +385,8 @@ advanced features.
 
 - Perform a build
   ```
-  # ~/Development/code/apache/nifi-minifi-cpp on git:master
-  $ make
+  # ~/Development/code/apache/nifi-minifi-cpp/ on git:master
+  $ cmake --build build/ --parallel 8 
   Scanning dependencies of target gmock_main
   Scanning dependencies of target gmock
   Scanning dependencies of target minifi
@@ -409,8 +409,8 @@ advanced features.
   ```
 
 - Create a binary assembly located in your build directory with suffix -bin.tar.gz
-  ```
-  ~/Development/code/apache/nifi-minifi-cpp/build
+  $ cd build```
+  #~/Development/code/apache/nifi-minifi-cpp/build
   $ make package
   Run CPack packaging tool for source...
   CPack: Create package using TGZ

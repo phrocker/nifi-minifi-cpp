@@ -55,7 +55,6 @@ the consumer's build. The last two argument represent where the extension and te
 	if (ENABLE_ALL OR ENABLE_GPS)
 		createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
 	endif()
-
 	
 Once the createExtension target is made in the root CMakeLists.txt , you may load your dependencies and build your targets. Once you are finished defining your build
 and link commands, you must set your target reference to a target within your build. In this case, the previously mentioned GPS-EXTENSION will be assigned to minifi-gps.
@@ -63,5 +62,10 @@ The next call register_extension will ensure that minifi-gps is linked appropria
 	
 	SET (GPS-EXTENSION minifi-gps PARENT_SCOPE)
 	register_extension(minifi-gps)
+	register_extension_linter(minifi-gps)
 	
+### Best Practices
+
+It is advised that necessary dependencies be statically linked within your extension. This allows us to reduce external dependencies. If this is not possible please be sure
+to include dependencies that are built as dynamic libs in the resulting package with CPack. 
 	

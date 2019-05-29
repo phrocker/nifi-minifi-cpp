@@ -14,10 +14,16 @@
 # limitations under the License.
 
 language: cpp
-cache:
+cache: 
+  ccache: true
   directories:
-  - $HOME/.ccache
   - $HOME/Library/Caches/Homebrew
+  - $TRAVIS_BUILD_DIR/build/thirdparty
+  - $TRAVIS_BUILD_DIR/build/extensions/aws/aws-sdk-install/
+  - $TRAVIS_BUILD_DIR/build/curl-external-prefix
+  - $TRAVIS_BUILD_DIR/build/libressl-portable-prefix
+  - $TRAVIS_BUILD_DIR/build/libssh2-portable-prefix
+  - $TRAVIS_BUILD_DIR/build/zlib-external-prefix
   timeout: 300
 
 env:
@@ -82,18 +88,20 @@ matrix:
         # Establish updated toolchain as default
         - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
         - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++
+      script:
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       name: trusty static build with tests
       dist: trusty
       sudo: required
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1  && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       name: xenial shared build with tests
       dist: xenial
       sudo: required
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS= .. && cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 2  && sudo make test ARGS="-j2 --output-on-failure"
     - os: linux
       name: debian static package build
       dist: trusty
@@ -101,7 +109,7 @@ matrix:
       services:
         - docker
       script:
-        - mkdir build && cd build && cmake .. && make debian
+        - mkdir -p build && cd build && cmake .. && make debian
     - os: linux
       name: centos static package biuld
       dist: trusty
@@ -109,7 +117,7 @@ matrix:
       services:
         - docker
       script:
-        - mkdir build && cd build && cmake .. && make centos
+        - mkdir -p build && cd build && cmake .. && make centos
     - os: linux
       name: fedora static package build
       dist: trusty
@@ -117,7 +125,7 @@ matrix:
       services:
         - docker
       script:
-        - mkdir build && cd build && cmake .. && make fedora
+        - mkdir -p build && cd build && cmake .. && make fedora
     - os: linux
       name: bionic static package build
       dist: trusty
@@ -125,12 +133,12 @@ matrix:
       services:
         - docker
       script:
-        - mkdir build && cd build && cmake .. && make u18
+        - mkdir -p build && cd build && cmake .. && make u18
     - os: linux
       dist: xenial
       sudo: required
       script:
-        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON .. && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure"
+        - ./bootstrap.sh -e -t && cd build  && cmake -DUSE_SHARED_LIBS=ON .. && cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 2  && sudo make test ARGS="-j2 --output-on-failure"
     - os: osx
       osx_image: xcode9.2
       env:
@@ -177,4 +185,4 @@ matrix:
         - package='libssh2'; [[ $(brew ls --versions ${package}) ]] && { brew outdated ${package} || brew upgrade ${package}; } || brew install ${package}
 
 script:
-  - ./bootstrap.sh -e -t && cd build  && make -j2 VERBOSE=1 && sudo make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat
+  - ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF .. && cmake --build . --parallel 2 && sudo make test ARGS="-j2 --output-on-failure" && make linter && make apache-rat
