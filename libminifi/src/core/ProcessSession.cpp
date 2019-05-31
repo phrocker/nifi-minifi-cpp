@@ -322,7 +322,6 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
       rollback();
       return;
     }
-    uint64_t appendSize = stream->getSize() - oldPos;
     flow->setSize(stream->getSize());
 
     std::stringstream details;

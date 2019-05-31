@@ -50,6 +50,10 @@ bool Property::getRequired() const {
   return is_required_;
 }
 
+bool Property::isSensitive() const {
+  return is_sensitive_;
+}
+
 bool Property::supportsExpressionLangauge() const {
   return supports_el_;
 }

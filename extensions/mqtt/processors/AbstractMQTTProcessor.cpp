@@ -36,7 +36,7 @@ core::Property AbstractMQTTProcessor::BrokerURL("Broker URI", "The URI to use to
 core::Property AbstractMQTTProcessor::CleanSession("Session state", "Whether to start afresh or resume previous flows. See the allowable value descriptions for more details", "true");
 core::Property AbstractMQTTProcessor::ClientID("Client ID", "MQTT client ID to use", "");
 core::Property AbstractMQTTProcessor::UserName("Username", "Username to use when connecting to the broker", "");
-core::Property AbstractMQTTProcessor::PassWord("Password", "Password to use when connecting to the broker", "");
+core::Property AbstractMQTTProcessor::PassWord(core::PropertyBuilder::createProperty("Password")->withDescription("Password to use when connecting to the broker")->sensitive(true)->build());
 core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
 core::Property AbstractMQTTProcessor::ConnectionTimeOut("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
 core::Property AbstractMQTTProcessor::QOS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", "MQTT_QOS_0");
@@ -100,15 +100,14 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext *context, core::Proc
     logger_->log_debug("AbstractMQTTProcessor: PassWord [%s]", passWord_);
   }
   value = "";
-  if (context->getProperty(CleanSession.getName(), value) && !value.empty() &&
-      org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, cleanSession_)) {
+  if (context->getProperty(CleanSession.getName(), value) && !value.empty() && org::apache::nifi::minifi::utils::StringUtils::StringToBool(value, cleanSession_)) {
     logger_->log_debug("AbstractMQTTProcessor: CleanSession [%d]", cleanSession_);
   }
   value = "";
   if (context->getProperty(KeepLiveInterval.getName(), value) && !value.empty()) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      keepAliveInterval_ = valInt/1000;
+      keepAliveInterval_ = valInt / 1000;
       logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%ll]", keepAliveInterval_);
     }
   }
@@ -116,13 +115,12 @@ void AbstractMQTTProcessor::onSchedule(core::ProcessContext *context, core::Proc
   if (context->getProperty(ConnectionTimeOut.getName(), value) && !value.empty()) {
     core::TimeUnit unit;
     if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      connectionTimeOut_ = valInt/1000;
+      connectionTimeOut_ = valInt / 1000;
       logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%ll]", connectionTimeOut_);
     }
   }
   value = "";
-  if (context->getProperty(QOS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) &&
-      core::Property::StringToInt(value, valInt)) {
+  if (context->getProperty(QOS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) && core::Property::StringToInt(value, valInt)) {
     qos_ = valInt;
     logger_->log_debug("AbstractMQTTProcessor: QOS [%ll]", qos_);
   }

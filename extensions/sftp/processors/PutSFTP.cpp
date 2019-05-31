@@ -66,7 +66,7 @@ core::Property PutSFTP::PrivateKeyPath(
         ->supportsExpressionLanguage(true)->isRequired(false)->build());
 core::Property PutSFTP::PrivateKeyPassphrase(
     core::PropertyBuilder::createProperty("Private Key Passphrase")->withDescription("Password for the private key")
-        ->supportsExpressionLanguage(true)->isRequired(false)->build());
+        ->supportsExpressionLanguage(true)->isRequired(false)->sensitive(true)->build());
 core::Property PutSFTP::RemotePath(
     core::PropertyBuilder::createProperty("Remote Path")->withDescription("The path on the remote system from which to pull or push files")
         ->supportsExpressionLanguage(true)->isRequired(false)->build());

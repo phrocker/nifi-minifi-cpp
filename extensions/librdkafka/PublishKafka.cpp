@@ -42,7 +42,7 @@ core::Property PublishKafka::SeedBrokers(
 core::Property PublishKafka::Topic(core::PropertyBuilder::createProperty("Topic Name")->withDescription("The Kafka Topic of interest")->isRequired(true)->supportsExpressionLanguage(true)->build());
 
 core::Property PublishKafka::DeliveryGuarantee(
-    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("TSpecifies the requirement for guaranteeing that a message is sent to Kafka")->isRequired(false)
+    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("Specifies the requirement for guaranteeing that a message is sent to Kafka")->isRequired(false)
         ->supportsExpressionLanguage(true)->withDefaultValue("DELIVERY_ONE_NODE")->build());
 
 core::Property PublishKafka::MaxMessageSize(core::PropertyBuilder::createProperty("Max Request Size")->withDescription("Maximum Kafka protocol request message size")->isRequired(false)->build());
@@ -67,7 +67,8 @@ core::Property PublishKafka::SecurityProtocol("Security Protocol", "Protocol use
 core::Property PublishKafka::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
 core::Property PublishKafka::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
 core::Property PublishKafka::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
-core::Property PublishKafka::SecurityPrivateKeyPassWord("Security Pass Phrase", "Private key passphrase", "");
+core::Property PublishKafka::SecurityPrivateKeyPassWord(
+    core::PropertyBuilder::createProperty("Security Pass Phrase")->withDescription("Private key passphrase")->isRequired(false)->sensitive(true)->build());
 core::Property PublishKafka::KerberosServiceName("Kerberos Service Name", "Kerberos Service Name", "");
 core::Property PublishKafka::KerberosPrincipal("Kerberos Principal", "Keberos Principal", "");
 core::Property PublishKafka::KerberosKeytabPath("Kerberos Keytab Path",

@@ -58,6 +58,7 @@ class Property {
       : name_(std::move(name)),
         description_(std::move(description)),
         is_required_(is_required),
+        is_sensitive_(false),
         valid_regex_(std::move(valid_regex)),
         dependent_properties_(std::move(dependent_properties)),
         exclusive_of_properties_(std::move(exclusive_of_properties)),
@@ -68,33 +69,19 @@ class Property {
   }
 
   Property(const std::string name, const std::string description, std::string value)
-      : name_(name),
-        description_(description),
-        is_required_(false),
-        is_collection_(false),
-        supports_el_(false),
-        is_transient_(false) {
+      : Property(name,description) {
     default_value_ = coerceDefaultValue(value);
-  }
-
-  Property(const std::string name, const std::string description)
-      : name_(name),
-        description_(description),
-        is_required_(false),
-        is_collection_(true),
-        supports_el_(false),
-        is_transient_(false) {
-    validator_ = StandardValidators::VALID;
   }
 
   Property(Property &&other) = default;
 
   Property(const Property &other) = default;
 
-  Property()
-      : name_(""),
-        description_(""),
+  Property(const std::string name="", const std::string description="")
+      : name_(name),
+        description_(description),
         is_required_(false),
+        is_sensitive_(false),
         is_collection_(false),
         supports_el_(false),
         is_transient_(false) {
@@ -117,6 +104,10 @@ class Property {
   std::shared_ptr<PropertyValidator> getValidator() const;
   const PropertyValue &getValue() const;
   bool getRequired() const;
+  /**
+   * Returns whether or not this is a sensitive property.
+   */
+  bool isSensitive() const;
   bool supportsExpressionLangauge() const;
   std::string getValidRegex() const;
   std::vector<std::string> getDependentProperties() const;
@@ -453,6 +444,7 @@ class Property {
   std::string name_;
   std::string description_;
   bool is_required_;
+  bool is_sensitive_;
   std::string valid_regex_;
   std::vector<std::string> dependent_properties_;
   std::vector<std::pair<std::string, std::string>> exclusive_of_properties_;
@@ -496,6 +488,11 @@ class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
     prop.description_ = description;
     return shared_from_this();
   }
+
+  std::shared_ptr<PropertyBuilder> sensitive(bool sensitive) {
+      prop.is_sensitive_ = sensitive;
+      return shared_from_this();
+    }
 
   std::shared_ptr<PropertyBuilder> isRequired(bool required) {
     prop.is_required_ = required;
@@ -578,6 +575,14 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
  public:
   std::shared_ptr<ConstrainedProperty<T>> withDescription(const std::string &description) {
     builder_->withDescription(description);
+    return this->shared_from_this();
+  }
+
+  /**
+   * Sets whether a property is sensitive.
+   */
+  std::shared_ptr<ConstrainedProperty<T>> sensitive(bool sensitive) {
+    builder_->sensitive(sensitive);
     return this->shared_from_this();
   }
 

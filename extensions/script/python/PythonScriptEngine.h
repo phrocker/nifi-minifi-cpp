@@ -37,7 +37,7 @@ namespace python {
 
 namespace py = pybind11;
 
-struct Interpreter {
+struct DLL_LOCAL Interpreter {
 
   Interpreter()
       : guard_(false) {
@@ -54,7 +54,7 @@ struct Interpreter {
 
 static Interpreter *getInterpreter();
 
-class PythonScriptEngine : public script::ScriptEngine {
+class DLL_LOCAL PythonScriptEngine : public script::ScriptEngine {
  public:
   PythonScriptEngine();
   virtual ~PythonScriptEngine() {

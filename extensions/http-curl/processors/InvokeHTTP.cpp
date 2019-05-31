@@ -83,7 +83,7 @@ core::Property InvokeHTTP::ProxyPort("Proxy Port", "The port of the proxy server
 core::Property InvokeHTTP::ProxyUsername(
     core::PropertyBuilder::createProperty("invokehttp-proxy-username", "Proxy Username")->withDescription("Username to set when authenticating against proxy")->isRequired(false)->build());
 core::Property InvokeHTTP::ProxyPassword(
-    core::PropertyBuilder::createProperty("invokehttp-proxy-password", "Proxy Password")->withDescription("Password to set when authenticating against proxy")->isRequired(false)->build());
+    core::PropertyBuilder::createProperty("invokehttp-proxy-password", "Proxy Password")->withDescription("Password to set when authenticating against proxy")->isRequired(false)->sensitive(true)->build());
 core::Property InvokeHTTP::ContentType("Content-type", "The Content-Type to specify for when content is being transmitted through a PUT, "
                                        "POST or PATCH. In the case of an empty value after evaluating an expression language expression, "
                                        "Content-Type defaults to",

@@ -33,9 +33,8 @@ static core::Property imageEncoding;
 core::Property CaptureRTSPFrame::RTSPUsername(  // NOLINT
     "RTSP Username",
     "The username for connecting to the RTSP stream", "");
-core::Property CaptureRTSPFrame::RTSPPassword(  // NOLINT
-    "RTSP Password",
-    "Password used to connect to the RTSP stream", "");
+core::Property CaptureRTSPFrame::RTSPPassword(
+    core::PropertyBuilder::createProperty("RTSP Password")->withDescription("Password used to connect to the RTSP stream")->sensitive(true)->build());
 core::Property CaptureRTSPFrame::RTSPHostname(  // NOLINT
     "RTSP Hostname",
     "Hostname of the RTSP stream we are trying to connect to", "");
