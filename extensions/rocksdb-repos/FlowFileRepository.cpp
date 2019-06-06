@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 #include "FlowFileRecord.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
@@ -39,18 +40,30 @@ void FlowFileRepository::flush() {
   std::vector<std::shared_ptr<FlowFileRecord>> purgeList;
 
   uint64_t decrement_total = 0;
+  uint64_t bytes = 0;
+  uint64_t total_event_time = 0;
+  uint64_t count = 0;
+  auto curr = getTimeMillis();
   while (keys_to_delete.size_approx() > 0) {
     if (keys_to_delete.try_dequeue(key)) {
       db_->Get(options, key, &value);
       decrement_total += value.size();
       std::shared_ptr<FlowFileRecord> eventRead = std::make_shared<FlowFileRecord>(shared_from_this(), content_repo_);
       if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(value.data()), value.size())) {
+        count++;
+        bytes += eventRead->getSize();
+        total_event_time += curr - eventRead->getEventTime();
         purgeList.push_back(eventRead);
       }
+      else{
+        bytes += value.size();
+      }
+
       logger_->log_debug("Issuing batch delete, including %s, Content path %s", eventRead->getUUIDStr(), eventRead->getContentFullPath());
       batch.Delete(key);
     }
   }
+
   if (db_->Write(rocksdb::WriteOptions(), &batch).ok()) {
     logger_->log_trace("Decrementing %u from a repo size of %u", decrement_total, repo_size_.load());
     if (decrement_total > repo_size_.load()) {
@@ -59,6 +72,15 @@ void FlowFileRepository::flush() {
       repo_size_ -= decrement_total;
     }
   }
+  if (count == 0) {
+    time_in_repo_ = 0;
+  } else {
+    time_in_repo_ = total_event_time / count;
+  }
+  if (time_in_repo_ > 0)
+    throughput_ = (bytes / time_in_repo_) * 1000;  // bytes per second
+  else
+    throughput_ = 0;
 
   if (nullptr != content_repo_) {
     for (const auto &ffr : purgeList) {
@@ -142,7 +164,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
  * Returns True if there is data to interrogate.
  * @return true if our db has data stored.
  */
-bool FlowFileRepository::need_checkpoint(){
+bool FlowFileRepository::need_checkpoint() {
   std::unique_ptr<rocksdb::Iterator> it = std::unique_ptr<rocksdb::Iterator>(db_->NewIterator(rocksdb::ReadOptions()));
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     return true;
@@ -151,7 +173,7 @@ bool FlowFileRepository::need_checkpoint(){
 }
 void FlowFileRepository::initialize_repository() {
   // first we need to establish a checkpoint iff it is needed.
-  if (!need_checkpoint()){
+  if (!need_checkpoint()) {
     logger_->log_trace("Do not need checkpoint");
     return;
   }

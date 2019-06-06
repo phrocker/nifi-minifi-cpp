@@ -34,10 +34,18 @@ void ProvenanceRepository::flush() {
   std::string value;
   rocksdb::ReadOptions options;
   uint64_t decrement_total = 0;
+  uint64_t total_event_time = 0;
+  uint64_t count = 0;
+  auto curr = getTimeMillis();
   while (keys_to_delete.size_approx() > 0) {
     if (keys_to_delete.try_dequeue(key)) {
       db_->Get(options, key, &value);
       decrement_total += value.size();
+      ProvenanceEventRecord eventRead;
+      if (uint64_t eventTime = eventRead.getEventTime(reinterpret_cast<uint8_t*>(const_cast<char*>(value.data())), value.size()) > 0) {
+        total_event_time += curr - eventTime;
+        count++;
+      }
       batch.Delete(key);
       logger_->log_debug("Removing %s", key);
     }
@@ -50,6 +58,16 @@ void ProvenanceRepository::flush() {
       repo_size_ -= decrement_total;
     }
   }
+  if ( count == 0) {
+    time_in_repo_ = 0;
+  }
+  else {
+    time_in_repo_ = total_event_time / count;
+  }
+  if (time_in_repo_ > 0)
+    throughput_ = (decrement_total / time_in_repo_) * 1000;  // bytes per second
+  else
+    throughput_ = 0;
 }
 
 void ProvenanceRepository::run() {
@@ -68,7 +86,7 @@ void ProvenanceRepository::run() {
         std::string key = it->key().ToString();
         uint64_t eventTime = eventRead.getEventTime(reinterpret_cast<uint8_t*>(const_cast<char*>(it->value().data())), it->value().size());
         if (eventTime > 0) {
-          if ((curTime - eventTime) > (uint64_t)max_partition_millis_)
+          if ((curTime - eventTime) > (uint64_t) max_partition_millis_)
             Delete(key);
         } else {
           logger_->log_debug("NiFi Provenance retrieve event %s fail", key);
@@ -79,7 +97,7 @@ void ProvenanceRepository::run() {
     }
     flush();
     size = getRepoSize();
-    if (size > (uint64_t)max_partition_bytes_)
+    if (size > (uint64_t) max_partition_bytes_)
       repo_full_ = true;
     else
       repo_full_ = false;

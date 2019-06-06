@@ -60,20 +60,9 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   /*
    * Constructor for the repository
    */
-  Repository(std::string repo_name = "Repository", std::string directory = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
+  Repository(const std::string &repo_name = "Repository", const std::string &directory = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
   MAX_REPOSITORY_STORAGE_SIZE,
-             uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name),
-        thread_(),
-        repo_size_(0),
-        logger_(logging::LoggerFactory<Repository>::getLogger()) {
-    directory_ = directory;
-    max_partition_millis_ = maxPartitionMillis;
-    max_partition_bytes_ = maxPartitionBytes;
-    purge_period_ = purgePeriod;
-    running_ = false;
-    repo_full_ = false;
-  }
+             uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD);
 
   // Destructor
   virtual ~Repository() {
@@ -211,7 +200,27 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 
   }
 
-  virtual uint64_t getRepoSize();
+  virtual uint64_t getRepoSize() const ;
+
+  /**
+   * Returns the configured max size that was initially requested by the user
+   * Depending on the type of repo, this may be adjusted internally to meet
+   * fragmentation needs.
+   */
+  virtual uint64_t getInitialMaxSize() const;
+
+  /**
+   * Returns the throughput measured in bytes/milliseconds
+   * @return bytes per second.
+   */
+  uint64_t getThroughput() const;
+
+  /**
+   * Returns the average time in repo.
+   * @return average time in repo, in milliseconds.
+   */
+  uint64_t getAverageTimeInRepo() const;
+
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
@@ -240,6 +249,10 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 
   // size of the directory
   std::atomic<uint64_t> repo_size_;
+
+  std::atomic<uint64_t> throughput_;
+  // average time an item is in the repo.
+  std::atomic<uint64_t> time_in_repo_;
   // Run function for the thread
   void threadExecutor() {
     run();

@@ -24,6 +24,8 @@
 
 #include "../Value.h"
 #include "core/Core.h"
+#include "core/Processor.h"
+#include "core/ConfigurableComponent.h"
 #include "core/Connectable.h"
 
 namespace org {

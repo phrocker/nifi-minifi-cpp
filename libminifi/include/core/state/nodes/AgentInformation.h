@@ -56,6 +56,7 @@
 #include "core/state/nodes/StateMonitor.h"
 #include "core/ProcessorConfig.h"
 #include "SchedulingNodes.h"
+#include "AgentStatus.h"
 
 namespace org {
 namespace apache {
@@ -403,94 +404,7 @@ class Bundles : public DeviceInformation {
 
 };
 
-/**
- * Justification and Purpose: Provides available extensions for the agent information block.
- */
-class AgentStatus : public StateMonitorNode {
- public:
 
-  AgentStatus(std::string name, utils::Identifier & uuid)
-      : StateMonitorNode(name, uuid) {
-
-  }
-
-  AgentStatus(const std::string &name)
-      : StateMonitorNode(name) {
-  }
-
-  std::string getName() const {
-    return "status";
-  }
-
-  void setRepositories(const std::map<std::string, std::shared_ptr<core::Repository>> &repositories) {
-    repositories_ = repositories;
-  }
-
-  std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized;
-
-    SerializedResponseNode uptime;
-
-    uptime.name = "uptime";
-    if (nullptr != monitor_)
-      uptime.value = monitor_->getUptime();
-    else {
-      uptime.value = "0";
-    }
-
-    if (!repositories_.empty()) {
-      SerializedResponseNode repositories;
-
-      repositories.name = "repositories";
-
-      for (auto &repo : repositories_) {
-        SerializedResponseNode repoNode;
-        repoNode.collapsible = false;
-        repoNode.name = repo.first;
-
-        SerializedResponseNode queuesize;
-        queuesize.name = "size";
-        queuesize.value = repo.second->getRepoSize();
-
-        repoNode.children.push_back(queuesize);
-
-        repositories.children.push_back(repoNode);
-
-      }
-      serialized.push_back(repositories);
-    }
-
-    serialized.push_back(uptime);
-
-    if (nullptr != monitor_) {
-      auto components = monitor_->getAllComponents();
-      SerializedResponseNode componentsNode(false);
-      componentsNode.name = "components";
-
-      for (auto component : components) {
-        SerializedResponseNode componentNode(false);
-        componentNode.name = component->getComponentName();
-
-        SerializedResponseNode uuidNode;
-        uuidNode.name = "uuid";
-        uuidNode.value = component->getComponentUUID();
-
-        SerializedResponseNode componentStatusNode;
-        componentStatusNode.name = "running";
-        componentStatusNode.value = component->isRunning();
-
-        componentNode.children.push_back(componentStatusNode);
-        componentNode.children.push_back(uuidNode);
-        componentsNode.children.push_back(componentNode);
-      }
-      serialized.push_back(componentsNode);
-    }
-
-    return serialized;
-  }
- protected:
-  std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
-};
 
 class AgentIdentifier {
  public:

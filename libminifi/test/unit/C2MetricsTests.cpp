@@ -129,7 +129,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("repo_name" == resp.name);
 
-    REQUIRE(3 == resp.children.size());
+    REQUIRE(6 == resp.children.size());
 
     minifi::state::response::SerializedResponseNode running = resp.children.at(0);
 
@@ -145,6 +145,21 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("size" == size.name);
     REQUIRE("0" == size.value);
+
+    minifi::state::response::SerializedResponseNode madxsize = resp.children.at(3);
+
+    REQUIRE("maxSize" == madxsize.name);
+    REQUIRE(std::to_string(repo->getInitialMaxSize()) == madxsize.value.to_string());
+
+    minifi::state::response::SerializedResponseNode averageMillisInRepo = resp.children.at(4);
+
+    REQUIRE("averageMillisInRepo" == averageMillisInRepo.name);
+    REQUIRE("0" == averageMillisInRepo.value.to_string());
+
+    minifi::state::response::SerializedResponseNode throughputPerSecond = resp.children.at(5);
+
+    REQUIRE("throughputPerSecond" == throughputPerSecond.name);
+    REQUIRE("0" == throughputPerSecond.value.to_string());
   }
 
   repo->start();
@@ -155,7 +170,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("repo_name" == resp.name);
 
-    REQUIRE(3 == resp.children.size());
+    REQUIRE(6 == resp.children.size());
 
     minifi::state::response::SerializedResponseNode running = resp.children.at(0);
 
@@ -171,6 +186,21 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("size" == size.name);
     REQUIRE("0" == size.value);
+
+    minifi::state::response::SerializedResponseNode madxsize = resp.children.at(3);
+
+    REQUIRE("maxSize" == madxsize.name);
+    REQUIRE(std::to_string(repo->getInitialMaxSize()) == madxsize.value.to_string());
+
+    minifi::state::response::SerializedResponseNode averageMillisInRepo = resp.children.at(4);
+
+    REQUIRE("averageMillisInRepo" == averageMillisInRepo.name);
+    REQUIRE("0" == averageMillisInRepo.value.to_string());
+
+    minifi::state::response::SerializedResponseNode throughputPerSecond = resp.children.at(5);
+
+    REQUIRE("throughputPerSecond" == throughputPerSecond.name);
+    REQUIRE("0" == throughputPerSecond.value.to_string());
   }
 
   repo->setFull();
@@ -182,7 +212,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("repo_name" == resp.name);
 
-    REQUIRE(3 == resp.children.size());
+    REQUIRE(6 == resp.children.size());
 
     minifi::state::response::SerializedResponseNode running = resp.children.at(0);
 
@@ -198,6 +228,21 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("size" == size.name);
     REQUIRE("0" == size.value.to_string());
+
+    minifi::state::response::SerializedResponseNode madxsize = resp.children.at(3);
+
+    REQUIRE("maxSize" == madxsize.name);
+    REQUIRE(std::to_string(repo->getInitialMaxSize()) == madxsize.value.to_string());
+
+    minifi::state::response::SerializedResponseNode averageMillisInRepo = resp.children.at(4);
+
+    REQUIRE("averageMillisInRepo" == averageMillisInRepo.name);
+    REQUIRE("0" == averageMillisInRepo.value.to_string());
+
+    minifi::state::response::SerializedResponseNode throughputPerSecond = resp.children.at(5);
+
+    REQUIRE("throughputPerSecond" == throughputPerSecond.name);
+    REQUIRE("0" == throughputPerSecond.value.to_string());
   }
 
   repo->stop();
@@ -209,7 +254,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("repo_name" == resp.name);
 
-    REQUIRE(3 == resp.children.size());
+    REQUIRE(6 == resp.children.size());
 
     minifi::state::response::SerializedResponseNode running = resp.children.at(0);
 
@@ -225,5 +270,20 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
     REQUIRE("size" == size.name);
     REQUIRE("0" == size.value);
+
+    minifi::state::response::SerializedResponseNode madxsize = resp.children.at(3);
+
+    REQUIRE("maxSize" == madxsize.name);
+    REQUIRE(std::to_string(repo->getInitialMaxSize()) == madxsize.value.to_string());
+
+    minifi::state::response::SerializedResponseNode averageMillisInRepo = resp.children.at(4);
+
+    REQUIRE("averageMillisInRepo" == averageMillisInRepo.name);
+    REQUIRE("0" == averageMillisInRepo.value.to_string());
+
+    minifi::state::response::SerializedResponseNode throughputPerSecond = resp.children.at(5);
+
+    REQUIRE("throughputPerSecond" == throughputPerSecond.name);
+    REQUIRE("0" == throughputPerSecond.value.to_string());
   }
 }

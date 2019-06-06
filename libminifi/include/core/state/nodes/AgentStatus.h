@@ -15,22 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_
 
-#include "core/Resource.h"
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTSTATUS_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTSTATUS_H_
 
-#include <sstream>
-#include <map>
-#include "MetricsBase.h"
-#include "Connection.h"
-#include "io/ClientSocket.h"
-#include "agent/agent_version.h"
-#include "agent/build_description.h"
-#include "core/ClassLoader.h"
-#include "core/state/UpdateController.h"
+#include "core/state/nodes/MetricsBase.h"
+#include "core/state/nodes/StateMonitor.h"
+#include "core/ProcessorConfig.h"
+#include "SchedulingNodes.h"
 
 namespace org {
 namespace apache {
@@ -39,25 +31,26 @@ namespace minifi {
 namespace state {
 namespace response {
 
-class StateMonitorNode : public DeviceInformation {
+/**
+ * Justification and Purpose: Provides available extensions for the agent information block.
+ *
+ * Moved from AgentInformation to improve readability.
+ */
+class AgentStatus : public StateMonitorNode {
  public:
 
-  StateMonitorNode(std::string name, utils::Identifier &uuid)
-      : DeviceInformation(name, uuid),
-        monitor_(nullptr) {
+  AgentStatus(std::string name, utils::Identifier & uuid);
 
-  }
+  AgentStatus(const std::string &name);
 
-  StateMonitorNode(const std::string &name)
-      : DeviceInformation(name),
-        monitor_(nullptr) {
-  }
+  std::string getName() const;
 
-  void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
-    monitor_ = monitor;
-  }
+  void setRepositories(const std::map<std::string, std::shared_ptr<core::Repository>> &repositories);
+
+  std::vector<SerializedResponseNode> serialize();
+
  protected:
-  std::shared_ptr<state::StateMonitor> monitor_;
+  std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 };
 
 } /* namespace metrics */
@@ -67,4 +60,4 @@ class StateMonitorNode : public DeviceInformation {
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_STATEMONITOR_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTSTATUS_H_ */

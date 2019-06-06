@@ -76,11 +76,26 @@ class RepositoryMetrics : public ResponseNode {
 
       SerializedResponseNode queuesize;
       queuesize.name = "size";
-      queuesize.value = std::to_string(repo->getRepoSize());
+      queuesize.value = repo->getRepoSize();
 
-      parent.children.push_back(datasize);
-      parent.children.push_back(datasizemax);
-      parent.children.push_back(queuesize);
+      SerializedResponseNode maxSize;
+      maxSize.name = "maxSize";
+      maxSize.value = repo->getInitialMaxSize();
+
+      SerializedResponseNode averageTimeInRepo;
+      averageTimeInRepo.name = "averageMillisInRepo";
+      averageTimeInRepo.value = repo->getAverageTimeInRepo();
+
+      SerializedResponseNode throughput;
+      throughput.name = "throughputPerSecond";
+      throughput.value = repo->getThroughput();
+
+      parent.children.emplace_back(datasize);
+      parent.children.emplace_back(datasizemax);
+      parent.children.emplace_back(queuesize);
+      parent.children.emplace_back(maxSize);
+      parent.children.emplace_back(averageTimeInRepo);
+      parent.children.emplace_back(throughput);
 
       serialized.push_back(parent);
     }
@@ -90,6 +105,8 @@ class RepositoryMetrics : public ResponseNode {
  protected:
   std::map<std::string, std::shared_ptr<core::Repository>> repositories;
 };
+
+REGISTER_RESOURCE(RepositoryMetrics, "Node part of an AST that defines repository metrics.");
 
 } /* namespace metrics */
 } /* namespace state */
