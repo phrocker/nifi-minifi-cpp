@@ -362,8 +362,15 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
 void RemoteProcessorGroupPort::refreshPeerList() {
   auto connection = refreshRemoteSite2SiteInfo();
   if (connection.second == -1) {
+  std::string host,portstr;
+    if ( configure_->get("nifi.remote.input.socket.host",host) && configure_->get("nifi.remote.input.socket.port",portstr)){
+      connection = std::make_pair(host,std::atoi(portstr.c_str()));
+     std::cout << "host " << host << " " << portstr << std::endl;
+    }
+    else{
     logger_->log_debug("No port configured");
     return;
+    }
   }
 
   this->peers_.clear();
