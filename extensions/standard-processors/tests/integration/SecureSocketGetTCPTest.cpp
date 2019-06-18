@@ -65,7 +65,7 @@ class SecureSocketTest : public IntegrationBase {
     LogTestController::getInstance().setTrace<minifi::io::TLSSocket>();
     LogTestController::getInstance().setTrace<processors::GetTCP>();
     std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
+    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
@@ -73,7 +73,6 @@ class SecureSocketTest : public IntegrationBase {
 
   void cleanup() {
     LogTestController::getInstance().reset();
-    unlink(ss.str().c_str());
   }
 
   void runAssertions() {
@@ -99,7 +98,7 @@ class SecureSocketTest : public IntegrationBase {
     configuration->set("nifi.security.client.ca.certificate", path);
     configuration->set("nifi.c2.enable", "false");
     std::shared_ptr<org::apache::nifi::minifi::io::TLSContext> socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration);
-    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, "localhost", 8776, 3);
+    server_socket = std::make_shared<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, org::apache::nifi::minifi::io::Socket::getMyHostName(), 8776, 3);
     server_socket->initialize();
 
     isRunning_ = true;
@@ -107,6 +106,7 @@ class SecureSocketTest : public IntegrationBase {
       return isRunning_;
     };
     handler = [this](std::vector<uint8_t> *b, int *size) {
+      std::cout << "oh write!" << std::endl;
       b->reserve(20);
       memset(b->data(), 0x00, 20);
       memcpy(b->data(), "hello world", 11);
@@ -156,8 +156,8 @@ class SecureSocketTest : public IntegrationBase {
   }
 
   virtual void waitToVerifyProcessor() {
-      std::this_thread::sleep_for(std::chrono::seconds(3));
-    }
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+  }
 
  protected:
   std::function<bool()> check;
@@ -170,14 +170,17 @@ class SecureSocketTest : public IntegrationBase {
   std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket;
 };
 
-static void sigpipe_handle(int x) {}
+static void sigpipe_handle(int x) {
+}
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location, url;
-  url = "http://localhost:8888/api/heartbeat";
+  std::string key_dir, test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];
+  } else {
+    test_file_location = "C:/Users/marc/source/repos/nifi-minifi-cpp/libminifi/test/resources/TestGetTCPSecure.yml";
+    key_dir = "C:/Users/marc/source/repos/nifi-minifi-cpp/libminifi/test/resources/";
   }
 
 #ifndef WIN32

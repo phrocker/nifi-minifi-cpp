@@ -59,7 +59,6 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
 
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;
-  if (url.find("localhost") != std::string::npos) {
     if (server != nullptr) {
       server->addHandler(path, handler);
       return;
@@ -76,6 +75,5 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
       server = start_webserver(port, path, handler);
     }
   }
-}
 
 #endif /* LIBMINIFI_TEST_INTEGRATION_HTTPINTEGRATIONBASE_H_ */

@@ -123,10 +123,8 @@ int main(int argc, char **argv) {
   HttpResponder h_ex;
   std::string port, scheme, path;
   CivetServer *server = nullptr;
-
   parse_http_components(url, port, scheme, path);
   struct mg_callbacks callback;
-  if (url.find("localhost") != std::string::npos) {
     if (scheme == "https") {
       std::string cert = "";
       cert = key_dir + "nifi-cert.pem";
@@ -138,7 +136,6 @@ int main(int argc, char **argv) {
     } else {
       server = start_webserver(port, path, &h_ex);
     }
-  }
   controller->load();
   controller->start();
   waitToVerifyProcessor();
