@@ -103,6 +103,13 @@ matrix:
       name: debian static package build
       dist: trusty
       sudo: required
+      addons:
+          artifacts: true
+          working_directory: build
+          paths:
+          debug: true
+          paths:
+          - nifi-minifi-cpp-debian-0.7.0-bin.tar.gz
       services:
         - docker
       script:
@@ -110,6 +117,13 @@ matrix:
     - os: linux
       name: centos static package biuld
       dist: trusty
+      addons:
+          artifacts: true
+          working_directory: build
+          paths:
+          debug: true
+          paths:
+          - nifi-minifi-cpp-centos7-0.7.0-bin.tar.gz      
       sudo: required
       services:
         - docker
