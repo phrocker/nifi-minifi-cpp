@@ -391,21 +391,10 @@ include_directories(thirdparty/rapidjson-1.1.0/include)
 
 ## Expression language extensions
 if(BOOTSTRAP)
-<<<<<<< HEAD
 	# display an error message for those using the bootstrap
     message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
 endif()
 
-               
-=======
-    add_subdirectory(thirdparty/cxxopts)
-    createExtension(BOOTSTRAP "BOOTSTRAP" "Bootstraps documentation and other features" "extensions/bootstrap")
-    # we don't currently need this route. A follow on should help re-write processor documentation from what exists in code, so this will remain here 
-	# execute_process(COMMAND ${CMAKE_BINARY_DIR}/extensions/bootstrap/bstrp --inputc2docs "${CMAKE_SOURCE_DIR}/PROCESSORS.md" --outputc2docs "${CMAKE_SOURCE_DIR}/libminifi/include/agent/agent_docs.h")
-    return()
-endif()
-
->>>>>>> MINIFICPP-883: Add windows build script
 add_subdirectory(libminifi)
 
 if(NOT USE_SYSTEM_OPENSSL OR USE_SYSTEM_OPENSSL STREQUAL "OFF")
