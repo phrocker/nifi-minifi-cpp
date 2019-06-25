@@ -99,7 +99,7 @@ int16_t TLSContext::initialize(bool server_method) {
     if (ssl_service_ != nullptr) {
       // if the private key has passphase
       SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
-      SSL_CTX_set_default_passwd_cb_userdata(ctx, static_cast<void*>(const_cast<char*>(passphrase.c_str())));
+      SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase);
     } else {
       if (configure_->get(Configure::nifi_security_client_pass_phrase, passphrase)) {
         std::ifstream file(passphrase.c_str(), std::ifstream::in);
@@ -112,7 +112,7 @@ int16_t TLSContext::initialize(bool server_method) {
         file.close();
         passphrase = password;
         SSL_CTX_set_default_passwd_cb(ctx, pemPassWordCb);
-        SSL_CTX_set_default_passwd_cb_userdata(ctx, static_cast<void*>(const_cast<char*>(passphrase.c_str())));
+        SSL_CTX_set_default_passwd_cb_userdata(ctx, &passphrase);
       }
     }
 
@@ -378,7 +378,9 @@ int TLSSocket::readData(uint8_t *buf, int buflen, bool retrieve_all_bytes) {
 }
 
 int TLSSocket::readData(std::vector<uint8_t> &buf, int buflen) {
-  if (buf.capacity() < buflen) {
+  if (buflen < 0)
+    return -1;
+  if (buf.capacity() < static_cast<size_t>(buflen)) {
     buf.reserve(buflen);
   }
   int total_read = 0;
