@@ -32,7 +32,7 @@ endif()
 
   set(BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/kafka")
   if (WIN32)
-  	set(BYPRODUCT "${BASE_DIR}/install/lib/librdkafka.lib")
+  	set(BYPRODUCT "${BASE_DIR}/install/lib/rdkafka.lib")
   else()
   	set(BYPRODUCT "${BASE_DIR}/install/lib/librdkafka.a")
   endif()
@@ -55,6 +55,7 @@ ExternalProject_Add(
                "-DENABLE_LZ4_EXT=OFF"
                "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH_PASSTHROUGH_LIST}"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
+			   "-DCMAKE_INSTALL_LIBDIR=lib"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
     EXCLUDE_FROM_ALL TRUE
   )
@@ -62,24 +63,18 @@ if ( NOT USE_SYSTEM_OPENSSL )
 	add_dependencies(kafka-external libressl-portable)
 endif()
 set(KAFKA_INCLUDE "${BASE_DIR}/install/include/librdkafka/")
+set(KAFKA_LIBRARY "${BYPRODUCT}")
 add_dependencies(minifi-rdkafka-extensions kafka-external)
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${KAFKA_INCLUDE})
-target_link_libraries (minifi-rdkafka-extensions ${BYPRODUCT})
-if (WIN32)
-    set_target_properties(minifi-rdkafka-extensions PROPERTIES
-        LINK_FLAGS "/WHOLERDKAFKA"
-    )
-elseif (APPLE)
-    set_target_properties(minifi-rdkafka-extensions PROPERTIES
-        LINK_FLAGS "-Wl,-all_load"
-    )
-else ()
-    set_target_properties(minifi-rdkafka-extensions PROPERTIES
-        LINK_FLAGS "-Wl,--whole-rdkafka"
-    )
-endif ()
 
+if (WIN32)
+	target_link_libraries (minifi-rdkafka-extensions -WHOLEARCHIVE:${KAFKA_LIBRARY} ${KAFKA_LIBRARY})
+elseif (APPLE)
+	target_link_libraries (minifi-rdkafka-extensions -Wl,--whole-archive ${KAFKA_LIBRARY} -Wl,--no-whole-archive)
+else ()
+	target_link_libraries (minifi-rdkafka-extensions -Wl,-force_load ${KAFKA_LIBRARY})
+endif ()
 
 SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)
 
