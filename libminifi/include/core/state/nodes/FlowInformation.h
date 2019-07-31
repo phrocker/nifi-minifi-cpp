@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
 
+#include "core/ConfigurableComponent.h"
+#include "core/Processor.h"
 #include "core/Resource.h"
 #include <functional>
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD)) 
@@ -157,100 +159,13 @@ class FlowMonitor : public StateMonitorNode {
 class FlowInformation : public FlowMonitor {
  public:
 
-  FlowInformation(const std::string &name, utils::Identifier &uuid)
-      : FlowMonitor(name, uuid) {
-  }
+  FlowInformation(const std::string &name, utils::Identifier &uuid);
 
-  FlowInformation(const std::string &name)
-      : FlowMonitor(name) {
-  }
+  FlowInformation(const std::string &name);
 
-  std::string getName() const {
-    return "flowInfo";
-  }
+  std::string getName() const;
 
-  std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized;
-
-    SerializedResponseNode fv;
-    fv.name = "flowId";
-    fv.value = flow_version_->getFlowId();
-
-    SerializedResponseNode uri;
-    uri.name = "versionedFlowSnapshotURI";
-    for (auto &entry : flow_version_->serialize()) {
-      uri.children.push_back(entry);
-    }
-
-    serialized.push_back(fv);
-    serialized.push_back(uri);
-
-    if (!connections_.empty()) {
-      SerializedResponseNode queues(false);
-      queues.name = "queues";
-
-      for (auto &queue : connections_) {
-        SerializedResponseNode repoNode(false);
-        repoNode.name = queue.second->getName();
-
-        SerializedResponseNode queueUUIDNode;
-        queueUUIDNode.name = "uuid";
-        queueUUIDNode.value = queue.second->getUUIDStr();
-
-        SerializedResponseNode queuesize;
-        queuesize.name = "size";
-        queuesize.value = queue.second->getQueueSize();
-
-        SerializedResponseNode queuesizemax;
-        queuesizemax.name = "sizeMax";
-        queuesizemax.value = queue.second->getMaxQueueSize();
-
-        SerializedResponseNode datasize;
-        datasize.name = "dataSize";
-        datasize.value = queue.second->getQueueDataSize();
-        SerializedResponseNode datasizemax;
-
-        datasizemax.name = "dataSizeMax";
-        datasizemax.value = queue.second->getMaxQueueDataSize();
-
-        repoNode.children.push_back(queuesize);
-        repoNode.children.push_back(queuesizemax);
-        repoNode.children.push_back(datasize);
-        repoNode.children.push_back(datasizemax);
-        repoNode.children.push_back(queueUUIDNode);
-
-        queues.children.push_back(repoNode);
-
-      }
-      serialized.push_back(queues);
-    }
-
-    if (nullptr != monitor_) {
-      auto components = monitor_->getAllComponents();
-      SerializedResponseNode componentsNode(false);
-      componentsNode.name = "components";
-
-      for (auto component : components) {
-        SerializedResponseNode componentNode(false);
-        componentNode.name = component->getComponentName();
-
-        SerializedResponseNode uuidNode;
-        uuidNode.name = "uuid";
-        uuidNode.value = component->getComponentUUID();
-
-        SerializedResponseNode componentStatusNode;
-        componentStatusNode.name = "running";
-        componentStatusNode.value = component->isRunning();
-
-        componentNode.children.push_back(componentStatusNode);
-        componentNode.children.push_back(uuidNode);
-        componentsNode.children.push_back(componentNode);
-      }
-      serialized.push_back(componentsNode);
-    }
-
-    return serialized;
-  }
+  std::vector<SerializedResponseNode> serialize();
 
  protected:
 
