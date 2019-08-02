@@ -9,9 +9,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description | 
 | - | - | - | - | 
-|File to Tail|||Fully-qualified filename of the file that should be tailed|
-|Input Delimiter|||Specifies the character that should be used for delimiting the data being tailedfrom the incoming file.|
+|File to Tail|||Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode|
+|Input Delimiter|||Specifies the character that should be used for delimiting the data being tailedfrom the incoming file.If none is specified, data will be ingested as it becomes available.|
 |State File|TailFileState||Specifies the file that should be used for storing state about what data has been ingested so that upon restart NiFi can resume from where it left off|
+|tail-base-directory||||
+|**tail-mode**|Single file|Single file<br>Multiple file<br>|Specifies the tail file mode. In 'Single file' mode only a single file will be watched. In 'Multiple file' mode a regex may be used. Note that in multiple file mode we will still continue to watch for rollover on the initial set of watched files. The Regex used to locate multiple files will be run during the schedule phrase. Note that if rotated files are matched by the regex, those files will be tailed.|
 ### Properties 
 
 | Name | Description |

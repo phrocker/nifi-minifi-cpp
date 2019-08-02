@@ -396,11 +396,6 @@ else()
 	endif()
 endif()
 
-if(BOOTSTRAP)
-	# display an error message for those using the bootstrap
-    message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
-endif()
-
                
 add_subdirectory(libminifi)
 
