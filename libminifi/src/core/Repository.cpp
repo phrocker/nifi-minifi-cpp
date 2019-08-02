@@ -52,8 +52,12 @@ void Repository::stop() {
 }
 
 // repoSize
-uint64_t Repository::getRepoSize() {
+uint64_t Repository::getRepoSize() const {
   return repo_size_;
+}
+
+uint64_t Repository::getRepoMaxSize() const {
+  return max_partition_bytes_;
 }
 
 void Repository::flush() {

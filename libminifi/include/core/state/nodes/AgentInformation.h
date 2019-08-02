@@ -448,11 +448,16 @@ class AgentStatus : public StateMonitorNode {
         repoNode.collapsible = false;
         repoNode.name = repo.first;
 
+        SerializedResponseNode datasizemax;
+        datasizemax.name = "sizeMax";
+        datasizemax.value = repo.second->getRepoMaxSize();
+
         SerializedResponseNode queuesize;
         queuesize.name = "size";
         queuesize.value = repo.second->getRepoSize();
 
         repoNode.children.push_back(queuesize);
+        repoNode.children.push_back(datasizemax);
 
         repositories.children.push_back(repoNode);
 

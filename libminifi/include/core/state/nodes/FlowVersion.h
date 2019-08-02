@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWVERSION_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWVERSION_H_
 
 #include "core/ConfigurableComponent.h"
 #include "core/Processor.h"
@@ -36,8 +36,6 @@
 #include "io/ClientSocket.h"
 #include "../nodes/StateMonitor.h"
 #include "../FlowIdentifier.h"
-#include "FlowVersion.h"
-#include "FlowMonitor.h"
 
 namespace org {
 namespace apache {
@@ -46,26 +44,40 @@ namespace minifi {
 namespace state {
 namespace response {
 
-
-/**
- * Justification and Purpose: Provides flow version Information
- */
-class FlowInformation : public FlowMonitor {
+class FlowVersion : public DeviceInformation {
  public:
 
-  FlowInformation(const std::string &name, utils::Identifier &uuid);
+  FlowVersion();
 
-  FlowInformation(const std::string &name);
+  explicit FlowVersion(const std::string &registry_url, const std::string &bucket_id, const std::string &flow_id);
 
-  std::string getName() const;
+  std::string getName() const ;
+
+  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const ;
+  /**
+   * In most cases the lock guard isn't necessary for these getters; however,
+   * we don't want to cause issues if the FlowVersion object is ever used in a way
+   * that breaks the current paradigm.
+   */
+  std::string getRegistryUrl() const ;
+
+  std::string getBucketId() const ;
+
+  std::string getFlowId() const ;
+
+  void setFlowVersion(const std::string &url, const std::string &bucket_id, const std::string &flow_id);
 
   std::vector<SerializedResponseNode> serialize();
 
+  //FlowVersion &operator=(const FlowVersion &&fv);
+
  protected:
 
+  mutable std::mutex guard;
+
+  std::shared_ptr<FlowIdentifier> identifier;
 };
 
-REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID and flow URL deployed to this agent");
 
 } /* namespace response */
 } /* namespace state */
@@ -74,4 +86,4 @@ REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWVERSION_H_ */

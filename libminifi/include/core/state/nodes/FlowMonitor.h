@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
+#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWMONITOR_H_
+#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWMONITOR_H_
 
 #include "core/ConfigurableComponent.h"
 #include "core/Processor.h"
@@ -37,7 +37,6 @@
 #include "../nodes/StateMonitor.h"
 #include "../FlowIdentifier.h"
 #include "FlowVersion.h"
-#include "FlowMonitor.h"
 
 namespace org {
 namespace apache {
@@ -46,26 +45,22 @@ namespace minifi {
 namespace state {
 namespace response {
 
-
-/**
- * Justification and Purpose: Provides flow version Information
- */
-class FlowInformation : public FlowMonitor {
+class FlowMonitor : public StateMonitorNode {
  public:
 
-  FlowInformation(const std::string &name, utils::Identifier &uuid);
+  explicit FlowMonitor(const std::string &name, utils::Identifier &uuid);
 
-  FlowInformation(const std::string &name);
+  explicit FlowMonitor(const std::string &name);
 
-  std::string getName() const;
+  void addConnection(const std::shared_ptr<minifi::Connection> &connection);
 
-  std::vector<SerializedResponseNode> serialize();
+  void setFlowVersion(const std::shared_ptr<state::response::FlowVersion> &flow_version);
 
  protected:
 
+  std::shared_ptr<state::response::FlowVersion> flow_version_;
+  std::map<std::string, std::shared_ptr<minifi::Connection>> connections_;
 };
-
-REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID and flow URL deployed to this agent");
 
 } /* namespace response */
 } /* namespace state */
@@ -74,4 +69,4 @@ REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID
 } /* namespace apache */
 } /* namespace org */
 
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_ */
+#endif /* LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWMONITOR_H_ */

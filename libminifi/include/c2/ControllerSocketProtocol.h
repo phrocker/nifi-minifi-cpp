@@ -18,6 +18,7 @@
 #ifndef LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_CONTROLLERSOCKETPROTOCOL_H_
 
+#include <functional>
 #include "core/Resource.h"
 #include "HeartBeatReporter.h"
 #include "io/StreamFactory.h"
@@ -28,6 +29,14 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace c2 {
+
+struct Connection {
+  bool full_;
+  uint64_t size_;
+  uint64_t max_;
+  std::string uuid_;
+  std::string name_;
+};
 
 /**
  * Purpose: Creates a reporter that can handle basic c2 operations for a localized environment
@@ -59,6 +68,9 @@ class ControllerSocketProtocol : public HeartBeatReporter {
 
  protected:
 
+  void perform_operation(const std::shared_ptr<state::StateMonitor> &updateSink, std::function<void(const std::shared_ptr<state::StateController> &component)> function,
+                         const std::string &componentOrUuid);
+
   /**
    * Parses content from the content response.
    */
@@ -66,11 +78,13 @@ class ControllerSocketProtocol : public HeartBeatReporter {
 
   std::mutex controller_mutex_;
 
-  std::map<std::string, bool> queue_full_;
+  std::map<std::string, Connection> connections_;
+  /*
+   std::map<std::string, bool> queue_full_;
 
-  std::map<std::string, uint64_t> queue_size_;
+   std::map<std::string, uint64_t> queue_size_;
 
-  std::map<std::string, uint64_t> queue_max_;
+   std::map<std::string, uint64_t> queue_max_;*/
 
   std::map<std::string, bool> component_map_;
 

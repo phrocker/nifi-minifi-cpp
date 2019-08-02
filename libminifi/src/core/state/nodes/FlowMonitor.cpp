@@ -15,14 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
 
-#include <sstream>
-#include <map>
+#include "core/state/nodes/FlowMonitor.h"
+#include <memory>
 
-#include "../nodes/MetricsBase.h"
-#include "Connection.h"
 namespace org {
 namespace apache {
 namespace nifi {
@@ -30,35 +26,27 @@ namespace minifi {
 namespace state {
 namespace response {
 
-/**
- * Justification and Purpose: Provides repository metrics. Provides critical information to the
- * C2 server.
- *
- */
-class RepositoryMetrics : public ResponseNode {
- public:
+FlowMonitor::FlowMonitor(const std::string &name, utils::Identifier &uuid)
+    : StateMonitorNode(name, uuid) {
+}
 
-  RepositoryMetrics(const std::string &name, utils::Identifier &uuid);
+FlowMonitor::FlowMonitor(const std::string &name)
+    : StateMonitorNode(name) {
+}
 
-  RepositoryMetrics(const std::string &name);
+void FlowMonitor::addConnection(const std::shared_ptr<minifi::Connection> &connection) {
+  if (nullptr != connection) {
+    connections_.insert(std::make_pair(connection->getUUIDStr(), connection));
+  }
+}
 
-  RepositoryMetrics();
+void FlowMonitor::setFlowVersion(const std::shared_ptr<state::response::FlowVersion> &flow_version) {
+  flow_version_ = flow_version;
+}
 
-  virtual std::string getName() const;
-
-  void addRepository(const std::shared_ptr<core::Repository> &repo);
-
-  std::vector<SerializedResponseNode> serialize();
-
- protected:
-  std::map<std::string, std::shared_ptr<core::Repository>> repositories;
-};
-
-} /* namespace metrics */
+} /* namespace response */
 } /* namespace state */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_CORE_STATE_METRICS_RepositoryMetrics_H_ */

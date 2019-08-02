@@ -126,7 +126,7 @@ class VolatileRepository : public core::Repository, public std::enable_shared_fr
 
   virtual void start();
 
-  virtual uint64_t getRepoSize() {
+  virtual uint64_t getRepoSize() const {
     return current_size_;
   }
 

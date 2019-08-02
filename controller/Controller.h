@@ -117,9 +117,10 @@ int getFullConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream 
     socket->read(connections);
     out << connections << " are full" << std::endl;
     for (int i = 0; i < connections; i++) {
-      std::string fullcomponent;
+      std::string fullcomponent, fullComponentId;
       socket->readUTF(fullcomponent);
-      out << fullcomponent << " is full" << std::endl;
+      socket->readUTF(fullComponentId);
+      out << fullcomponent << " ( uuid: " << fullComponentId << " )  is full" << std::endl;
     }
   }
   return 0;
@@ -202,10 +203,11 @@ int listComponents(std::unique_ptr<minifi::io::Socket> socket, std::ostream &out
     out << "Components:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
-    std::string name, status;
+    std::string name, uuid, status;
     socket->readUTF(name, false);
+    socket->readUTF(uuid, false);
     socket->readUTF(status, false);
-    out << name << ", running: " << status << std::endl;
+    out << name << ", / " << uuid << " running: " << status << std::endl;
   }
   return 0;
 }
@@ -226,9 +228,10 @@ int listConnections(std::unique_ptr<minifi::io::Socket> socket, std::ostream &ou
     out << "Connection Names:" << std::endl;
 
   for (int i = 0; i < responses; i++) {
-    std::string name;
+    std::string name, uuid;
     socket->readUTF(name, false);
-    out << name << std::endl;
+    socket->readUTF(uuid, false);
+    out << name << " ( uuid: " << uuid << " ) " << std::endl;
   }
   return 0;
 }
@@ -316,7 +319,7 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
   configuration->set("c2.agent.heartbeat.period", "25");
   configuration->set("nifi.c2.root.classes", "AgentInformation");
   configuration->set("nifi.c2.enable", "true");
-  configuration->set("nifi.c2.agent.class","test");
+  configuration->set("nifi.c2.agent.class", "test");
   configuration->set("c2.agent.listen", "true");
   configuration->set("c2.agent.heartbeat.reporter.classes", "AgentPrinter");
 

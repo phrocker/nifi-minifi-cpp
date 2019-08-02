@@ -211,7 +211,9 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 
   }
 
-  virtual uint64_t getRepoSize();
+  virtual uint64_t getRepoSize() const;
+
+  virtual uint64_t getRepoMaxSize() const;
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
