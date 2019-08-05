@@ -699,11 +699,13 @@ install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
         DESTINATION bin
         COMPONENT bin)
         
-endif()
+endif() 
         
 
 if (WIN32)
 set(CPACK_GENERATOR "WIX")
+set(CPACK_WIX_UPGRADE_GUID, "FE29F801-3486-4E9E-AFF9-838C1A5C8D59")
+set(CPACK_WIX_PRODUCT_ICON,"${CMAKE_CURRENT_SOURCE_DIR}/msi/minifi-logo-ico.ico")
 else()
 set(CPACK_GENERATOR "TGZ")
 endif()
