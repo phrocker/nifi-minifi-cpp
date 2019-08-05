@@ -39,6 +39,9 @@ namespace minifi {
 namespace utils {
 
 #ifdef WIN32
+/*
+These are common translations for SIDs in windows
+*/
 std::string OsUtils::resolve_common_identifiers(const std::string &id) {
 	static std::map<std::string, std::string> nameMap;
 	if (nameMap.empty()) {
@@ -73,10 +76,20 @@ std::string  OsUtils::userIdToUsername(const std::string &uid) {
 			if (ConvertStringSidToSidA(name.c_str(), &pSidOwner)) {
 				SID_NAME_USE sidType = SidTypeUnknown;
 				DWORD windowsAccountNameSize = 0, dwwindowsDomainSize = 0;
+				/* 
+				We can use a unique ptr with a deleter here but some of the calls
+				below require we use global alloc -- so a global deleter to call GlobalFree
+				won't buy us a ton unless we anticipate requiring more of this. If we do
+				I suggest we break this out until a subset of OsUtils into our own convenience functions.
+				*/
 				LPTSTR windowsDomain = NULL;
 				LPTSTR windowsAccount = NULL;
 
-				// Reallocate memory for the buffers.
+				/*  
+				The first call will be to obtain sizes for domain and account,
+				after which we will allocate the memory and free it after.
+				In some cases youc an replace GlobalAlloc with 
+				*/
 				LookupAccountSid(NULL /** local computer **/, pSidOwner,
 					windowsAccount,
 					(LPDWORD)&windowsAccountNameSize,
@@ -129,10 +142,9 @@ std::string  OsUtils::userIdToUsername(const std::string &uid) {
 				std::lock_guard<std::mutex> lock(mtx);
 				struct passwd *pwd = getpwuid(uid);
 				if (nullptr != pwd) {
-					name = pwd->pw_name
+					name = pwd->pw_name;
 				}
 			}
-			// nothing to perform. noop until linux impl can be created.
 #endif
 		}
 	return name;
