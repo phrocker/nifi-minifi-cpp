@@ -106,7 +106,7 @@ core::Property ConsumeWindowsEventLog::IdentifierFunction(
 	core::PropertyBuilder::createProperty("Apply Identifier Function")->
 	isRequired(false)->
 	withDefaultValue<bool>(true)->
-	withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\USERNAME associated with that ID")->
+	withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")->
 	build());
 
 core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");

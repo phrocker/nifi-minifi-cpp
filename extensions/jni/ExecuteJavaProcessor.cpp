@@ -206,16 +206,20 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
     // in this function.
     jobject java_process_session_factory = nullptr;
 
+	std::cout << "ah0" << std::endl;
     JniSessionFactory *jniSessionFactory = getFactory(sessionFactory);
 
     if (!jniSessionFactory) {
+		std::cout << "ah1" << std::endl;
       java_process_session_factory = sessionFactoryCls.newInstance(env);
       jniSessionFactory = setFactory(sessionFactory, java_process_session_factory);
+	  std::cout << "ah2" << std::endl;
       java_servicer_->putNativeFunctionMapping<JniSessionFactory>(env, sessionFactoryCls);
       java_servicer_->setReference<JniSessionFactory>(env, java_process_session_factory, jniSessionFactory);
     } else {
       java_process_session_factory = jniSessionFactory->getJavaReference();
     }
+	std::cout << "ah" << std::endl;
     current_processor_class.callVoidMethod(env, clazzInstance, "onTrigger", "(Lorg/apache/nifi/processor/ProcessContext;Lorg/apache/nifi/processor/ProcessSessionFactory;)V", context_instance_,
                                            java_process_session_factory);
   } catch (const JavaException &je) {
