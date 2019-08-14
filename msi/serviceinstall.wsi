@@ -91,26 +91,25 @@
             
             <Component Id="minifiService" Guid="87658309-0339-425c-8633-f54ffaaa4921">
               <File Id="MiNiFiExe"
-                       Name="minifi-service"
+                       Name="minifi.exe"
                        KeyPath="yes"
                        Source="main\minifi.exe"/>
               <ServiceInstall Id="MiNiFiExeService"
                               Type="ownProcess"
                               Vital="yes"
-                              Name="Apache NiFi MiNiFi Service"
+                              Name="Apache NiFi MiNiFi"
                               DisplayName="Apache NiFi MiNiFi"
                               Description="Apache NiFi MiNifi Service"
                               ErrorControl="ignore"
-                              Account="NT AUTHORITY\LocalService"
                               Start="auto"
                               Interactive="no" />
 
               <ServiceControl Id="ServiceControl_Start"
-                    Name="Apache NiFi MiNiFi Service"
+                    Name="Apache NiFi MiNiFi"
                     Start="install"
                     Wait="no" />
               <ServiceControl Id="ServiceControl_Stop"
-                              Name="Apache NiFi MiNiFi Service"
+                              Name="Apache NiFi MiNiFi"
                               Stop="both"
                               Remove="uninstall"
                               Wait="yes" />

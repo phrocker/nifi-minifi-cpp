@@ -165,7 +165,7 @@ endif()
 endif()
 
 if (WIN32)
-	add_definitions(-DSERVICE_NAME="MiNiFi")
+	add_definitions(-DSERVICE_NAME="Apache NiFi MINiFi")
 endif()
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
@@ -688,9 +688,11 @@ install(DIRECTORY extensions/pythonprocessors/
         DESTINATION minifi-python
         COMPONENT bin)
 
+if (NOT WIN32)
 install(PROGRAMS bin/minifi.sh
         DESTINATION bin
         COMPONENT bin)
+endif()
 
 install(FILES LICENSE README.md NOTICE
         DESTINATION .
@@ -701,9 +703,9 @@ if(WIN32)
 #but that leaves the onus up to the developer, so until we can automate some of that build let's enforce
 #the exe here temporarily
 #TODO: Remove this and automate this step.
-install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi.exe
-        DESTINATION bin
-        COMPONENT bin)
+#install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi.exe
+        #DESTINATION bin
+        #COMPONENT bin)
 else()
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/main/minifi
         DESTINATION bin
