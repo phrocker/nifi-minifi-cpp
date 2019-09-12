@@ -20,7 +20,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
-#include "DatabaseConnectors.h"
+#include "data/DatabaseConnectors.h"
 #include <soci.h>
 #include <memory>
 #include <unordered_map>
@@ -98,7 +98,6 @@ class DatabaseService : public core::controller::ControllerService {
   virtual std::unique_ptr<sql::Connection> getConnection() const = 0;
 
  protected:
-
 
   void initializeProperties();
 

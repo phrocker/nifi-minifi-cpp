@@ -18,13 +18,13 @@
 #
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-
+include_directories(../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
 set(EXTRA_SOURCES "")
 if (WIN32)
   set(EXTRA_SOURCES "win/*.cpp")
 endif()
 
-file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp" ${EXTRA_SOURCES} )
+file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp" ${EXTRA_SOURCES} )
 
 add_library(minifi-sql STATIC ${SOURCES})
 set_property(TARGET minifi-sql PROPERTY POSITION_INDEPENDENT_CODE ON)

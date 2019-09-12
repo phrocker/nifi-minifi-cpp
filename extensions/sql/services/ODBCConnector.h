@@ -24,7 +24,7 @@
 #include <soci.h>
 #include <odbc/soci-odbc.h>
 #include "DatabaseService.h"
-#include "DatabaseConnectors.h"
+#include "data/DatabaseConnectors.h"
 #include <memory>
 #include <unordered_map>
 
@@ -34,16 +34,6 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 namespace controllers {
-
-class ODBCStatement : public sql::Statement {
- public:
-  explicit ODBCStatement(std::unique_ptr<soci::session> sql)
-      : sql_(std::move(sql)) {
-  }
-
- private:
-  std::unique_ptr<soci::session> sql_;
-};
 
 class ODBCConnection : public sql::Connection {
  public:
@@ -56,7 +46,7 @@ class ODBCConnection : public sql::Connection {
     soci::connection_parameters parameters("odbc", connection_string_);
     parameters.set_option(soci::odbc_option_driver_complete, "0" /* SQL_DRIVER_NOPROMPT */);
     std::unique_ptr<soci::session> sql = std::unique_ptr<soci::session>(new soci::session(parameters));
-    return std::unique_ptr<sql::Statement>(new ODBCStatement(std::move(sql)));
+    return std::unique_ptr<sql::Statement>(new Statement(std::move(sql), query));
   }
  private:
   std::string connection_string_;

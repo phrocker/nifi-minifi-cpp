@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_SQL_SERVICES_DATABASECONNECTORS_H_
-#define EXTENSIONS_SQL_SERVICES_DATABASECONNECTORS_H_
-
-#include <memory>
+#include "SQLWriter.h"
 
 namespace org {
 namespace apache {
@@ -27,21 +24,16 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-class Statement {
- public:
-};
+SQLWriter::SQLWriter(soci::rowset<soci::row> &rowset)
+    : rowset_(rowset) {
+  iter_ = rowset_.begin();
+}
 
-class Connection {
- public:
-  virtual ~Connection() {
-  }
-  virtual std::unique_ptr<Statement> prepareStatement(const std::string &query) const = 0;
-};
+SQLWriter::~SQLWriter() {
+}
 
 } /* namespace sql */
 } /* namespace minifi */
 } /* namespace nifi */
 } /* namespace apache */
 } /* namespace org */
-
-#endif /* EXTENSIONS_SQL_SERVICES_DATABASECONNECTORS_H_ */

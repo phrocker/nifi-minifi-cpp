@@ -30,12 +30,14 @@
 #include <iostream>
 #include <memory>
 #include <codecvt>
+#include <soci.h>
 
 #include "io/DataStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "Exception.h"
 #include "utils/OsUtils.h"
+#include "data/DatabaseConnectors.h"
 
 namespace org {
 namespace apache {
@@ -88,6 +90,20 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     std::unique_ptr<sql::Connection> connection = database_service_->getConnection();
     if (connection) {
       auto statement = connection->prepareStatement(sqlSelectQuery_);
+      auto rowset = statement->execute();
+
+      auto rowiterator = rowset.begin();
+
+      size_t row_count = 0;
+      while (rowiterator != rowset.end()) {
+        auto newflow = session->create();
+
+        newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
+
+        for (; rowiterator != rowset.end(); ++rowiterator, ++row_count) {
+
+        }
+      }
     }
   }
   /*
