@@ -1,4 +1,4 @@
-#include "Odbc.h"
+#include "../sql/Odbc.h"
 
 #pragma comment(lib, "Odbc32.lib")
 

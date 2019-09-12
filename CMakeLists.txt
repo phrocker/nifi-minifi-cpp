@@ -468,12 +468,11 @@ if (ENABLE_ALL OR ENABLE_WEL)
 endif()
 endif(WIN32)
 
-if (WIN32)
-option(ENABLE_EXECUTESQL "Enables the ExecuteSQL." OFF)
-if (ENABLE_ALL OR ENABLE_EXECUTESQL)
-	createExtension(EXECUTESQL-EXTENSIONS "EXECUTESQL EXTENSIONS" "Enables ExecuteSQL extensions." "extensions/executesql")
+
+option(ENABLE_SQL "Enables the SQL Suite of Tools." OFF)
+if (ENABLE_ALL OR ENABLE_SQL)
+	createExtension(SQL-EXTENSIONS "SQL EXTENSIONS" "Enables the SQL Suite of Tools" "extensions/sql")
 endif()
-endif(WIN32)
 
 ## Create MQTT Extension
 option(ENABLE_MQTT "Enables the mqtt extension." OFF)

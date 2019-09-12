@@ -25,6 +25,7 @@
 #include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
+#include "services/DatabaseService.h"
 #include <sstream>
 
 namespace org {
@@ -33,16 +34,14 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-
 //! ExecuteSQL Class
-class ExecuteSQL : public core::Processor
-{
-public:
+class ExecuteSQL : public core::Processor {
+ public:
   //! Constructor
   /*!
-  * Create a new processor
-  */
-  ExecuteSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
+   * Create a new processor
+   */
+  explicit ExecuteSQL(const std::string& name, utils::Identifier uuid = utils::Identifier());
 
   //! Destructor
   virtual ~ExecuteSQL();
@@ -50,13 +49,13 @@ public:
   //! Processor Name
   static const std::string ProcessorName;
 
-public:
+ public:
   /**
-  * Function that's executed when the processor is scheduled.
-  * @param context process context.
-  * @param sessionFactory process session factory that is used when creating
-  * ProcessSession objects.
-  */
+   * Function that's executed when the processor is scheduled.
+   * @param context process context.
+   * @param sessionFactory process session factory that is used when creating
+   * ProcessSession objects.
+   */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   //! OnTrigger method, implemented by NiFi ConsumeWindowsEventLog
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
@@ -64,10 +63,11 @@ public:
   void initialize(void) override;
   void notifyStop() override;
 
-private:
+ private:
+  std::shared_ptr<sql::controllers::DatabaseService> database_service_;
   // Logger
   std::shared_ptr<logging::Logger> logger_;
-  std::string dbConnectionStr_;
+  std::string db_controller_service_;
   std::string sqlSelectQuery_;
 };
 
