@@ -100,9 +100,8 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
         newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
 
-        for (; rowiterator != rowset.end(); ++rowiterator, ++row_count) {
-
-        }
+		//json writer
+        
       }
     }
   }

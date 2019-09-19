@@ -21,7 +21,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
 set(EXTRA_SOURCES "")
 if (WIN32)
-  set(EXTRA_SOURCES "win/*.cpp")
+#  set(EXTRA_SOURCES "win/*.cpp")
 endif()
 
 file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp" ${EXTRA_SOURCES} )
@@ -37,6 +37,7 @@ endif()
 
 find_package(Patch)
 
+if(NOT WIN32)
 set(ODBC_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-install/" CACHE STRING "iODBC install directory")
 	
   ExternalProject_Add(
@@ -53,17 +54,24 @@ set(ODBC_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/iodbc-install/" C
     PATCH_COMMAND ./autogen.sh && ./configure --prefix=${ODBC_BYPRODUCT_DIR}
     STEP_TARGETS build
     EXCLUDE_FROM_ALL TRUE
-    BUILD_BYPRODUCTS ${BYPRODUCT}
+    BUILD_BYPRODUCTS ${ODBC_BYPRODUCT}
   )
 
+  endif()
 set(SOCI_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-install" CACHE STRING "SOCI install directory")
 if(WIN32)
-	set(BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib/soci.lib")
-	set(ODBC_BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib64/libsoci_odbc.lib")
+	set(BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib/libsoci_core_4_0.lib")
+	set(ODBC_BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib/libsoci_odbc_4_0.lib")
+	set(ODBC_OPTION "")
+	set(CMAKE_MODULE "")
 else()
 	set(BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib64/libsoci_core.a")
+	set(ODBC_OPTION "-DODBC_BYPRODUCT_DIR=${ODBC_BYPRODUCT_DIR}")
 	set(ODBC_BYPRODUCT "${SOCI_BYPRODUCT_DIR}/lib64/libsoci_odbc.a")
+	set(CMAKE_MODULE "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 endif()
+
+
 
   ExternalProject_Add(
     sql-external
@@ -74,13 +82,13 @@ endif()
 	SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/soci-src"
  	CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
 			   "-DSOCI_TESTS=OFF"
-			   "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
+			   ${CMAKE_MODULE}
 			   "-DSOCI_SHARED=OFF"
 			   "-DSOCI_CXX_C11=ON"
 			   "-DWITH_ODBC=ON"
 			   "-DSOCI_ODBC=ON"
 			   "-DWITH_BOOST=OFF"
-			   "-DODBC_BYPRODUCT_DIR=${ODBC_BYPRODUCT_DIR}"
+			   ${ODBC_OPTION}
                "-DCMAKE_INSTALL_PREFIX=${SOCI_BYPRODUCT_DIR}"
     BUILD_BYPRODUCTS ${BYPRODUCT}
   )
@@ -109,12 +117,16 @@ if (NOT WIN32)
 		message("Linking whole archives")
 	endif()
 else()
-	target_link_libraries (minifi-sql  "${ODBC_BYPRODUCT_DIR}/lib/libodbc.a" ${BYPRODUCT} ${ODBC_BYPRODUCT})
+	find_package(ODBC)
+	target_link_libraries (minifi-sql  ${BYPRODUCT} ${ODBC_BYPRODUCT} ${ODBC_LIBRARIES} )
 endif()
 
 if (WIN32)
     set_target_properties(minifi-sql PROPERTIES
-        LINK_FLAGS "/WHOLEARCHIVE"
+        LINK_FLAGS "/WHOLEARCHIVE:${BYPRODUCT}"
+    )
+	set_target_properties(minifi-sql PROPERTIES
+        LINK_FLAGS "/WHOLEARCHIVE:${ODBC_BYPRODUCT}"
     )
 elseif (APPLE)
     set_target_properties(minifi-sql PROPERTIES
