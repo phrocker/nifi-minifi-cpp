@@ -20,6 +20,7 @@
 
 #include "core/ClassLoader.h"
 #include "processors/ExecuteSQL.h"
+#include "services/ODBCConnector.h"
 
 class SQLFactory : public core::ObjectFactory {
  public:
@@ -43,14 +44,15 @@ class SQLFactory : public core::ObjectFactory {
    * @return class name for the processor.
    */
   virtual std::vector<std::string> getClassNames() override{
-    std::vector<std::string> class_names;
-    class_names.push_back("ExecuteSQL");
+	  std::vector<std::string> class_names = {"ExecuteSQL","ODBCService"};
     return class_names;
   }
 
   virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {
-    if (utils::StringUtils::equalsIgnoreCase(class_name, "ExecuteSQL")) {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ExecuteSQL>());
+	  if (utils::StringUtils::equalsIgnoreCase(class_name, "ExecuteSQL")) {
+		  return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::processors::ExecuteSQL>());
+	  } else if (utils::StringUtils::equalsIgnoreCase(class_name, "ODBCService")) {
+		  return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::sql::controllers::ODBCService>());
     } else {
       return nullptr;
     }

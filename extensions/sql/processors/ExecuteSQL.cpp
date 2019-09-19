@@ -100,6 +100,36 @@ void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
         newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
 
+		/*
+		
+Processors:
+- id: 39c792d0-0e75-45cb-8f43-ec0f1e551101
+  name: ExecuteSQL
+  class: org.apache.nifi.processors.standard.ExecuteSQL
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  penalization period: 30000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+	DB Controller Service: ODBCService
+Controller Services:
+- id: 39c792d0-0e75-45cb-8f43-ec0f1e551102
+  name: ODBCService
+  class: org.apache.nifi.processors.standard.ODBCService
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  penalization period: 30000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list: []
+  Properties:
+	Connection String: 'DRIVER={SQL Server};Server=localhost\SQLEXPRESS;Database=master;'
+		
+		*/
 		//json writer
         
       }
