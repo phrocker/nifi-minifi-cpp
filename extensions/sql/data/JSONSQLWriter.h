@@ -30,7 +30,7 @@ namespace sql {
 
 class JSONSQLWriter : public SQLWriter {
  public:
-  explicit JSONSQLWriter(soci::rowset<soci::row> &rowset, std::ostream &out);
+  explicit JSONSQLWriter(soci::rowset<soci::row> &rowset, std::ostream *out);
   virtual ~JSONSQLWriter();
 
   virtual bool addRow(soci::row &set) override;
@@ -39,6 +39,7 @@ class JSONSQLWriter : public SQLWriter {
 
  private:
 
+  std::ostream *output_stream;
   rapidjson::Document json_payload;
 
 };

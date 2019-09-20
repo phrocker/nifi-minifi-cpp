@@ -38,6 +38,7 @@
 #include "Exception.h"
 #include "utils/OsUtils.h"
 #include "data/DatabaseConnectors.h"
+#include "data/JSONSQLWriter.h"
 
 namespace org {
 namespace apache {
@@ -57,10 +58,14 @@ static core::Property s_SQLSelectQuery(
         "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database. "
         "Note that Expression Language is not evaluated for flow file contents.")->supportsExpressionLanguage(true)->build());
 
-static core::Relationship s_Success("success", "After a successful SQL SELECT execution, result FlowFiles are sent here.");
+static core::Property MaxRowsPerFlowFile(
+	core::PropertyBuilder::createProperty("Max Rows Per Flow File")->isRequired(true)->withDefaultValue<int>(0)->withDescription(
+		"The maximum number of result rows that will be included intoi a flow file. If zero then all will be placed into the flow file")->supportsExpressionLanguage(true)->build());
+
+core::Relationship ExecuteSQL::Success("success", "Relationship for successfully consumed events.");
 
 ExecuteSQL::ExecuteSQL(const std::string& name, utils::Identifier uuid)
-    : core::Processor(name, uuid),
+    : core::Processor(name, uuid), max_rows_(0),
       logger_(logging::LoggerFactory<ExecuteSQL>::getLogger()) {
 }
 
@@ -69,15 +74,16 @@ ExecuteSQL::~ExecuteSQL() {
 
 void ExecuteSQL::initialize() {
   //! Set the supported properties
-  setSupportedProperties( { DBCControllerService, s_SQLSelectQuery });
+  setSupportedProperties( { DBCControllerService, s_SQLSelectQuery, MaxRowsPerFlowFile });
 
   //! Set the supported relationships
-  setSupportedRelationships( { s_Success });
+  setSupportedRelationships( { Success });
 }
 
 void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   context->getProperty(DBCControllerService.getName(), db_controller_service_);
   context->getProperty(s_SQLSelectQuery.getName(), sqlSelectQuery_);
+  context->getProperty(MaxRowsPerFlowFile.getName(), max_rows_);
 
   database_service_ = std::dynamic_pointer_cast<sql::controllers::DatabaseService>(context->getControllerService(db_controller_service_));
   if (database_service_ == nullptr) {
@@ -86,54 +92,41 @@ void ExecuteSQL::onSchedule(const std::shared_ptr<core::ProcessContext> &context
 }
 
 void ExecuteSQL::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+	
   if (database_service_) {
+	
     std::unique_ptr<sql::Connection> connection = database_service_->getConnection();
     if (connection) {
+	
       auto statement = connection->prepareStatement(sqlSelectQuery_);
+	
       auto rowset = statement->execute();
-
-      auto rowiterator = rowset.begin();
-
+	
       size_t row_count = 0;
-      while (rowiterator != rowset.end()) {
-        auto newflow = session->create();
+	  std::stringstream outputStream;
+	  sql::JSONSQLWriter writer(rowset, &outputStream);
+	  // serialize the rows
+	  do {
+		  row_count = writer.serialize(max_rows_ == 0 ? std::numeric_limits<size_t>::max() : max_rows_);
+		  if (row_count == 0)
+			  break;
+		  writer.write();
+		  auto output = outputStream.str();
+		  if (!output.empty()) {
+			  WriteCallback writer(output.data(), output.size());
+			  auto newflow = session->create();
+			  newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
+			  session->write(newflow, &writer);
+			  session->transfer(newflow, Success);
+		  }
+		  outputStream.str("");
+		  outputStream.clear();
+	  } while (row_count > 0);
 
-        newflow->addAttribute("executesql.resultset.index", std::to_string(row_count));
-
-		/*
-		
-Processors:
-- id: 39c792d0-0e75-45cb-8f43-ec0f1e551101
-  name: ExecuteSQL
-  class: org.apache.nifi.processors.standard.ExecuteSQL
-  max concurrent tasks: 1
-  scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1000 ms
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
-  auto-terminated relationships list: []
-  Properties:
-	DB Controller Service: ODBCService
-Controller Services:
-- id: 39c792d0-0e75-45cb-8f43-ec0f1e551102
-  name: ODBCService
-  class: org.apache.nifi.processors.standard.ODBCService
-  max concurrent tasks: 1
-  scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1000 ms
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
-  auto-terminated relationships list: []
-  Properties:
-	Connection String: 'DRIVER={SQL Server};Server=localhost\SQLEXPRESS;Database=master;'
-		
-		*/
-		//json writer
-        
-      }
     }
+	else {
+		context->yield();
+	}
   }
   /*
    ODBCDatabase db;

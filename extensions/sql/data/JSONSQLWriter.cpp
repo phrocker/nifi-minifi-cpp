@@ -18,74 +18,19 @@
 
 #include "JSONSQLWriter.h"
 #include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/prettywriter.h"
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace sql {
 
-JSONSQLWriter::JSONSQLWriter(soci::rowset<soci::row> &rowset, std::ostream &out)
-    : SQLWriter(rowset),
-      json_payload(rapidjson::kArrayType) {
-
-  /*
-   rapidjson::Value opReqStrVal;
-   std::string operation_request_str = getOperation(payload);
-   opReqStrVal.SetString(operation_request_str.c_str(), operation_request_str.length(), alloc);
-   json_payload.AddMember("operation", opReqStrVal, alloc);
-
-   std::string operationid = payload.getIdentifier();
-   if (operationid.length() > 0) {
-   json_payload.AddMember("operationId", getStringValue(operationid, alloc), alloc);
-   std::string operationStateStr = "FULLY_APPLIED";
-   switch (payload.getStatus().getState()) {
-   case state::UpdateState::FULLY_APPLIED:
-   operationStateStr = "FULLY_APPLIED";
-   break;
-   case state::UpdateState::PARTIALLY_APPLIED:
-   operationStateStr = "PARTIALLY_APPLIED";
-   break;
-   case state::UpdateState::READ_ERROR:
-   operationStateStr = "OPERATION_NOT_UNDERSTOOD";
-   break;
-   case state::UpdateState::SET_ERROR:
-   default:
-   operationStateStr = "NOT_APPLIED";
-   }
-
-   rapidjson::Value opstate(rapidjson::kObjectType);
-
-   opstate.AddMember("state", getStringValue(operationStateStr, alloc), alloc);
-   const auto details = payload.getRawData();
-
-   opstate.AddMember("details", getStringValue(std::string(details.data(), details.size()), alloc), alloc);
-
-   json_payload.AddMember("operationState", opstate, alloc);
-   json_payload.AddMember("identifier", getStringValue(operationid, alloc), alloc);
-   }
-
-   mergePayloadContent(json_payload, payload, alloc);
-
-   for (const auto &nested_payload : payload.getNestedPayloads()) {
-   if (!minimize_updates_ || (minimize_updates_ && !containsPayload(nested_payload))) {
-   rapidjson::Value np_key = getStringValue(nested_payload.getLabel(), alloc);
-   rapidjson::Value np_value = serializeJsonPayload(nested_payload, alloc);
-   if (minimize_updates_) {
-   nested_payloads_.insert(std::pair<std::string, C2Payload>(nested_payload.getLabel(), nested_payload));
-   }
-   json_payload.AddMember(np_key, np_value, alloc);
-   }
-   }
-
-   rapidjson::StringBuffer buffer;
-   rapidjson::PrettyWriter < rapidjson::StringBuffer > writer(buffer);
-   json_payload.Accept(writer);
-   return buffer.GetString();*/
-
+JSONSQLWriter::JSONSQLWriter(soci::rowset<soci::row> &rowset, std::ostream *out)
+    : SQLWriter(rowset), json_payload(rapidjson::kArrayType), output_stream(out){
 }
 
 JSONSQLWriter::~JSONSQLWriter() {
-  // TODO Auto-generated destructor stub
 }
 
 bool JSONSQLWriter::addRow(soci::row &row) {
@@ -131,11 +76,16 @@ bool JSONSQLWriter::addRow(soci::row &row) {
     rowobj.AddMember(name, valueVal, alloc);
 
   }
+  json_payload.PushBack(rowobj, alloc);
   return true;
 }
 
 void JSONSQLWriter::write() {
-
+	rapidjson::StringBuffer buffer;
+	rapidjson::PrettyWriter < rapidjson::StringBuffer > writer(buffer);
+	json_payload.Accept(writer);
+	*output_stream << buffer.GetString();
+	json_payload = rapidjson::Document(rapidjson::kArrayType);
 }
 
 } /* namespace sql */
