@@ -25,7 +25,7 @@ namespace minifi {
 namespace sql {
 
 SQLWriter::SQLWriter(soci::rowset<soci::row> &rowset)
-    : rowset_(rowset) {
+    : rowset_(rowset), total_count_(0){
   iter_ = rowset_.begin();
 }
 

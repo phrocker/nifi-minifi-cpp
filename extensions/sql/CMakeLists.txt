@@ -88,6 +88,7 @@ endif()
 			   "-DWITH_ODBC=ON"
 			   "-DSOCI_ODBC=ON"
 			   "-DWITH_BOOST=OFF"
+			   "-DCMAKE_BUILD_TYPE=Release"
 			   ${ODBC_OPTION}
                "-DCMAKE_INSTALL_PREFIX=${SOCI_BYPRODUCT_DIR}"
     BUILD_BYPRODUCTS ${BYPRODUCT}
@@ -117,7 +118,7 @@ if (NOT WIN32)
 		message("Linking whole archives")
 	endif()
 else()
-	find_package(ODBC)
+	find_package(ODBC REQUIRED)
 	target_link_libraries (minifi-sql  ${BYPRODUCT} ${ODBC_BYPRODUCT} ${ODBC_LIBRARIES} )
 endif()
 

@@ -20,7 +20,7 @@
 #define EXTENSIONS_SQL_DATA_SQLWRITER_H_
 
 #include "DatabaseConnectors.h"
-
+#include <iostream>
 #include <soci.h>
 
 namespace org {
@@ -37,10 +37,14 @@ class SQLWriter {
   virtual size_t serialize(size_t max = 0) {
     size_t count = 0;
 
-    for (; iter_ != rowset_.end(); ++iter_, ++count, ++total_count_) {
+    for (; iter_ != rowset_.end(); ) {
       addRow(*iter_);
-      if (max > 0 && count >= max)
-        break;
+	  iter_++;
+	  count++; 
+	  total_count_++;
+	  if (max > 0 && count >= max) {
+		  break;
+	  }
     }
 
     return count;
